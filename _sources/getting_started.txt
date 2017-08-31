@@ -1,0 +1,87 @@
+
+Getting started
+===============================
+
+
+**Installation**
+
+*Mac*
+
+If you don't have Python3,
+
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+brew install python3
+
+and then
+
+pip3 install chorus
+
+installation
+----------------
+
+### Required
+
+- Chemex (Molecular modeling. Cython support is recommended for MCS calc)
+- Tornado  (Web server and parallel computing)
+
+
+### Excel export option
+
+- Matplotlib  # SVG -> PNG
+- XlsxWriter  # export Excel format file
+
+
+### Included JavaScript libraries (shown below are with MIT license)
+
+- D3 v4
+- Dexie
+- bootstrap v4
+  - JQuery
+  - tether
+
+
+### for Mac
+
+brew update
+brew install python3
+pip3 install tornado
+pip3 install numpy
+pip3 install numexpr
+pip3 install cython
+pip3 install chorus  # TODO: not yet
+
+pip3 install matplotlib
+pip3 install xlsxwriter
+
+# For developer(Less, babel)
+
+brew install nodejs
+npm install less -g
+
+# Documentation
+
+pip3 install sphinx
+pip3 install sphinxcontrib-napoleon
+
+
+### for Windows
+
+# Windows用バイナリのインストーラで一発
+# すべて32bit(x86)
+# インストーラ(.exe)は管理者権限で実行
+# コマンドプロンプトは管理者権限で開く
+
+python3を落としてきてインストール
+環境変数PATHにpython3を追加
+numpyをインストーラで入れる
+cythonとnumexprはおそらく非対応
+python -m pip install chorus
+python -m pip install xlsxwriter
+matplotlibは？
+
+
+
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

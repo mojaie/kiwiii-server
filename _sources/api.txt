@@ -1,0 +1,28 @@
+
+Web API
+===========
+
+
+.. autotornado:: cheddar.handler:app
+   :endpoints:
+
+:>json string id: datatable ID
+:>json string format: ``datatable``
+:>json string responseDate: date of response sent from server
+:>json float execTime: execution time
+:>json int searchCount: sum of the number of rows searched
+:>json float progress: 100
+:>json int recordCount: number of rows found
+:>json string dataSource: list of database entity
+:>json object query: number of rows found: number of rows found
+:>json object status:  ``Queued`` | ``Completed`` | ``In progress`` | ``Failure`` | ``Aborting`` | ``Aborted``
+:>json object records: list of record
+:>json object columns: list of columns
+:>json object extraColumns: list of columns
+:>json string startDate: date
+:>json string format: ``datatable``
+:>json string responseDate: date of response sent from server
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

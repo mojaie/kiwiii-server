@@ -1,0 +1,36 @@
+
+Kiwiii server
+====================================================================
+
+Kiwiii(server) is a cheminformatics datasource integration server with Web API
+
+
+
+Contents:
+-------------
+
+Kiwiii(server) is a cheminformatic datasource integration server with Web API
+
+
+**Features**
+
+- Requires Python 3.4 and upper
+- Requires Tornado, Chemex
+- Compound attribute and structure search on sqlite formatted chemical db
+- RESTful API
+- Kiwiii client web UI is available on npm
+
+
+.. toctree::
+   :maxdepth: 2
+
+   getting_started.rst
+   query.rst
+   resource.rst
+
+
+
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
