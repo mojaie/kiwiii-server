@@ -4,8 +4,16 @@ import os
 import yaml
 
 
-with open("server_config.yaml") as f:
-    config = yaml.load(f.read())
+try:
+    with open("server_config.yaml") as f:
+        config = yaml.load(f.read())
+except FileNotFoundError:
+    """ use server_config stub"""
+    config = {
+        "web_home": "",
+        "basic_auth_realm": "",
+        "user": {},
+    }
 
 
 def web_home_path():
@@ -55,4 +63,4 @@ def report_tmpl_file(filename):
 
 def screener_api():
     # TODO: deprecated - API URL should be given by resource scheme
-    return config["screener_api"]
+    return config.get("screener_api", "")

@@ -1,6 +1,36 @@
 
-Resource API
+Resource schema
 ===========================
+
+.. code-block:: python
+
+    "resources": [
+        {
+            "id": "test_db",
+            "name": "Test DB",
+            "domain": "chemical",
+            "entity": "chemdb:library1",
+            "columns": [
+                {
+                    "key": "ID",
+                    "sort": "text"
+                },
+                {
+                    "key": "mw",
+                    "name": "Molecular weight",
+                    "sort": "numeric",
+                    "method": "chemcalc"
+                },
+                {
+                    "key": "struct",
+                    "name": "Structure",
+                    "sort": "none"
+                }
+            ]
+            "description": "This is Test DB.",
+        }
+    ]
+
 
 
 :Domain:
