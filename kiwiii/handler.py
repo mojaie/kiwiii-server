@@ -41,54 +41,40 @@ class BaseHandler(web.RequestHandler):
 
 class SchemaHandler(BaseHandler):
     @hu.basic_auth
-    def post(self):
-        domain = self.get_argument("domain")
-        response = {
-            "domain": domain,
-            "resources": []
-        }
-        for sq in loader.db_list():
-            conn = Connection(sq)
-            doc = conn.document()
-            if doc["domain"] != domain:
-                continue
-            if doc["domain"] == "chemical":
-                for tbl in doc["tables"]:
-                    tc.add_calc_cols(tbl)
-            response["resources"].extend(doc["tables"])
-        self.write(response)
+    def get(self):
+        """Responds with resource schema JSON
 
-
-class TemplatesHandler(BaseHandler):
-    @hu.basic_auth
-    def post(self):
-        response = {
+        :statuscode 200: no error
+        """
+        schema = {
+            "resources": [],
             "templates": []
         }
+        # SQLite databases
+        for filename in loader.db_list():
+            conn = Connection(filename)
+            doc = conn.document()
+            for tbl in doc["tables"]:
+                if doc["domain"] == "chemical":
+                    tc.add_calc_cols(tbl)
+                tbl["domain"] = doc["domain"]
+            schema["resources"].extend(doc["tables"])
+        # API schema
+        for filename in loader.api_list():
+            with open(filename) as f:
+                schema["resources"].extend(yaml.load(f.read()))
+        # templates
         for tm in loader.report_tmpl_list():
-            response["templates"].append({
+            schema["templates"].append({
                 "name": os.path.splitext(os.path.basename(tm))[0],
                 "sourceFile": os.path.basename(tm)
             })
-        self.write(response)
-
-
-class DataSourceHandler(BaseHandler):
-    @hu.basic_auth
-    def post(self):
-        filename = self.get_argument("filename")
-        response = {}
-        try:
-            with open(filename) as f:
-                response = yaml.load(f.read())
-        except FileNotFoundError:
-            response["enabled"] = False
-        self.write(response)
+        self.write(schema)
 
 
 class SQLQueryHandler(BaseHandler):
     @hu.basic_auth
-    def post(self):
+    def get(self):
         """Search database
 
         :form query: JSON encoded query
@@ -127,7 +113,7 @@ class ComputationHandler(BaseHandler):
         self.store = store
 
     @hu.basic_auth
-    def post(self):
+    def get(self):
         """Submit computation query
 
         :form query: JSON encoded query
@@ -172,7 +158,7 @@ class ComputationHandler(BaseHandler):
 
 class StructurePreviewHandler(BaseHandler):
     @hu.basic_auth
-    def post(self):
+    def get(self):
         """Structure image preview
 
         :form query: JSON encoded query
@@ -199,7 +185,7 @@ class StructurePreviewHandler(BaseHandler):
 
 class SdfHandler(BaseHandler):
     def post(self):
-        """Structure image preview
+        """Responds with datatable JSON made of query SDFile
 
         :form contents: request file object
         :form columns: list of SDF option attribute to show
@@ -264,8 +250,8 @@ class FetchRowsHandler(BaseHandler):
         self.store = store
 
     @hu.basic_auth
-    def post(self):
-        """Submit graph connection calculation job
+    def get(self):
+        """Fetch calculation results
 
         :form query: JSON encoded query
 
@@ -293,7 +279,7 @@ class FetchRowsHandler(BaseHandler):
 
 
 class ReportPreviewHandler(BaseHandler):
-    def post(self):
+    def get(self):
         auth_header = self.request.headers.get('Authorization')
         # TODO: auth_header is local servers one
         # auth_decoded = base64.b64decode(auth_header[6:]).decode('utf-8')
@@ -312,7 +298,7 @@ class ReportPreviewHandler(BaseHandler):
 
 
 class ReportHandler(BaseHandler):
-    def post(self):
+    def get(self):
         auth_header = self.request.headers.get('Authorization')
         qcsid = self.get_argument("qcsid")
         tmpl_file = self.get_argument("template")
@@ -382,7 +368,7 @@ class ServerStatusHandler(BaseHandler):
         self.store = store
 
     @hu.basic_auth
-    def post(self):
+    def get(self):
         # TODO: template_version
         # TODO: resource_version
         js = {
