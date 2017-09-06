@@ -414,8 +414,6 @@ def run():
     app = web.Application(
         [
             (r"/schema", SchemaHandler),
-            (r"/templates", TemplatesHandler),
-            (r"/source", DataSourceHandler),
             (r"/sql", SQLQueryHandler),
             (r"/compute", ComputationHandler, store),
             (r"/graph", GraphHandler, store),
