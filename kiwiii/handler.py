@@ -26,6 +26,7 @@ from kiwiii import tablebuilder as tb
 from kiwiii import tablefilter as tf
 from kiwiii import tablecolumn as tc
 from kiwiii import worker as wk
+from kiwiii import defaultformat
 from kiwiii.sqliteconnection import Connection
 from kiwiii.util import debug
 
@@ -51,18 +52,17 @@ class SchemaHandler(BaseHandler):
             "templates": []
         }
         # SQLite databases
-        for filename in loader.db_list():
+        for filename in loader.sqlite_list():
             conn = Connection(filename)
             doc = conn.document()
-            for tbl in doc["tables"]:
-                if doc["domain"] == "chemical":
-                    tc.add_calc_cols(tbl)
-                tbl["domain"] = doc["domain"]
+            defaultformat.resource_format(doc)
             schema["resources"].extend(doc["tables"])
         # API schema
         for filename in loader.api_list():
             with open(filename) as f:
-                schema["resources"].extend(yaml.load(f.read()))
+                doc = yaml.load(f.read())
+                defaultformat.screener_format(doc)
+                schema["resources"].extend(doc["resources"])
         # templates
         for tm in loader.report_tmpl_list():
             schema["templates"].append({
@@ -88,7 +88,13 @@ class SQLQueryHandler(BaseHandler):
 
         :statuscode 200: no error
         """
-        query = json.loads(self.get_argument("query"))
+        query = {
+            "method": self.get_argument("method"),
+            "targets": json.loads(self.get_argument("targets")),
+            "key": self.get_argument("key"),
+            "values": json.loads(self.get_argument("values")),
+            "operator": self.get_argument("operator")
+        }
         builder = tb.TableBuilder()
         if query["method"] == "chemsql":
             if query["operator"] == "fm":

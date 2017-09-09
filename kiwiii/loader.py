@@ -29,21 +29,20 @@ def user_passwd_matched(user, passwd):
     return user in users and passwd == users[user]['password']
 
 
-def db_list():
-    pathname = os.path.join(config.get("db_base_dir", ""), "**/*.sqlite3")
-    ps = set(glob.glob(pathname, recursive=True))
-    ps |= set(os.path.realpath(p) for p in config.get("db_include", []))
-    ps -= set(os.path.realpath(p) for p in config.get("db_exclude", []))
-    return list(ps)
+def sqlite_list():
+    pathname = os.path.join(config.get("sqlite_base_dir", ""), "*.sqlite3")
+    return glob.glob(pathname)
+
+
+def sqlite_path(db):
+    return os.path.join(
+        config.get("sqlite_base_dir", ""), "{}.sqlite3".format(db)
+    )
 
 
 def api_list():
-    pathname = os.path.join(config.get("api_base_dir", ""), "**/*.yaml")
-    ps = set(glob.glob(pathname, recursive=True))
-    exc = config.get("api_exclude", []) + ["server_config.yaml"]
-    ps |= set(os.path.realpath(p) for p in config.get("api_include", []))
-    ps -= set(os.path.realpath(p) for p in exc)
-    return list(ps)
+    pathname = os.path.join(config.get("api_base_dir", ""), "*.yaml")
+    return glob.glob(pathname)
 
 
 def report_tmpl_list():
@@ -51,13 +50,7 @@ def report_tmpl_list():
     return glob.glob(pathname)
 
 
-def db(filename):
-    # TODO: deprecated - db name should be given by resource scheme
-    return "{}.sqlite3".format(filename)
-
-
 def report_tmpl_file(filename):
-    # TODO: deprecated - template path should be given by resource scheme
     return os.path.join(config.get("report_template_dir", ""), filename)
 
 
