@@ -88,13 +88,7 @@ class SQLQueryHandler(BaseHandler):
 
         :statuscode 200: no error
         """
-        query = {
-            "method": self.get_argument("method"),
-            "targets": json.loads(self.get_argument("targets")),
-            "key": self.get_argument("key"),
-            "values": json.loads(self.get_argument("values")),
-            "operator": self.get_argument("operator")
-        }
+        query = json.loads(self.get_argument("query"))
         builder = tb.TableBuilder()
         if query["method"] == "chemsql":
             if query["operator"] == "fm":
@@ -368,18 +362,18 @@ class LoginHandler(BaseHandler):
 
 
 class ServerStatusHandler(BaseHandler):
-    def initialize(self, wq, store):
+    def initialize(self, wq, store, instance):
         super().initialize()
         self.wq = wq
         self.store = store
+        self.instance = instance
 
     @hu.basic_auth
     def get(self):
-        # TODO: template_version
-        # TODO: resource_version
         js = {
             "totalTasks": len(self.store.container),
             "queuedTasks": len(self.wq.queued_ids),
+            "instance": self.instance,
             "processors": wk.PROCESSES,
             "rdk": tf.RDK_AVAILABLE,
             "cython": tf.CYTHON_AVAILABLE,
@@ -415,7 +409,8 @@ def run():
     parse_command_line()
     store = {
         "wq": wk.WorkerQueue(),
-        "store": hu.TemporaryDataStore()
+        "store": hu.TemporaryDataStore(),
+        "instance": time.strftime("%X %x %Z", time.localtime(time.time()))
     }
     app = web.Application(
         [
