@@ -89,21 +89,39 @@ class SQLQueryHandler(BaseHandler):
         :statuscode 200: no error
         """
         query = json.loads(self.get_argument("query"))
-        builder = tb.TableBuilder()
+        response["columns"] = [
+            index_column(),
+            structure_column(),
+            db_prop_columns(),
+            chem_prop_columns()
+        ]
         if query["method"] == "chemsql":
             if query["operator"] == "fm":
-                builder.add_filter(tf.ChemFirstMatchFilter(query))
+                rows = chem_first_match(query)
             else:
-                builder.add_filter(tf.ChemFindAllFilter(query))
-            builder.add_filter(tc.IndexColumn())
-            builder.add_filter(tc.StructureColumn())
-            builder.add_filter(tc.CalcColumnGroup())
-        elif query["method"] == 'sql':
+                rows = chem_find_all(query)
+            tree.add_task(chem_prop_columns())
+        elif query["method"] == "sql":
             if query["operator"] == "fm":
-                builder.add_filter(tf.FirstMatchFilter(query))
+                rows = first_match(query)
             else:
-                builder.add_filter(tf.FindAllFilter(query))
-        self.write(builder.flush())
+                rows = find_all(query)
+            tree.add_task(chem_prop_columns())
+        elif query["method"] == "chemcalc":
+            rows = db_iter()
+            worker = Worker(chemcalcfunc, rows)
+            tree.add_worker(worker)
+        elif query["method"] == "exact":
+            rows = db_iter()
+            worker = Worker(exact, rows)
+            tree.add_worker(worker)
+        elif query["method"] == "morgan":
+            rows = db_iter()
+            worker = Worker(morgan(query), rows)
+            tree.add_worker(worker)
+        tree.add_task(db_columns())
+        tree.run(rows)
+        self.write(tree.flush())
 
 
 class ComputationHandler(BaseHandler):
@@ -145,7 +163,6 @@ class ComputationHandler(BaseHandler):
             "rdmorgan": tf.RdMorganFilter,
             "rdfmcs": tf.RdFmcsFilter
         }
-        builder = tb.TableBuilder()
         builder.add_filter(mol_filter[query["method"]](query))
         builder.add_filter(tc.IndexColumn())
         builder.add_filter(tc.StructureColumn())
