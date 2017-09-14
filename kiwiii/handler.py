@@ -27,7 +27,7 @@ from kiwiii import tablefilter as tf
 from kiwiii import tablecolumn as tc
 from kiwiii import worker as wk
 from kiwiii import defaultformat
-from kiwiii.sqliteconnection import Connection
+from kiwiii import sqliteconnection as sqlite
 from kiwiii.util import debug
 
 
@@ -53,7 +53,7 @@ class SchemaHandler(BaseHandler):
         }
         # SQLite databases
         for filename in loader.sqlite_list():
-            conn = Connection(filename)
+            conn = sqlite.Connection(filename)
             doc = conn.document()
             defaultformat.resource_format(doc)
             schema["resources"].extend(doc["tables"])
@@ -72,59 +72,7 @@ class SchemaHandler(BaseHandler):
         self.write(schema)
 
 
-class SQLQueryHandler(BaseHandler):
-    @hu.basic_auth
-    def get(self):
-        """Search database
-
-        :form query: JSON encoded query
-
-        :<json string method: one of ``sql``, ``chemsql``
-        :<json object targets: list of resource entity
-        :<json string key: query column key
-        :<json object values: list of query value
-        :<json string operator: ``eq``, ``gt``, ``lt``, ``ge``, ``le``,
-            ``in``, ``lk``
-
-        :statuscode 200: no error
-        """
-        query = json.loads(self.get_argument("query"))
-        response["columns"] = [
-            index_column(),
-            structure_column(),
-            db_prop_columns(),
-            chem_prop_columns()
-        ]
-        if query["method"] == "chemsql":
-            if query["operator"] == "fm":
-                rows = chem_first_match(query)
-            else:
-                rows = chem_find_all(query)
-            tree.add_task(chem_prop_columns())
-        elif query["method"] == "sql":
-            if query["operator"] == "fm":
-                rows = first_match(query)
-            else:
-                rows = find_all(query)
-            tree.add_task(chem_prop_columns())
-        elif query["method"] == "chemcalc":
-            rows = db_iter()
-            worker = Worker(chemcalcfunc, rows)
-            tree.add_worker(worker)
-        elif query["method"] == "exact":
-            rows = db_iter()
-            worker = Worker(exact, rows)
-            tree.add_worker(worker)
-        elif query["method"] == "morgan":
-            rows = db_iter()
-            worker = Worker(morgan(query), rows)
-            tree.add_worker(worker)
-        tree.add_task(db_columns())
-        tree.run(rows)
-        self.write(tree.flush())
-
-
-class ComputationHandler(BaseHandler):
+class QueryHandler(BaseHandler):
     def initialize(self, wq, store):
         super().initialize()
         self.wq = wq
@@ -132,16 +80,18 @@ class ComputationHandler(BaseHandler):
 
     @hu.basic_auth
     def get(self):
-        """Submit computation query
+        """Search database
 
         :form query: JSON encoded query
 
-        :<json string method: one of ``prop``, ``exact``, ``sub``
+        :<json string method: one of ``sql``, ``chemsql``,
+            ``prop``, ``exact``, ``sub``, ``super``, ``gls``
         :<json boolean flush: if true, use map function with single process
-        :<json object targets:
-        :<json string key:
-        :<json object values:
-        :<json string operator:
+        :<json object targets: list of resource entity
+        :<json string key: query column key
+        :<json object values: list of query value
+        :<json string operator: ``eq``, ``gt``, ``lt``, ``ge``, ``le``,
+            ``in``, ``lk``
         :<json string format: one of ``smiles``, ``molfile``, ``dbid``
         :<json string value: query value
         :<json string querySource:
@@ -153,24 +103,21 @@ class ComputationHandler(BaseHandler):
         :statuscode 200: no error
         """
         query = json.loads(self.get_argument("query"))
-        mol_filter = {
-            "chemcalc": tf.ChemPropFilter,
-            "exact": tf.ExactStructFilter,
-            "sub": tf.SubStructFilter,
-            "super": tf.SuperStructFilter,
-            "mcsdr": tf.McsdrFilter,
-            "gls": tf.GlsFilter,
-            "rdmorgan": tf.RdMorganFilter,
-            "rdfmcs": tf.RdFmcsFilter
+        tasktrees = {
+            "search": tt.DBSearch,
+            "filter": tt.DBFilter,
+            "exact": tt.ChemFilter,
+            "sub": tt.SubstructureFilter,
+            "prop": tt.ChemPropFilter,
+            "gls": tt.GLSFilter,
+            "rdfmcs": tt.RDKitFMCSFilter,
+            "rdmorgan": tt.RDKitMorganFilter
         }
-        builder.add_filter(mol_filter[query["method"]](query))
-        builder.add_filter(tc.IndexColumn())
-        builder.add_filter(tc.StructureColumn())
-        builder.add_filter(tc.CalcColumnGroup())
-        if query.get("flush", 0):
-            self.write(builder.flush())
-        else:
-            builder.queue(self)
+        task = tasktrees[query["task"]](query)
+
+        self.write()
+        self.store.register()
+        handler.wq.put(self.data["id"], task)
 
 
 class StructurePreviewHandler(BaseHandler):
@@ -432,8 +379,7 @@ def run():
     app = web.Application(
         [
             (r"/schema", SchemaHandler),
-            (r"/sql", SQLQueryHandler),
-            (r"/compute", ComputationHandler, store),
+            (r"/sql", QueryHandler),
             (r"/graph", GraphHandler, store),
             (r"/sdf", SdfHandler),
             (r"/xlsx", ExcelExportHandler),

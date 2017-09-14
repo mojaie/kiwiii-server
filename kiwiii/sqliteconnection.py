@@ -80,3 +80,75 @@ class Connection(object):
             res = self._cursor.execute(sql, values).fetchone()
             if res:
                 return res
+
+
+def resources_iter(targets):
+    dbs = {}
+    for trgt in targets:
+        db, table = trgt.split(':')
+        if db not in dbs:
+            dbs[db] = Connection(loader.sqlite_path(db))
+        yield dbs[db], table
+
+
+def first_match(query):
+    for val in query["values"]:
+        for conn, tbl in resources_iter(query["targets"]):
+            dc_exists = lod.find("dataColumn", query["key"], tbl["columns"])
+            if dc_exists is None:
+                continue
+            res = conn.find_first(query["key"], (val,), (tbl["table"],))
+            if res is not None:
+                row = dict(res)
+                row["source"] = tbl["id"]
+                yield row
+                break
+        else:
+            yield {query["key"]: val}
+
+
+def chem_first_match(query):
+    for val in query["values"]:
+        for conn, tbl in resources_iter(query["targets"]):
+            key_exists = lod.find("key", query["key"], tbl["columns"])
+            if key_exists is None:
+                continue
+            res = conn.find_first(query["key"], (val,), (tbl["table"],))
+            if res is not None:
+                row = dict(res)
+                row["source"] = tbl["id"]
+                yield row
+                break
+        else:
+            null_record = {query["key"]: val}
+            null_record[MOL.key] = pickle.dumps(
+                molutil.null_molecule().jsonized())
+            return null_record
+
+
+def find_all(query):
+    op = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",
+          "lk": "LIKE", "in": "IN"}[query["operator"]]
+    for conn, tbl in resources_iter(query["targets"]):
+        dc_exists = lod.find("dataColumn", query["key"], tbl["columns"])
+        if dc_exists is None:
+            continue
+        for res in conn.find_iter(query["key"], query["values"],
+                                  (tbl["table"],), op):
+            row = dict(res)
+            row["source"] = tbl["id"]
+            yield row
+
+
+def chem_find_all(query):
+    op = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",
+          "lk": "LIKE", "in": "IN"}[query["operator"]]
+    for conn, tbl in resources_iter(query["targets"]):
+        key_exists = lod.find("key", query["key"], tbl["columns"])
+        if key_exists is None:
+            continue
+        for res in conn.find_iter(query["key"], query["values"],
+                                  (tbl["table"],), op):
+            row = dict(res)
+            row["source"] = tbl["id"]
+            yield row
