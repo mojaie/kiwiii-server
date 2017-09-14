@@ -25,7 +25,15 @@ from kiwiii import handlerutil as hu
 from kiwiii import tablebuilder as tb
 from kiwiii import tablefilter as tf
 from kiwiii import tablecolumn as tc
-from kiwiii import worker as wk
+from kiwiii.workflow import worker as wk
+from kiwiii.workflow.chemfilter import ChemFilter
+from kiwiii.workflow.chempropfilter import ChemPropFilter
+from kiwiii.workflow.dbfilter import DBFilter
+from kiwiii.workflow.dbsearch import DBSearch
+from kiwiii.workflow.glsfilter import GLSFilter
+from kiwiii.workflow.rdfmcsfilter import RDKitFMCSFilter
+from kiwiii.workflow.rdmorganfilter import RDKitMorganFilter
+from kiwiii.workflow.substructfilter import SubstructFilter
 from kiwiii import defaultformat
 from kiwiii import sqliteconnection as sqlite
 from kiwiii.util import debug
@@ -72,8 +80,8 @@ class SchemaHandler(BaseHandler):
         self.write(schema)
 
 
-class QueryHandler(BaseHandler):
-    def initialize(self, wq, store):
+class WorkflowHandler(BaseHandler):
+    def initialize(self, wq, store, instance):
         super().initialize()
         self.wq = wq
         self.store = store
@@ -104,20 +112,20 @@ class QueryHandler(BaseHandler):
         """
         query = json.loads(self.get_argument("query"))
         tasktrees = {
-            "search": tt.DBSearch,
-            "filter": tt.DBFilter,
-            "exact": tt.ChemFilter,
-            "sub": tt.SubstructureFilter,
-            "prop": tt.ChemPropFilter,
-            "gls": tt.GLSFilter,
-            "rdfmcs": tt.RDKitFMCSFilter,
-            "rdmorgan": tt.RDKitMorganFilter
+            "search": DBSearch,
+            "filter": DBFilter,
+            "chem": ChemFilter,
+            "substr": SubstructFilter,
+            "prop": ChemPropFilter,
+            "gls": GLSFilter,
+            "rdfmcs": RDKitFMCSFilter,
+            "rdmorgan": RDKitMorganFilter
         }
-        task = tasktrees[query["task"]](query)
+        task = tasktrees[query["workflow"]](query)
 
         self.write()
         self.store.register()
-        handler.wq.put(self.data["id"], task)
+        self.wq.put(self.data["id"], task)
 
 
 class StructurePreviewHandler(BaseHandler):
@@ -173,7 +181,7 @@ class SdfHandler(BaseHandler):
 
 
 class GraphHandler(BaseHandler):
-    def initialize(self, wq, store):
+    def initialize(self, wq, store, instance):
         super().initialize()
         self.wq = wq
         self.store = store
@@ -208,7 +216,7 @@ class GraphHandler(BaseHandler):
 
 
 class FetchRowsHandler(BaseHandler):
-    def initialize(self, wq, store):
+    def initialize(self, wq, store, instance):
         super().initialize()
         self.wq = wq
         self.store = store
@@ -379,7 +387,7 @@ def run():
     app = web.Application(
         [
             (r"/schema", SchemaHandler),
-            (r"/sql", QueryHandler),
+            (r"/wf", WorkflowHandler, store),
             (r"/graph", GraphHandler, store),
             (r"/sdf", SdfHandler),
             (r"/xlsx", ExcelExportHandler),

@@ -7,20 +7,19 @@
 import itertools
 import json
 import pickle
-from chorus.chem.model import Compound
+from chorus.model.graphmol import Compound
 from kiwiii import sqliteconnection as sqlite
-from kiwiii.definition import MOL
-from kiwiii.tasktrees.tasktree import TaskTree
+from kiwiii.definition import molobj
+from kiwiii.workflow.tasktree import TaskTree
 
 
-def substr_search(func, qmol, row):
+def chem_records(qmol, row):
     record = {}
-    mol = Compound(pickle.loads(row[MOL.key]))
-    if func(mol, qmol):
-        record[MOL.key] = json.dumps(mol.jsonized())
-        record.update(row)
-        del record[MOL.key]
-        return record
+    mol = Compound(pickle.loads(row[molobj["key"]]))
+    record[molobj["key"]] = json.dumps(mol.jsonized())
+    record.update(row)
+    del record[molobj["key"]]
+    return record
 
 
 def reindex(row, count):
@@ -29,11 +28,11 @@ def reindex(row, count):
     return result
 
 
-class ExactStructSearch(TaskTree):
+class DBFilter(TaskTree):
     def __init__(self, query):
         super().__init__()
-        source = sqlite.chem_find_all({query["targets"], "eq", "_mw_wo_sw"})
-        t1 = self.put_task(substr_search, args=source, mp=query["mp"])
+        source = sqlite.chem_find_all(query)
+        t1 = self.put_task(chem_records, args=source)
         t2 = self.put_task(reindex, args=itertools.count, parents=(t1,))
         self.output_id = t2
 

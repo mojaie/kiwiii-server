@@ -5,7 +5,13 @@
 #
 
 import json
+import pickle
 import sqlite3
+
+from chorus import molutil
+from kiwiii import loader
+from kiwiii.definition import molobj
+from kiwiii.util import lod
 
 
 class Connection(object):
@@ -91,6 +97,14 @@ def resources_iter(targets):
         yield dbs[db], table
 
 
+def records_iter(query):
+    for conn, tbl in resources_iter(query["targets"]):
+        for res in conn.rows_iter((tbl["table"],)):
+            row = dict(res)
+            row["source"] = tbl["id"]
+            yield row
+
+
 def first_match(query):
     for val in query["values"]:
         for conn, tbl in resources_iter(query["targets"]):
@@ -121,7 +135,7 @@ def chem_first_match(query):
                 break
         else:
             null_record = {query["key"]: val}
-            null_record[MOL.key] = pickle.dumps(
+            null_record[molobj["key"]] = pickle.dumps(
                 molutil.null_molecule().jsonized())
             return null_record
 

@@ -1,0 +1,4 @@
+
+molobj = {
+    "key": "_mol"
+}

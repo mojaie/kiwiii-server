@@ -7,7 +7,7 @@
 import itertools
 
 from tornado import gen
-from kiwiii.worker import Worker
+from kiwiii.workflow.worker import Worker
 from kiwiii.util import graph
 
 
@@ -30,6 +30,7 @@ class TaskTree(Worker):
     def run(self):
         order = graph.topological_sort(self.succs, self.preds)
         for flow_id in order:
+            print("Started task {}".format(flow_id))
             task = self.tasks[flow_id]
             args = []
             if task["parents"] is not None:
@@ -42,6 +43,7 @@ class TaskTree(Worker):
             else:
                 res = itertools.starmap(task["function"], *zip(args))
                 self.tasks[flow_id]["output"] = res
+        print("Finished task {}".format(flow_id))
 
     def put_task(self, function, args, parents=None, mp=False):
         """parallel computation
