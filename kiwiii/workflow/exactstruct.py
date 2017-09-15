@@ -4,7 +4,6 @@
 # http://opensource.org/licenses/MIT
 #
 
-import itertools
 import json
 import pickle
 from chorus.model.graphmol import Compound
@@ -31,7 +30,7 @@ def reindex(row, count):
     return result
 
 
-class ChemFilter(TaskTree):
+class ExactStruct(TaskTree):
     def __init__(self, query):
         super().__init__()
         # MW filter
@@ -41,9 +40,11 @@ class ChemFilter(TaskTree):
             "operator": "eq",
             "value": molutil.mw(query["mol"])
         })
-        t1 = self.put_task(exact_filter, args=source, mp=query["mp"])
-        t2 = self.put_task(reindex, args=itertools.count, parents=(t1,))
-        self.output_id = t2
+        n1 = Filter(exact_filter, args=source, mp=query["mp"])
+        e1 = self.add_node(n1)
+        n2 = NumberGenerator(pred=e1)
+        e2 = self.add_node(n2)
+        self.output = JsonStore(pred=e2)
 
     def result(self):
         return self.tasks[self.output_id]["output"]
