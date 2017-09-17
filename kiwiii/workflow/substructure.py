@@ -4,7 +4,6 @@
 # http://opensource.org/licenses/MIT
 #
 
-import itertools
 import json
 import pickle
 from chorus.model.graphmol import Compound
@@ -29,7 +28,8 @@ def substr_filter(qmol, row):
 
 class Substructure(TaskTree):
     def __init__(self, query):
+        super().__init__()
         e1, = self.add_node(SQLiteQuery())
         e2, = self.add_node(MPFilter(substr_filter, e1))
         e3, = self.add_node(NumberGenerator(e2))
-        self.response = self.add_node(JSONResponse(e3))
+        self.response, = self.add_node(JSONResponse(e3))

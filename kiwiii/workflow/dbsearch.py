@@ -28,4 +28,4 @@ class DBSearch(TaskTree):
         super().__init__()
         e1, = self.add_node(SQLiteQuery(query))
         e2, = self.add_node(NumberGenerator(e1))
-        self.response = self.add_node(JSONResponse(e2))
+        self.response, = self.add_node(JSONResponse(e2))

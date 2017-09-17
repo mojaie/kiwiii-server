@@ -32,4 +32,4 @@ class GLS(TaskTree):
         e1, = self.add_node(SQLiteQuery())
         e2, = self.add_node(MPFilter(gls_filter, e1))
         e3, = self.add_node(NumberGenerator(e2))
-        self.response = self.add_node(JSONResponse(e3))
+        self.response, = self.add_node(JSONResponse(e3))

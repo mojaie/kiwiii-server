@@ -4,6 +4,8 @@
 # http://opensource.org/licenses/MIT
 #
 
+import time
+
 from tornado import gen
 from kiwiii.worker import Worker
 from kiwiii.util import graph
@@ -14,9 +16,11 @@ class TaskTree(Worker):
         self.nodes = []
         self.preds = {}
         self.succs = {}
+        self.start_date = None
 
     @gen.coroutine
     def run(self):
+        self.start_date = time.time()
         order = graph.topological_sort(self.succs, self.preds)
         for node_id in order:
             print("Started task {}".format(node_id))

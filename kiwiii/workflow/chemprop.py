@@ -11,6 +11,7 @@ from chorus.model.graphmol import Compound
 from kiwiii.definition import molobj
 from kiwiii.workflow.tasktree import TaskTree
 from kiwiii.node.sqlitequery import SQLiteQuery
+from kiwiii.node.spfilter import SPFilter
 from kiwiii.node.numbergenerator import NumberGenerator
 from kiwiii.node.jsonresponse import JSONResponse
 
@@ -31,4 +32,4 @@ class ChemProp(TaskTree):
         e1, = self.add_node(SQLiteQuery(query))
         e2, = self.add_node(SPFilter(prop_filter, e1))
         e2, = self.add_node(NumberGenerator(e1))
-        self.response = self.add_node(JSONResponse(e2))
+        self.response, = self.add_node(JSONResponse(e2))

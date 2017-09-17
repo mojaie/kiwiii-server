@@ -8,7 +8,7 @@ import functools
 import time
 import uuid
 
-from kiwiii.workflow import worker as wk
+from kiwiii import worker as wk
 
 
 def timestamp(data):

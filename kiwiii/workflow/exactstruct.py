@@ -39,4 +39,4 @@ class ExactStruct(TaskTree):
         e1, = self.add_node(SQLiteQuery(mw_filter))
         e2, = self.add_node(MPFilter(exact_filter, e1))
         e3, = self.add_node(NumberGenerator(e2))
-        self.response = self.add_node(JSONResponse(e3))
+        self.response, = self.add_node(JSONResponse(e3))

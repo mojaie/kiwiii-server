@@ -10,10 +10,10 @@ from tornado.queues import Queue
 
 class Node(object):
     def in_edges(self):
-        raise NotImplemented
+        return tuple()
 
     def out_edges(self):
-        raise NotImplemented
+        return tuple()
 
 
 class Edge(object):

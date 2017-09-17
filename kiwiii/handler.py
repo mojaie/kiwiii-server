@@ -25,7 +25,7 @@ from kiwiii import handlerutil as hu
 from kiwiii import tablebuilder as tb
 from kiwiii import tablefilter as tf
 from kiwiii import tablecolumn as tc
-from kiwiii.workflow import worker as wk
+from kiwiii import worker as wk
 from kiwiii.workflow.exactstruct import ExactStruct
 from kiwiii.workflow.chemprop import ChemProp
 from kiwiii.workflow.dbfilter import DBFilter
@@ -122,10 +122,9 @@ class WorkflowHandler(BaseHandler):
             "rdmorgan": RDKitMorgan
         }
         task = tasktrees[query["workflow"]](query)
-
-        self.write()
-        self.store.register()
-        self.wq.put(self.data["id"], task)
+        self.write(task.response.data)
+        self.store.register(task.response.data)
+        self.wq.put(task.response.data["id"], task)
 
 
 class StructurePreviewHandler(BaseHandler):

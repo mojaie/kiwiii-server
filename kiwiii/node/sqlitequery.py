@@ -29,3 +29,6 @@ class SQLiteQuery(Node):
                 self.out_edge.data = sqlite.chem_find_all(self.query)
             else:
                 self.out_edge.data = sqlite.find_all(self.query)
+
+    def out_edges(self):
+        return (self.out_edge,)
