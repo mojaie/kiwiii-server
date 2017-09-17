@@ -4,13 +4,14 @@
 # http://opensource.org/licenses/MIT
 #
 
-import itertools
 import json
 import pickle
 from chorus.model.graphmol import Compound
-from kiwiii import sqliteconnection as sqlite
 from kiwiii.definition import molobj
 from kiwiii.workflow.tasktree import TaskTree
+from kiwiii.node.sqlitequery import SQLiteQuery
+from kiwiii.node.numbergenerator import NumberGenerator
+from kiwiii.node.jsonresponse import JSONResponse
 
 
 def chem_records(qmol, row):
@@ -22,19 +23,9 @@ def chem_records(qmol, row):
     return record
 
 
-def reindex(row, count):
-    result = {"_index": count}
-    result.update(row)
-    return result
-
-
 class DBFilter(TaskTree):
     def __init__(self, query):
         super().__init__()
-        source = sqlite.chem_find_all(query)
-        t1 = self.put_task(chem_records, args=source)
-        t2 = self.put_task(reindex, args=itertools.count, parents=(t1,))
-        self.output_id = t2
-
-    def result(self):
-        return self.tasks[self.output_id]["output"]
+        e1, = self.add_node(SQLiteQuery(query))
+        e2, = self.add_node(NumberGenerator(e1))
+        self.response = self.add_node(JSONResponse(e2))

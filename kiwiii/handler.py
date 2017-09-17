@@ -26,14 +26,14 @@ from kiwiii import tablebuilder as tb
 from kiwiii import tablefilter as tf
 from kiwiii import tablecolumn as tc
 from kiwiii.workflow import worker as wk
-from kiwiii.workflow.chemfilter import ChemFilter
-from kiwiii.workflow.chempropfilter import ChemPropFilter
+from kiwiii.workflow.exactstruct import ExactStruct
+from kiwiii.workflow.chemprop import ChemProp
 from kiwiii.workflow.dbfilter import DBFilter
 from kiwiii.workflow.dbsearch import DBSearch
-from kiwiii.workflow.glsfilter import GLSFilter
-from kiwiii.workflow.rdfmcsfilter import RDKitFMCSFilter
-from kiwiii.workflow.rdmorganfilter import RDKitMorganFilter
-from kiwiii.workflow.substructfilter import SubstructFilter
+from kiwiii.workflow.gls import GLS
+from kiwiii.workflow.rdkitfmcs import RDKitFMCS
+from kiwiii.workflow.rdkitmorgan import RDKitMorgan
+from kiwiii.workflow.substructure import Substructure
 from kiwiii import defaultformat
 from kiwiii import sqliteconnection as sqlite
 from kiwiii.util import debug
@@ -114,12 +114,12 @@ class WorkflowHandler(BaseHandler):
         tasktrees = {
             "search": DBSearch,
             "filter": DBFilter,
-            "chem": ChemFilter,
-            "substr": SubstructFilter,
-            "prop": ChemPropFilter,
-            "gls": GLSFilter,
-            "rdfmcs": RDKitFMCSFilter,
-            "rdmorgan": RDKitMorganFilter
+            "chem": ExactStruct,
+            "substr": Substructure,
+            "prop": ChemProp,
+            "gls": GLS,
+            "rdfmcs": RDKitFMCS,
+            "rdmorgan": RDKitMorgan
         }
         task = tasktrees[query["workflow"]](query)
 

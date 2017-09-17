@@ -9,9 +9,12 @@ import pickle
 from chorus.model.graphmol import Compound
 from chorus import substructure
 from chorus import molutil
-from kiwiii import sqliteconnection as sqlite
 from kiwiii.definition import molobj
 from kiwiii.workflow.tasktree import TaskTree
+from kiwiii.node.sqlitequery import SQLiteQuery
+from kiwiii.node.mpfilter import MPFilter
+from kiwiii.node.numbergenerator import NumberGenerator
+from kiwiii.node.jsonresponse import JSONResponse
 
 
 def exact_filter(qmol, row):
@@ -24,27 +27,16 @@ def exact_filter(qmol, row):
         return record
 
 
-def reindex(row, count):
-    result = {"_index": count}
-    result.update(row)
-    return result
-
-
 class ExactStruct(TaskTree):
     def __init__(self, query):
         super().__init__()
-        # MW filter
-        source = sqlite.chem_find_all({
+        mw_filter = {
             "targets": query["targets"],
             "key": "_mw_wo_sw",
             "operator": "eq",
             "value": molutil.mw(query["mol"])
-        })
-        n1 = Filter(exact_filter, args=source, mp=query["mp"])
-        e1 = self.add_node(n1)
-        n2 = NumberGenerator(pred=e1)
-        e2 = self.add_node(n2)
-        self.output = JsonStore(pred=e2)
-
-    def result(self):
-        return self.tasks[self.output_id]["output"]
+        }
+        e1, = self.add_node(SQLiteQuery(mw_filter))
+        e2, = self.add_node(MPFilter(exact_filter, e1))
+        e3, = self.add_node(NumberGenerator(e2))
+        self.response = self.add_node(JSONResponse(e3))

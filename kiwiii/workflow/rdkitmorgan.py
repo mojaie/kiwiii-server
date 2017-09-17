@@ -4,14 +4,16 @@
 # http://opensource.org/licenses/MIT
 #
 
-import itertools
 import json
 import pickle
 from chorus.model.graphmol import Compound
 from chorus import substructure
-from kiwiii import sqliteconnection as sqlite
 from kiwiii.definition import molobj
 from kiwiii.workflow.tasktree import TaskTree
+from kiwiii.node.sqlitequery import SQLiteQuery
+from kiwiii.node.mpfilter import MPFilter
+from kiwiii.node.numbergenerator import NumberGenerator
+from kiwiii.node.jsonresponse import JSONResponse
 
 
 def gls_filter(qmol, row):
@@ -24,19 +26,9 @@ def gls_filter(qmol, row):
         return record
 
 
-def reindex(row, count):
-    result = {"_index": count}
-    result.update(row)
-    return result
-
-
-class RDKitMorganFilter(TaskTree):
+class RDKitMorgan(TaskTree):
     def __init__(self, query):
-        super().__init__()
-        source = sqlite.records_iter(query)
-        t1 = self.put_task(gls_filter, args=source, mp=query["mp"])
-        t2 = self.put_task(reindex, args=itertools.count, parents=(t1,))
-        self.output_id = t2
-
-    def result(self):
-        return self.tasks[self.output_id]["output"]
+        e1, = self.add_node(SQLiteQuery())
+        e2, = self.add_node(MPFilter(gls_filter, e1))
+        e3, = self.add_node(NumberGenerator(e2))
+        self.response = self.add_node(JSONResponse(e3))
