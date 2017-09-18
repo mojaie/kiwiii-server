@@ -91,9 +91,11 @@ class Connection(object):
 def resources_iter(targets):
     dbs = {}
     for trgt in targets:
-        db, table = trgt.split(':')
+        db, table_key = trgt.split(':')
         if db not in dbs:
             dbs[db] = Connection(loader.sqlite_path(db))
+        table = lod.find("entity", trgt, dbs[db].document()["tables"])
+        table["table"] = table_key
         yield dbs[db], table
 
 

@@ -14,7 +14,7 @@ from chorus.model.graphmol import Compound
 from chorus import v2000writer
 from chorus.util.text import decode
 
-from tornado import web
+from tornado import web, gen
 from tornado.ioloop import IOLoop
 from tornado.options import define, options, parse_command_line
 
@@ -27,6 +27,8 @@ from kiwiii import tablefilter as tf
 from kiwiii import tablecolumn as tc
 from kiwiii import worker as wk
 from kiwiii.workflow.exactstruct import ExactStruct
+from kiwiii.workflow.chemdbfilter import ChemDBFilter
+from kiwiii.workflow.chemdbsearch import ChemDBSearch
 from kiwiii.workflow.chemprop import ChemProp
 from kiwiii.workflow.dbfilter import DBFilter
 from kiwiii.workflow.dbsearch import DBSearch
@@ -80,7 +82,41 @@ class SchemaHandler(BaseHandler):
         self.write(schema)
 
 
-class WorkflowHandler(BaseHandler):
+class DBSearchHandler(BaseHandler):
+    @hu.basic_auth
+    @gen.coroutine
+    def get(self):
+        """Search database
+
+        :form query: JSON encoded query
+
+        :<json string method: one of ``sql``, ``chemsql``,
+            ``prop``, ``exact``, ``sub``, ``super``, ``gls``
+        :<json object targets: list of resource entity
+        :<json string key: query column key
+        :<json object values: list of query value
+        :<json string operator: ``eq``, ``gt``, ``lt``, ``ge``, ``le``,
+            ``in``, ``lk``
+        :<json string format: one of ``smiles``, ``molfile``, ``dbid``
+        :<json string value: query value
+        :<json string querySource:
+
+        :statuscode 200: no error
+        """
+        query = json.loads(self.get_argument("query"))
+        tasktrees = {
+            "search": DBSearch,
+            "filter": DBFilter,
+            "chemsearch": ChemDBSearch,
+            "chemfilter": ChemDBFilter,
+            "exact": ExactStruct
+        }
+        task = tasktrees[query["type"]](query)
+        yield task.run()
+        self.write(task.response)
+
+
+class SubmitJobHandler(BaseHandler):
     def initialize(self, wq, store, instance):
         super().initialize()
         self.wq = wq
@@ -112,19 +148,16 @@ class WorkflowHandler(BaseHandler):
         """
         query = json.loads(self.get_argument("query"))
         tasktrees = {
-            "search": DBSearch,
-            "filter": DBFilter,
-            "chem": ExactStruct,
             "substr": Substructure,
             "prop": ChemProp,
             "gls": GLS,
             "rdfmcs": RDKitFMCS,
             "rdmorgan": RDKitMorgan
         }
-        task = tasktrees[query["workflow"]](query)
-        self.write(task.response.data)
-        self.store.register(task.response.data)
-        self.wq.put(task.response.data["id"], task)
+        task = tasktrees[query["type"]](query)
+        self.write(task.response)
+        self.store.register(task.response)
+        self.wq.put(task.response["id"], task)
 
 
 class StructurePreviewHandler(BaseHandler):
@@ -386,7 +419,8 @@ def run():
     app = web.Application(
         [
             (r"/schema", SchemaHandler),
-            (r"/wf", WorkflowHandler, store),
+            (r"/search", DBSearchHandler),
+            (r"/job", SubmitJobHandler, store),
             (r"/graph", GraphHandler, store),
             (r"/sdf", SdfHandler),
             (r"/xlsx", ExcelExportHandler),

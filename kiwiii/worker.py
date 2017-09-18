@@ -51,6 +51,9 @@ class Worker(object):
                 self.on_task_done(res)
             self._queue.task_done()
 
+    def on_start(self):
+        pass
+
     def on_task_done(self, res):
         pass
 

@@ -19,17 +19,16 @@ class Node(object):
 class Edge(object):
     def __init__(self):
         self.source = None
-        self.data = []
-
-    def get(self):
-        return next(self.data)
+        self.records = []
+        self.status = "ready"
 
 
 class AsyncQueueEdge(Edge):
     def __init__(self):
-        self.data = []
-        self._queue = Queue(20)
+        self.source = None
+        self.records = []
         self.status = "ready"
+        self._queue = Queue(20)
 
     @gen.coroutine
     def put(self, record):

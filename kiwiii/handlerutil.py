@@ -18,21 +18,22 @@ class TemporaryDataStore(object):
         self.container = []
         self.max_age = 86400 * 7  # Time(sec)
 
-    def register(self, new_data, now=time.time()):
+    def register(self, out_edge, now=time.time()):
         # remove expired data
         alive = []
-        for tbl in self.container:
-            t = time.mktime(time.strptime(tbl["startDate"], "%X %x %Z"))
+        for edge in self.container:
+            t = time.mktime(
+                time.strptime(edge.response["created"], "%X %x %Z"))
             if t + self.max_age > now:
-                alive.append(tbl)
+                alive.append(edge)
         self.container = alive
         # add new data
-        self.container.append(new_data)
+        self.container.append(out_edge)
 
     def get(self, id_):
-        for tbl in self.container:
-            if tbl["id"] == id_:
-                return tbl
+        for edge in self.container:
+            if edge.response["id"] == id_:
+                return edge.response
         raise KeyError('Table not found')
 
 

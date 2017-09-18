@@ -4,27 +4,19 @@
 # http://opensource.org/licenses/MIT
 #
 
-import json
-import pickle
-from chorus.model.graphmol import Compound
 from chorus import substructure
 from chorus import molutil
 from kiwiii.definition import molobj
 from kiwiii.workflow.tasktree import TaskTree
 from kiwiii.node.sqlitequery import SQLiteQuery
-from kiwiii.node.mpfilter import MPFilter
-from kiwiii.node.numbergenerator import NumberGenerator
-from kiwiii.node.jsonresponse import JSONResponse
+from kiwiii.node.filter import AsyncFilter
+from kiwiii.node.numbergenerator import AsyncNumberGenerator
+from kiwiii.node.jsonresponse import AsyncJSONResponse
 
 
 def exact_filter(qmol, row):
-    record = {}
-    mol = Compound(pickle.loads(row[molobj["key"]]))
-    if substructure.exact(mol, qmol):
-        record[molobj["key"]] = json.dumps(mol.jsonized())
-        record.update(row)
-        del record[molobj["key"]]
-        return record
+    if substructure.exact(row[molobj["key"]], qmol):
+        return row
 
 
 class ExactStruct(TaskTree):
@@ -37,6 +29,8 @@ class ExactStruct(TaskTree):
             "value": molutil.mw(query["mol"])
         }
         e1, = self.add_node(SQLiteQuery(mw_filter))
-        e2, = self.add_node(MPFilter(exact_filter, e1))
-        e3, = self.add_node(NumberGenerator(e2))
-        self.response, = self.add_node(JSONResponse(e3))
+        e2, = self.add_node(AsyncFilter(exact_filter, e1))
+        e3, = self.add_node(AsyncNumberGenerator(e2))
+        res = AsyncJSONResponse(e3)
+        self.response = res.response
+        self.add_node(res)
