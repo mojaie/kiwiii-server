@@ -14,11 +14,11 @@ class SQLiteQuery(Node):
         self.query = query
 
     def run(self):
-        if self.query is None:
+        if self.query["type"] == "all":
             self.out_edge.records = sqlite.records_iter(self.query)
         elif self.query["operator"] == "fm":
             if self.query["type"] == "chem":
-                self.out_edge.records = list(sqlite.chem_first_match(self.query))
+                self.out_edge.records = sqlite.chem_first_match(self.query)
             else:
                 self.out_edge.records = sqlite.first_match(self.query)
         else:
