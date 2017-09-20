@@ -19,7 +19,7 @@ Resource schema
                     "key": "mw",
                     "name": "Molecular weight",
                     "sort": "numeric",
-                    "method": "chemcalc"
+                    "request": "job"
                 },
                 {
                     "key": "struct",
@@ -32,15 +32,9 @@ Resource schema
     ]
 
 
-
-:Domain:
-    * **domain**\ (*string*) - API ID
-    * **name**\ (*string*) - display name of the API domain
-    * **description**\ (*string*) - optional description
-    * **tables**\ (*object*) - list of tables
-
-:Table:
+:Resource:
     * **id**\ (*string*) - table ID for annotation (experiment ID)
+    * **domain**\ (*string*) - identifies group of dbs and site of external resources
     * **entity**\ (*string*) - db table name(refID:layer or db:table)
     * **name**\ (*string*) - display name of the table
     * **tags**\ (*object*) - list of annotation key
@@ -48,12 +42,12 @@ Resource schema
     * **columns**\ (*object*) - list of column
 
 :Column:
-    * **key**\ (*string*) - column key for annotation
-    * **dataColumn**\ (*string*) - db table column name
+    * **key**\ (*string*) - column key
     * **name**\ (*string*) - display name of the column
     * **sort**\ (*string*) - one of "numeric", "text", "none"
-    * **request**\ (*string*) - if "calc", the value will be calculated on request
-    * **tags**\ (*object*) - list of annotation key. if not specified, table tags are copied to the column tags
+    * **dataType**\ (*string*) - data type (ex. inhibition%, IC50, annotation flag, ...)
+    * **request**\ (*string*) - if "job", the value is not stored on the db and  will be calculated on the fly
+    * **tags**\ (*object*) - list of annotation key. if not specified, it will be the duplicate of table tags
 
 
 * :ref:`genindex`

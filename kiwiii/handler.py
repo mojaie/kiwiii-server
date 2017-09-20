@@ -64,16 +64,20 @@ class DBSearchHandler(BaseHandler):
 
         :form query: JSON encoded query
 
-        :<json string method: one of ``sql``, ``chemsql``,
-            ``prop``, ``exact``, ``sub``, ``super``, ``gls``
+        :<json string type: query type
         :<json object targets: list of resource entity
+
+        for sql query
         :<json string key: query column key
         :<json object values: list of query value
         :<json string operator: ``eq``, ``gt``, ``lt``, ``ge``, ``le``,
             ``in``, ``lk``
+
+        for structure query
         :<json string format: one of ``smiles``, ``molfile``, ``dbid``
         :<json string value: query value
-        :<json string querySource:
+        :<json string source: resource of the query value(for format=dbid)
+        :<json boolean ignoreHs: if true, ignore explicit hydrogens
 
         :statuscode 200: no error
         """
@@ -102,17 +106,22 @@ class SubmitJobHandler(BaseHandler):
 
         :form query: JSON encoded query
 
-        :<json string method: one of ``sql``, ``chemsql``,
-            ``prop``, ``exact``, ``sub``, ``super``, ``gls``
-        :<json boolean flush: if true, use map function with single process
+        :<json string type: query type
         :<json object targets: list of resource entity
+
+        for sql query
         :<json string key: query column key
         :<json object values: list of query value
         :<json string operator: ``eq``, ``gt``, ``lt``, ``ge``, ``le``,
             ``in``, ``lk``
+
+        for structure query
         :<json string format: one of ``smiles``, ``molfile``, ``dbid``
         :<json string value: query value
-        :<json string querySource:
+        :<json string querySource: resource of the query
+        :<json boolean ignoreHs: if true, ignore explicit hydrogens
+
+        similarity search options
         :<json float threshold:
         :<json int diameter: MCS-DR parameter
         :<json int maxTreeSize: MCS-DR parameter
@@ -178,7 +187,7 @@ class StructurePreviewHandler(BaseHandler):
 
         :<json string format: one of ``smiles``, ``molfile``, ``dbid``
         :<json string value: query value
-        :<json string querySource:
+        :<json string source: resource of the query value
 
         :statuscode 200: no error
         """
@@ -232,7 +241,7 @@ class GraphHandler(BaseHandler):
 
         :form query: JSON encoded query
 
-        :<json string nodeTableId: ``smiles`` | ``molfile`` | ``dbid``
+        :<json string nodeTableId:
         :<json object indices: list of index
         :<json object molecules: list of molecule object
         :<json string measure: ``gls`` | ``morgan``
