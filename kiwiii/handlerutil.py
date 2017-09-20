@@ -7,9 +7,10 @@
 import base64
 import csv
 import functools
+import os
 import time
 
-from kiwiii import loader
+from kiwiii import static
 
 
 class TemporaryDataStore(object):
@@ -18,22 +19,22 @@ class TemporaryDataStore(object):
         self.container = []
         self.max_age = 86400 * 7  # Time(sec)
 
-    def register(self, out_edge, now=time.time()):
+    def register(self, data, now=time.time()):
         # remove expired data
         alive = []
-        for edge in self.container:
+        for d in self.container:
             t = time.mktime(
-                time.strptime(edge.response["created"], "%X %x %Z"))
+                time.strptime(d["created"], "%X %x %Z"))
             if t + self.max_age > now:
-                alive.append(edge)
+                alive.append(d)
         self.container = alive
         # add new data
-        self.container.append(out_edge)
+        self.container.append(data)
 
     def get(self, id_):
-        for edge in self.container:
-            if edge.response["id"] == id_:
-                return edge.response
+        for d in self.container:
+            if d["id"] == id_:
+                return d
         raise KeyError('Table not found')
 
 
@@ -55,7 +56,7 @@ def basic_auth(method):
         def reject(hdl):
             hdl.set_header(
                 'WWW-Authenticate',
-                'Basic realm={}'.format(loader.basic_auth_realm())
+                'Basic realm={}'.format(static.BASIC_AUTH_REALM())
             )
             hdl.set_status(401)
 
@@ -67,7 +68,7 @@ def basic_auth(method):
         auth_decoded = base64.b64decode(auth[6:]).decode('utf-8')
         user, passwd = auth_decoded.split(':')
 
-        if loader.user_passwd_matched(user, passwd):
+        if static.user_passwd_matched(user, passwd):
             return method(handler, *args, **kwargs)
         return reject(handler)
     return wrapper
@@ -78,7 +79,7 @@ class TemplateMatcher(object):
         self.name = name
         self.columns = []
         self.template = {}  # {id1: {id: id1, col: val1}, ...}
-        tpath = loader.report_tmpl_file(tmpl_file)
+        tpath = os.path.join(static.REPORT_TEMPLATE_DIR, tmpl_file)
         with open(tpath, newline="") as f:
             reader = csv.reader(f)
             header = next(reader)

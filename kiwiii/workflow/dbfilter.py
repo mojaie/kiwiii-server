@@ -13,7 +13,7 @@ from kiwiii.node.jsonresponse import JSONResponse
 class DBFilter(TaskTree):
     def __init__(self, query):
         super().__init__()
-        e1, = self.add_node(SQLiteQuery(query))
+        e1, = self.add_node(SQLiteQuery("filter", query))
         e2, = self.add_node(NumberGenerator(e1))
         res = JSONResponse(e2)
         self.response = res.response

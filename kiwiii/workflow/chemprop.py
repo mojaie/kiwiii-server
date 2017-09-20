@@ -22,9 +22,10 @@ def prop_filter(func, qmol, row):
 class ChemProp(TaskTree):
     def __init__(self, query):
         super().__init__()
+
         query.update({"type": "all"})
         func = functools.partial(prop_filter, query["func"], query["qmol"])
-        e1, = self.add_node(SQLiteQuery(query))
+        e1, = self.add_node(SQLiteQuery("all", query))
         e2, = self.add_node(AsyncFilter(func, e1))
         e3, = self.add_node(AsyncChemData(e2))
         e4, = self.add_node(AsyncNumberGenerator(e3))

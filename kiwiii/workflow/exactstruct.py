@@ -28,7 +28,7 @@ class ExactStruct(TaskTree):
             "operator": "eq",
             "value": molutil.mw(query["mol"])
         }
-        e1, = self.add_node(SQLiteQuery(mw_filter))
+        e1, = self.add_node(SQLiteQuery("filter", mw_filter))
         e2, = self.add_node(AsyncFilter(exact_filter, e1))
         e3, = self.add_node(AsyncNumberGenerator(e2))
         res = AsyncJSONResponse(e3)

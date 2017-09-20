@@ -5,13 +5,7 @@
 #
 
 import json
-import pickle
 import sqlite3
-
-from chorus import molutil
-from kiwiii import loader
-from kiwiii.definition import molobj
-from kiwiii.util import lod
 
 
 class Connection(object):
@@ -86,85 +80,3 @@ class Connection(object):
             res = self._cursor.execute(sql, values).fetchone()
             if res:
                 return res
-
-
-def resources_iter(targets):
-    dbs = {}
-    for trgt in targets:
-        db, table_key = trgt.split(':')
-        if db not in dbs:
-            dbs[db] = Connection(loader.sqlite_path(db))
-        table = lod.find("entity", trgt, dbs[db].document()["tables"])
-        table["table"] = table_key
-        yield dbs[db], table
-
-
-def records_iter(query):
-    for conn, tbl in resources_iter(query["targets"]):
-        for res in conn.rows_iter((tbl["table"],)):
-            row = dict(res)
-            row["source"] = tbl["id"]
-            yield row
-
-
-def first_match(query):
-    for val in query["values"]:
-        for conn, tbl in resources_iter(query["targets"]):
-            dc_exists = lod.find("dataColumn", query["key"], tbl["columns"])
-            if dc_exists is None:
-                continue
-            res = conn.find_first(query["key"], (val,), (tbl["table"],))
-            if res is not None:
-                row = dict(res)
-                row["source"] = tbl["id"]
-                yield row
-                break
-        else:
-            yield {query["key"]: val}
-
-
-def chem_first_match(query):
-    for val in query["values"]:
-        for conn, tbl in resources_iter(query["targets"]):
-            key_exists = lod.find("key", query["key"], tbl["columns"])
-            if key_exists is None:
-                continue
-            res = conn.find_first(query["key"], (val,), (tbl["table"],))
-            if res is not None:
-                row = dict(res)
-                row["source"] = tbl["id"]
-                yield row
-                break
-        else:
-            null_record = {query["key"]: val}
-            null_record[molobj["key"]] = pickle.dumps(
-                molutil.null_molecule().jsonized())
-            return null_record
-
-
-def find_all(query):
-    op = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",
-          "lk": "LIKE", "in": "IN"}[query["operator"]]
-    for conn, tbl in resources_iter(query["targets"]):
-        dc_exists = lod.find("dataColumn", query["key"], tbl["columns"])
-        if dc_exists is None:
-            continue
-        for res in conn.find_iter(query["key"], query["values"],
-                                  (tbl["table"],), op):
-            row = dict(res)
-            row["source"] = tbl["id"]
-            yield row
-
-
-def chem_find_all(query):
-    op = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",
-          "lk": "LIKE", "in": "IN"}[query["operator"]]
-    for conn, tbl in resources_iter(query["targets"]):
-        key_exists = lod.find("key", query["key"], tbl["columns"])
-        if key_exists is None:
-            continue
-        for res in conn.find_iter(query["key"], query["values"],
-                                  (tbl["table"],), op):
-            row = dict(res)
-            row["source"] = tbl["id"]
-            yield row

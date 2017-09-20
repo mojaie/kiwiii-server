@@ -37,7 +37,7 @@ class ChemData(Node):
         self.out_edge = Edge()
 
     def run(self):
-        self.out_edge.records = list(map(chem_data, self.in_edge.records))
+        self.out_edge.records = map(chem_data, self.in_edge.records)
 
     def in_edges(self):
         return (self.in_edge,)

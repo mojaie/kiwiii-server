@@ -5,9 +5,7 @@
 #
 
 import json
-import os
 import time
-import yaml
 
 from chorus.draw.svg import SVG
 from chorus.model.graphmol import Compound
@@ -19,7 +17,7 @@ from tornado.ioloop import IOLoop
 from tornado.options import define, options, parse_command_line
 
 from kiwiii import excelexporter
-from kiwiii import loader
+from kiwiii import static
 from kiwiii import screenerapi
 from kiwiii import handlerutil as hu
 from kiwiii import tablebuilder as tb
@@ -36,8 +34,6 @@ from kiwiii.workflow.gls import GLS
 from kiwiii.workflow.rdkitfmcs import RDKitFMCS
 from kiwiii.workflow.rdkitmorgan import RDKitMorgan
 from kiwiii.workflow.substructure import Substructure
-from kiwiii import defaultformat
-from kiwiii import sqliteconnection as sqlite
 from kiwiii.util import debug
 
 
@@ -57,29 +53,7 @@ class SchemaHandler(BaseHandler):
 
         :statuscode 200: no error
         """
-        schema = {
-            "resources": [],
-            "templates": []
-        }
-        # SQLite databases
-        for filename in loader.sqlite_list():
-            conn = sqlite.Connection(filename)
-            doc = conn.document()
-            defaultformat.resource_format(doc)
-            schema["resources"].extend(doc["tables"])
-        # API schema
-        for filename in loader.api_list():
-            with open(filename) as f:
-                doc = yaml.load(f.read())
-                defaultformat.screener_format(doc)
-                schema["resources"].extend(doc["resources"])
-        # templates
-        for tm in loader.report_tmpl_list():
-            schema["templates"].append({
-                "name": os.path.splitext(os.path.basename(tm))[0],
-                "sourceFile": os.path.basename(tm)
-            })
-        self.write(schema)
+        self.write(static.SCHEMA)
 
 
 class DBSearchHandler(BaseHandler):
@@ -160,6 +134,41 @@ class SubmitJobHandler(BaseHandler):
         self.wq.put(task.response["id"], task)
 
 
+class JobResultHandler(BaseHandler):
+    def initialize(self, wq, store, instance):
+        super().initialize()
+        self.wq = wq
+        self.store = store
+
+    @hu.basic_auth
+    def get(self):
+        """Fetch calculation results
+
+        :form query: JSON encoded query
+
+        :<json string id: datatable id
+        :<json string command: ``fetch`` | ``abort``
+
+        :statuscode 200: no error
+        """
+        query = json.loads(self.get_argument("query"))
+        try:
+            data = self.store.get(query["id"])
+        except KeyError:
+            self.write({
+                "id": query["id"],
+                "status": "Failure",
+                "message": "Temporary table not found."
+            })
+        else:
+            if query["command"] == "abort":
+                self.wq.abort(query["id"])
+            #data["progress"] = round(
+            #    data["searchDoneCount"] / data["searchCount"] * 100, 1)
+            #data["recordCount"] = len(data["records"])
+            self.write(data)
+
+
 class StructurePreviewHandler(BaseHandler):
     @hu.basic_auth
     def get(self):
@@ -176,8 +185,7 @@ class StructurePreviewHandler(BaseHandler):
         query = json.loads(self.get_argument("query"))
         try:
             qmol = tf.parse_chem_query(
-                query["value"], query["format"],
-                query.get("querySource"))
+                query["value"], query["format"], query.get("source"))
         except TypeError:
             response = '<span class="msg_warn">Format Error</span>'
         except ValueError:
@@ -245,41 +253,6 @@ class GraphHandler(BaseHandler):
         }
         builder.add_filter(matrix_filter[query["measure"]](query))
         builder.queue(self)
-
-
-class FetchRowsHandler(BaseHandler):
-    def initialize(self, wq, store, instance):
-        super().initialize()
-        self.wq = wq
-        self.store = store
-
-    @hu.basic_auth
-    def get(self):
-        """Fetch calculation results
-
-        :form query: JSON encoded query
-
-        :<json string id: datatable id
-        :<json string command: ``fetch`` | ``abort``
-
-        :statuscode 200: no error
-        """
-        query = json.loads(self.get_argument("query"))
-        try:
-            data = self.store.get(query["id"])
-        except KeyError:
-            self.write({
-                "id": query["id"],
-                "status": "Failure",
-                "message": "Temporary table not found."
-            })
-        else:
-            if query["command"] == "abort":
-                self.wq.abort(query["id"])
-            data["progress"] = round(
-                data["searchDoneCount"] / data["searchCount"] * 100, 1)
-            data["recordCount"] = len(data["records"])
-            self.write(data)
 
 
 class ReportPreviewHandler(BaseHandler):
@@ -378,16 +351,16 @@ class ServerStatusHandler(BaseHandler):
             "totalTasks": len(self.store.container),
             "queuedTasks": len(self.wq.queued_ids),
             "instance": self.instance,
-            "processors": wk.PROCESSES,
-            "rdk": tf.RDK_AVAILABLE,
-            "cython": tf.CYTHON_AVAILABLE,
-            "numexpr": tf.NUMEXPR_AVAILABLE,
+            "processors": static.PROCESSES,
+            "rdk": static.RDK_AVAILABLE,
+            "cython": static.CYTHON_AVAILABLE,
+            "numexpr": static.NUMEXPR_AVAILABLE,
             "calc": {
                 "columns": [
                     {"key": "id"},
                     {"key": "size"},
                     {"key": "status"},
-                    {"key": "responseDate"},
+                    {"key": "created"},
                     {"key": "expires"}
                 ],
                 "records": []
@@ -401,7 +374,7 @@ class ServerStatusHandler(BaseHandler):
                 "id": store["id"],
                 "size": debug.total_size_str(store),
                 "status": store["status"],
-                "responseDate": store["responseDate"],
+                "created": store["created"],
                 "expires": expires
             })
         self.write(js)
@@ -421,16 +394,16 @@ def run():
             (r"/schema", SchemaHandler),
             (r"/search", DBSearchHandler),
             (r"/job", SubmitJobHandler, store),
+            (r"/jobres", JobResultHandler, store),
             (r"/graph", GraphHandler, store),
             (r"/sdf", SdfHandler),
             (r"/xlsx", ExcelExportHandler),
             (r"/exportsdf", SDFileExportHandler),
-            (r"/rows", FetchRowsHandler, store),
             (r"/strprev", StructurePreviewHandler),
             (r"/report", ReportHandler),
             (r"/reportprev", ReportPreviewHandler),
             (r"/server", ServerStatusHandler, store),
-            (r'/(.*)', web.StaticFileHandler, {"path": loader.web_home_path()})
+            (r'/(.*)', web.StaticFileHandler, {"path": static.WEB_HOME})
         ],
         debug=options.debug,
         compress_response=True,

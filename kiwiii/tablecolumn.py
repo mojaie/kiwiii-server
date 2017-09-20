@@ -167,7 +167,7 @@ def add_calc_cols(table):
             "key": col.key,
             "name": col.name,
             "sort": col.sort,
-            "method": "chemcalc"
+            "request": "job"
         })
 
 

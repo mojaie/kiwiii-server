@@ -4,17 +4,17 @@
 # http://opensource.org/licenses/MIT
 #
 
-import os
 import json
-import yaml
 
 from tornado import httpclient
 
-from kiwiii import loader
+from kiwiii import static
+from kiwiii.util import lod
 
 
 def request(query, auth_header):
-    url = "{}{}".format(loader.screener_api(), query)
+    rsrc = lod.find("key", query["dest"], static.RESOURCES)
+    url = "{}{}".format(rsrc["url"], query)
     print("HTTP Request: {}".format(url))
     http_client = httpclient.HTTPClient()
     request = httpclient.HTTPRequest(url)

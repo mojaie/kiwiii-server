@@ -4,9 +4,12 @@
 # http://opensource.org/licenses/MIT
 #
 
+import functools
+
 from chorus import substructure
 from kiwiii.definition import molobj
 from kiwiii.workflow.tasktree import TaskTree
+from kiwiii.node import sqlitehelper as helper
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.filter import AsyncFilter
 from kiwiii.node.numbergenerator import AsyncNumberGenerator
@@ -18,11 +21,22 @@ def substr_filter(qmol, row):
         return row
 
 
+def supstr_filter(qmol, row):
+    if substructure.substructure(qmol, row[molobj["key"]]):
+        return row
+
+
 class Substructure(TaskTree):
     def __init__(self, query):
         super().__init__()
-        e1, = self.add_node(SQLiteQuery())
-        e2, = self.add_node(AsyncFilter(substr_filter, e1))
+        func = {
+            "substr": functools.partial(substr_filter,
+                                        helper.query_mol(query)),
+            "supstr": functools.partial(supstr_filter,
+                                        helper.query_mol(query))
+        }[query["type"]]
+        e1, = self.add_node(SQLiteQuery("all", query))
+        e2, = self.add_node(AsyncFilter(func, e1))
         e3, = self.add_node(AsyncNumberGenerator(e2))
         res = AsyncJSONResponse(e3)
         self.response = res.response

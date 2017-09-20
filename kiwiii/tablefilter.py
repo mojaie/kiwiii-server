@@ -17,7 +17,7 @@ from chorus.draw import calc2dcoords
 from chorus.model.graphmol import Compound
 from chorus.draw.svg import SVG
 
-from kiwiii import loader
+from kiwiii import static
 from kiwiii.sqliteconnection import Connection
 from kiwiii import tablecolumn as tc
 from kiwiii.util import lod
@@ -53,7 +53,7 @@ class DBSearchFilter(object):
         for trgt in self.query["targets"]:
             db, table = trgt.split(':')
             if db not in dbconns:
-                path = loader.sqlite_path(db)
+                path = static.sqlite_path(db)
                 dbconns[db] = Connection(path)
             conn = dbconns[db]
             tbl = lod.find("entity", trgt, conn.document()["tables"])
@@ -72,7 +72,7 @@ class DBSearchFilter(object):
         for trgt in self.query["targets"]:
             db, table = trgt.split(':')
             if db not in dbconns:
-                path = loader.sqlite_path(db)
+                path = static.sqlite_path(db)
                 dbconns[db] = Connection(path)
             conn = dbconns[db]
             search_cnt.append(conn.rows_count((table,)))
@@ -257,7 +257,7 @@ def parse_chem_query(data, fmt, source):
             raise TypeError()
     elif fmt == "dbid":
         db, tbl = source.split(":")
-        path = loader.sqlite_path(db)
+        path = static.sqlite_path(db)
         conn = Connection(path)
         res = conn.find_first("ID", (data,), (tbl,))
         if res is None:

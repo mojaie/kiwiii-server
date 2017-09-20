@@ -14,8 +14,7 @@ from kiwiii.node.jsonresponse import JSONResponse
 class ChemDBFilter(TaskTree):
     def __init__(self, query):
         super().__init__()
-        query.update({"type": "chem"})
-        e1, = self.add_node(SQLiteQuery(query))
+        e1, = self.add_node(SQLiteQuery("filter", query))
         e2, = self.add_node(ChemData(e1))
         e3, = self.add_node(NumberGenerator(e2))
         res = JSONResponse(e3)
