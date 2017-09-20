@@ -4,6 +4,7 @@
 # http://opensource.org/licenses/MIT
 #
 
+import json
 import os
 import pickle
 
@@ -35,6 +36,8 @@ def records_iter(query):
         table_key = rsrc["entity"].split(':')[1]
         for res in conn.rows_iter((table_key,)):
             row = dict(res)
+            mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
+            row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
             yield row
 
 
@@ -51,12 +54,15 @@ def first_match(query):
             res = conn.find_first(query["key"], (val,), (table_key,))
             if res is not None:
                 row = dict(res)
+                if static.MOLOBJ_KEY in row:
+                    mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
+                    row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
                 yield row
                 break
         else:
             if sum(is_chem):
                 null_record = {query["key"]: val}
-                null_record[molobj["key"]] = pickle.dumps(
+                null_record[static.MOLOBJ_KEY] = json.dumps(
                     molutil.null_molecule().jsonized())
                 yield null_record
             else:
@@ -74,6 +80,9 @@ def find_all(query):
         for res in conn.find_iter(query["key"], query["values"],
                                   (table_key,), op):
             row = dict(res)
+            if static.MOLOBJ_KEY in row:
+                mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
+                row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
             yield row
 
 
@@ -97,5 +106,5 @@ def query_mol(query):
         }))
         if res is None:
             raise ValueError()
-        qmol = Compound(pickle.loads(res[molobj["key"]]))
+        qmol = Compound(json.loads(res[static.MOLOBJ_KEY]))
     return qmol

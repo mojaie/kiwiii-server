@@ -13,20 +13,13 @@ from chorus import molutil
 from chorus import wclogp
 from tornado import gen
 
-from kiwiii.definition import molobj
+from kiwiii import static
 from kiwiii.node.node import Node, Edge, AsyncQueueEdge
 
 
 def chem_data(row):
-    record = {}
-    mol = Compound(pickle.loads(row[molobj["key"]]))
-    record[molobj["key"]] = json.dumps(mol.jsonized())
-    record["_structure"] = SVG(mol).contents()
-    record["_mw"] = molutil.mw(mol)
-    record["_formula"] = molutil.formula(mol)
-    record["_nonH"] = molutil.non_hydrogen_count(mol)
-    record["_logp"] = wclogp.wclogp(mol)
-    del row[molobj["key"]]
+    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    record = {k: v(mol) for k, v in static.CHEM_FUNCTIONS.items()}
     record.update(row)
     return record
 
@@ -47,8 +40,7 @@ class ChemData(Node):
 
 
 class AsyncChemData(Node):
-    def __init__(self, func, in_edge):
-        self.func = func
+    def __init__(self, in_edge):
         self.in_edge = in_edge
         self.out_edge = AsyncQueueEdge()
 

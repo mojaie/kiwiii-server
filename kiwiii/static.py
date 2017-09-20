@@ -3,17 +3,15 @@ import glob
 import os
 import yaml
 
+from tornado import process
+from chorus import molutil, wclogp
+from chorus.draw.svg import SVG
+
 from kiwiii import sqliteconnection as sqlite
 from kiwiii import tablecolumn as tc
-from tornado import process
 
 
 """ Option module availability """
-
-from chorus import mcsdr
-
-CYTHON_AVAILABLE = mcsdr.CYTHON_AVAILABLE
-NUMEXPR_AVAILABLE = mcsdr.NUMEXPR_AVAILABLE
 
 try:
     from chorus import rdkit
@@ -22,6 +20,20 @@ try:
 except ImportError:
     RDK_AVAILABLE = False
     print("RDKit is not available")
+try:
+    import cython
+    CYTHON_AVAILABLE = True
+    print("Cython is available")
+except ImportError:
+    CYTHON_AVAILABLE = False
+    print("Cython is not available")
+    try:
+        import numexpr
+        NUMEXPR_AVAILABLE = True
+        print("Numexpr is available")
+    except ImportError:
+        NUMEXPR_AVAILABLE = False
+        print("Numexpr is not available")
 
 
 """ Server status """
@@ -55,6 +67,25 @@ SQLITE_BASE_DIR = config.get("sqlite_base_dir", "")
 API_BASE_DIR = config.get("api_base_dir", "")
 REPORT_TEMPLATE_DIR = config.get("report_template_dir", "")
 
+def mol_to_svg(mol):
+    return SVG(mol).contents()
+
+CHEM_COLUMNS = [
+    {"key": "_structure", "name": "Structure", "sort": "none"},
+    {"key": "_mw", "name": "MW", "sort": "numeric"},
+    {"key": "_formula", "name": "Formula", "sort": "text"},
+    {"key": "_logp", "name": "WCLogP", "sort": "numeric"},
+    {"key": "_nonH", "name": "Non-H atom count", "sort": "numeric"}
+]
+CHEM_FUNCTIONS = {
+    "_structure": mol_to_svg,
+    "_mw": molutil.mw,
+    "_formula": molutil.formula,
+    "_logp": wclogp.wclogp,
+    "_nonH": molutil.non_hydrogen_count
+}
+
+MOLOBJ_KEY = "_mol"
 
 def resource_format(data):
     for tbl in data["tables"]:

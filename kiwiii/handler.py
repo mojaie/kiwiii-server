@@ -363,7 +363,6 @@ class ServerStatusHandler(BaseHandler):
             "processors": static.PROCESSES,
             "rdk": static.RDK_AVAILABLE,
             "cython": static.CYTHON_AVAILABLE,
-            "numexpr": static.NUMEXPR_AVAILABLE,
             "calc": {
                 "columns": [
                     {"key": "id"},

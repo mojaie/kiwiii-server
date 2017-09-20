@@ -27,10 +27,8 @@ NUMEXPR_AVAILABLE = mcsdr.NUMEXPR_AVAILABLE
 try:
     from chorus import rdkit
     RDK_AVAILABLE = True
-    print("RDKit is available")
 except ImportError:
     RDK_AVAILABLE = False
-    print("RDKit is not available")
 
 MOL = tc.MolObjectColumn()
 SIM = tc.SimilarityColumn()
