@@ -14,7 +14,6 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import sqliteconnection as sqlite
 from kiwiii import static
-from kiwiii.definition import molobj
 from kiwiii.util import lod
 
 

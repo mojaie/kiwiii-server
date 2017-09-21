@@ -46,8 +46,9 @@ class AsyncNumberGenerator(Node):
         cnt = itertools.count()
         while self.in_edge.status != "done":
             in_record = yield self.in_edge.get()
-            n = next(cnt)
-            yield self.out_edge.put({self.name: n}.update(in_record))
+            record = {self.name: next(cnt)}
+            record.update(in_record)
+            yield self.out_edge.put(record)
 
     def in_edges(self):
         return (self.in_edge,)

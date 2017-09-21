@@ -6,10 +6,12 @@
 import functools
 import json
 import operator
+import re
+
+from chorus.model.graphmol import Compound
 
 from kiwiii import static
 from kiwiii.workflow.tasktree import TaskTree
-from kiwiii.node import sqlitehelper as helper
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.chemdata import AsyncChemData
 from kiwiii.node.filter import AsyncFilter
@@ -23,9 +25,10 @@ def prop_filter(func, op, val, row):
     try:
         valid = op(func(mol), val)
     except TypeError as e:
-        print(e, res, val)
+        print(e, row["ID"], val)
     else:
-        return row
+        if valid:
+            return row
 
 
 def like_operator(a, b):

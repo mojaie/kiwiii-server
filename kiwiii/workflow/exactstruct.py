@@ -3,10 +3,13 @@
 # Licensed under the MIT License (MIT)
 # http://opensource.org/licenses/MIT
 #
+import json
 
 from chorus import substructure
 from chorus import molutil
-from kiwiii.definition import molobj
+from chorus.model.graphmol import Compound
+
+from kiwiii import static
 from kiwiii.workflow.tasktree import TaskTree
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.filter import AsyncFilter
@@ -15,7 +18,8 @@ from kiwiii.node.jsonresponse import AsyncJSONResponse
 
 
 def exact_filter(qmol, row):
-    if substructure.exact(row[molobj["key"]], qmol):
+    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    if substructure.exact(mol, qmol):
         return row
 
 

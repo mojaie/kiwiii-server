@@ -33,7 +33,7 @@ class Worker(object):
                 tp.submit(self._consumer())
             with cf.ProcessPoolExecutor(PROCESSES) as pp:
                 for i, a in enumerate(self.args):
-                    yield self._queue.put(pp.submit(self.func, *a))
+                    yield self._queue.put(pp.submit(self.func, a))
                     if self.interruption_requested:
                         yield self._queue.join()
                         self.on_interrupted()

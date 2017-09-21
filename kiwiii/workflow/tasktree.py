@@ -22,6 +22,7 @@ class TaskTree(Worker):
             print("Started task {}".format(node_id))
             yield gen.maybe_future(self.nodes[node_id].run())
             print("Finished task {}".format(node_id))
+            # TODO: start next async task immediately
 
     def add_node(self, node):
         """parallel computation
@@ -37,3 +38,6 @@ class TaskTree(Worker):
         for out in node.out_edges():
             out.source = node_id
         return node.out_edges()
+
+    def on_interrupted(self):
+        pass  # TODO: abort all async nodes

@@ -26,12 +26,15 @@ class Filter(Node):
 
 
 class MPNodeWorker(Worker):
-    def __init__(self, args, func, edge):
+    def __init__(self, args, func, out_edge):
         super().__init__(args, func)
-        self.edge = edge
+        self.out_edge = out_edge
 
+    @gen.coroutine
     def on_task_done(self, record):
-        self.edge.data.append(record)
+        if record is not None:
+            print(record)
+            self.out_edge.put(record)
 
 
 class AsyncFilter(Node):

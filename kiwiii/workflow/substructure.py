@@ -5,9 +5,12 @@
 #
 
 import functools
+import json
 
 from chorus import substructure
-from kiwiii.definition import molobj
+from chorus.model.graphmol import Compound
+
+from kiwiii import static
 from kiwiii.workflow.tasktree import TaskTree
 from kiwiii.node import sqlitehelper as helper
 from kiwiii.node.sqlitequery import SQLiteQuery
@@ -17,12 +20,14 @@ from kiwiii.node.jsonresponse import AsyncJSONResponse
 
 
 def substr_filter(qmol, row):
-    if substructure.substructure(row[molobj["key"]], qmol):
+    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    if substructure.substructure(mol, qmol):
         return row
 
 
 def supstr_filter(qmol, row):
-    if substructure.substructure(qmol, row[molobj["key"]]):
+    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    if substructure.substructure(qmol, mol):
         return row
 
 

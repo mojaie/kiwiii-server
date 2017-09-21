@@ -1,4 +1,0 @@
-
-molobj = {
-    "key": "_mol"
-}

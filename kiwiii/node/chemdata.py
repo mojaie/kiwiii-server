@@ -5,12 +5,7 @@
 #
 
 import json
-import pickle
-
-from chorus.draw.svg import SVG
 from chorus.model.graphmol import Compound
-from chorus import molutil
-from chorus import wclogp
 from tornado import gen
 
 from kiwiii import static

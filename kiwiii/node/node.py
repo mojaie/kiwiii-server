@@ -32,7 +32,7 @@ class AsyncQueueEdge(Edge):
 
     @gen.coroutine
     def put(self, record):
-        yield self._queue.put()
+        yield self._queue.put(record)
 
     @gen.coroutine
     def get(self):
