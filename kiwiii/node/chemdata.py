@@ -26,6 +26,7 @@ class ChemData(Node):
 
     def run(self):
         self.out_edge.records = map(chem_data, self.in_edge.records)
+        self.in_edge.status = "done"
 
     def in_edges(self):
         return (self.in_edge,)
@@ -47,6 +48,7 @@ class AsyncChemData(Node):
                 yield self.out_edge.put(chem_data(in_record))
         else:
             self.out_edge.records = map(chem_data, self.in_edge.records)
+            self.in_edge.status = "done"
 
     def in_edges(self):
         return (self.in_edge,)

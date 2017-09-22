@@ -56,7 +56,7 @@ def basic_auth(method):
         def reject(hdl):
             hdl.set_header(
                 'WWW-Authenticate',
-                'Basic realm={}'.format(static.BASIC_AUTH_REALM())
+                'Basic realm={}'.format(static.BASIC_AUTH_REALM)
             )
             hdl.set_status(401)
 

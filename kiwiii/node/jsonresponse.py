@@ -15,6 +15,7 @@ class JSONResponse(Node):
     def __init__(self, in_edge, params=None):
         self.in_edge = in_edge
         self.params = params
+        self.status = "ready"
         id_ = str(uuid.uuid4())
         self.response = {
             "id": id_,
@@ -27,15 +28,21 @@ class JSONResponse(Node):
 
     def run(self):
         self.response["records"] = self.in_edge.records
+        self.in_edge.status = "done"
+        self.status = "done"
 
     def in_edges(self):
         return (self.in_edge,)
+
+    def all_done(self):
+        return self.status == "done"
 
 
 class AsyncJSONResponse(Node):
     def __init__(self, in_edge, params=None):
         self.in_edge = in_edge
         self.params = params
+        self.status = "ready"
         id_ = str(uuid.uuid4())
         self.response = {
             "id": id_,
@@ -51,6 +58,10 @@ class AsyncJSONResponse(Node):
         while self.in_edge.status != "done":
             in_record = yield self.in_edge.get()
             self.response["records"].append(in_record)
+        self.status = "done"
 
     def in_edges(self):
         return (self.in_edge,)
+
+    def all_done(self):
+        return self.status == "done"

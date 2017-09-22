@@ -26,6 +26,7 @@ class NumberGenerator(Node):
             newrcd.update(rcd)
             res.append(newrcd)
         self.out_edge.records = res
+        self.in_edge.status = "done"
 
     def in_edges(self):
         return (self.in_edge,)

@@ -15,6 +15,13 @@ class Node(object):
     def out_edges(self):
         return tuple()
 
+    def all_done(self):
+        print([e.status == "done" for e in self.out_edges()])
+        return all(e.status == "done" for e in self.out_edges())
+
+    def interrupt(self):
+        pass
+
 
 class Edge(object):
     def __init__(self):

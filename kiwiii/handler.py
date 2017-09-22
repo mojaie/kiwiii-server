@@ -375,7 +375,7 @@ class ServerStatusHandler(BaseHandler):
             }
         }
         for store in self.store.container:
-            t = time.mktime(time.strptime(store["responseDate"], "%X %x %Z"))
+            t = time.mktime(time.strptime(store["created"], "%X %x %Z"))
             e = t + self.store.max_age
             expires = time.strftime("%X %x %Z", time.localtime(e))
             js["calc"]["records"].append({

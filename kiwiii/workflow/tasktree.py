@@ -14,15 +14,25 @@ class TaskTree(Worker):
         self.nodes = []
         self.preds = {}
         self.succs = {}
+        self.interruption_requested = False
 
     @gen.coroutine
     def run(self):
         order = graph.topological_sort(self.succs, self.preds)
         for node_id in order:
             print("Started task {}".format(node_id))
-            yield gen.maybe_future(self.nodes[node_id].run())
+            # yield gen.maybe_future(self.nodes[node_id].run())
+            self.nodes[node_id].run()
             print("Finished task {}".format(node_id))
-            # TODO: start next async task immediately
+        while 1:
+            if self.interruption_requested:
+                self.on_interrupted()
+                break
+            if all(n.all_done() for n in self.nodes):
+                self.on_finish()
+                break
+            print("Waiting...")
+            yield gen.sleep(0.5)
 
     def add_node(self, node):
         """parallel computation
@@ -40,4 +50,5 @@ class TaskTree(Worker):
         return node.out_edges()
 
     def on_interrupted(self):
-        pass  # TODO: abort all async nodes
+        for node in self.nodes:
+            node.interrupt()
