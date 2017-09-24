@@ -5,51 +5,44 @@
 #
 
 import time
-import uuid
 
 from tornado import gen
-from kiwiii.node.node import Node
+from kiwiii.task import Node
 
 
 class JSONResponse(Node):
-    def __init__(self, in_edge, params=None):
+    def __init__(self, in_edge, task, params=None):
+        super().__init__()
         self.in_edge = in_edge
         self.params = params
-        self.status = "ready"
-        id_ = str(uuid.uuid4())
         self.response = {
-            "id": id_,
-            "name": id_[:8],
+            "id": task.id,
+            "name": task.id[:8],
             "columns": [],
             "records": [],
-            "created": time.strftime("%X %x %Z"),
+            "created": time.strftime("%X %x %Z", time.localtime(task.created)),
             "status": "Completed"
         }
 
     def run(self):
         self.response["records"] = self.in_edge.records
-        self.in_edge.status = "done"
         self.status = "done"
 
     def in_edges(self):
         return (self.in_edge,)
 
-    def all_done(self):
-        return self.status == "done"
-
 
 class AsyncJSONResponse(Node):
-    def __init__(self, in_edge, params=None):
+    def __init__(self, in_edge, task, params=None):
+        super().__init__()
         self.in_edge = in_edge
         self.params = params
-        self.status = "ready"
-        id_ = str(uuid.uuid4())
         self.response = {
-            "id": id_,
-            "name": id_[:8],
+            "id": task.id,
+            "name": task.id[:8],
             "columns": [],
             "records": [],
-            "created": time.strftime("%X %x %Z"),
+            "created": time.strftime("%X %x %Z", time.localtime(task.created)),
             "status": "Completed"
         }
 
@@ -62,6 +55,3 @@ class AsyncJSONResponse(Node):
 
     def in_edges(self):
         return (self.in_edge,)
-
-    def all_done(self):
-        return self.status == "done"

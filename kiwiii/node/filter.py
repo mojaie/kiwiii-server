@@ -5,19 +5,19 @@
 #
 
 from tornado import gen
-from kiwiii.node.node import Node, Edge, AsyncQueueEdge
-from kiwiii.worker import Worker
+from kiwiii.task import Node, Edge, AsyncQueueEdge, MPWorker
 
 
 class Filter(Node):
     def __init__(self, func, in_edge):
+        super().__init__()
         self.func = func
         self.in_edge = in_edge
         self.out_edge = Edge()
 
     def run(self):
         self.out_edge.records = map(self.func, self.in_edge.records)
-        self.in_edge.status = "done"
+        self.status = "done"
 
     def in_edges(self):
         return (self.in_edge,)
@@ -26,7 +26,7 @@ class Filter(Node):
         return (self.out_edge,)
 
 
-class MPNodeWorker(Worker):
+class MPNodeWorker(MPWorker):
     def __init__(self, args, func, node):
         super().__init__(args, func)
         self.node = node
@@ -36,15 +36,15 @@ class MPNodeWorker(Worker):
         if record is not None:
             yield self.node.out_edge.put(record)
 
+    @gen.coroutine
     def on_finish(self):
-        self.node.in_edge.status = "done"
-
-    def on_interrupted(self):
-        self.node.in_edge.status = "done"
+        self.node.out_edge.done()
+        self.node.status = "done"
 
 
 class AsyncFilter(Node):
     def __init__(self, func, in_edge):
+        super().__init__()
         self.func = func
         self.in_edge = in_edge
         self.out_edge = AsyncQueueEdge()

@@ -22,6 +22,7 @@ RESOURCE_DIR = os.path.join(
 )
 
 
+@unittest.skip("No longer used")
 class TestTableFilter(unittest.TestCase):
     def test_first_match_filter(self):
         query = {

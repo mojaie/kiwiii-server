@@ -11,7 +11,7 @@ import re
 from chorus.model.graphmol import Compound
 
 from kiwiii import static
-from kiwiii.workflow.tasktree import TaskTree
+from kiwiii.task import Workflow
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.chemdata import AsyncChemData
 from kiwiii.node.filter import AsyncFilter
@@ -36,7 +36,7 @@ def like_operator(a, b):
     return re.match(b.replace("%", ".*?").replace("_", "[\w ]"), a) is not None
 
 
-class ChemProp(TaskTree):
+class ChemProp(Workflow):
     def __init__(self, query):
         super().__init__()
         sortfunc = {"numeric": float, "text": str}
@@ -57,6 +57,6 @@ class ChemProp(TaskTree):
         e2, = self.add_node(AsyncFilter(func, e1))
         e3, = self.add_node(AsyncChemData(e2))
         e4, = self.add_node(AsyncNumberGenerator(e3))
-        res = AsyncJSONResponse(e4)
+        res = AsyncJSONResponse(e4, self)
         self.response = res.response
         self.add_node(res)

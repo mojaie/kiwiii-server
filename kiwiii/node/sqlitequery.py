@@ -4,12 +4,13 @@
 # http://opensource.org/licenses/MIT
 #
 
-from kiwiii.node.node import Node, Edge
-from kiwiii.node import sqlitehelper as helper
+from kiwiii import sqlitehelper as helper
+from kiwiii.task import Node, Edge
 
 
 class SQLiteQuery(Node):
     def __init__(self, type_, query=None):
+        super().__init__()
         self.out_edge = Edge()
         self.query = query
         self.func = {
@@ -20,6 +21,7 @@ class SQLiteQuery(Node):
 
     def run(self):
         self.out_edge.records = self.func(self.query)
+        self.status = "done"
 
     def out_edges(self):
         return (self.out_edge,)

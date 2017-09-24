@@ -11,8 +11,8 @@ from chorus import substructure
 from chorus.model.graphmol import Compound
 
 from kiwiii import static
-from kiwiii.workflow.tasktree import TaskTree
-from kiwiii.node import sqlitehelper as helper
+from kiwiii.task import Workflow
+from kiwiii import sqlitehelper as helper
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.filter import AsyncFilter
 from kiwiii.node.numbergenerator import AsyncNumberGenerator
@@ -31,7 +31,7 @@ def supstr_filter(qmol, row):
         return row
 
 
-class Substructure(TaskTree):
+class Substructure(Workflow):
     def __init__(self, query):
         super().__init__()
         func = {
@@ -43,6 +43,6 @@ class Substructure(TaskTree):
         e1, = self.add_node(SQLiteQuery("all", query))
         e2, = self.add_node(AsyncFilter(func, e1))
         e3, = self.add_node(AsyncNumberGenerator(e2))
-        res = AsyncJSONResponse(e3)
+        res = AsyncJSONResponse(e3, self)
         self.response = res.response
         self.add_node(res)

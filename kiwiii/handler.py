@@ -23,7 +23,7 @@ from kiwiii import handlerutil as hu
 from kiwiii import tablebuilder as tb
 from kiwiii import tablefilter as tf
 from kiwiii import tablecolumn as tc
-from kiwiii import worker as wk
+from kiwiii.jobqueue import JobQueue
 from kiwiii.workflow.exactstruct import ExactStruct
 from kiwiii.workflow.chemdbfilter import ChemDBFilter
 from kiwiii.workflow.chemdbsearch import ChemDBSearch
@@ -34,7 +34,6 @@ from kiwiii.workflow.gls import GLS
 from kiwiii.workflow.rdkitfmcs import RDKitFMCS
 from kiwiii.workflow.rdkitmorgan import RDKitMorgan
 from kiwiii.workflow.substructure import Substructure
-from kiwiii.util import debug
 
 
 class BaseHandler(web.RequestHandler):
@@ -95,10 +94,9 @@ class DBSearchHandler(BaseHandler):
 
 
 class SubmitJobHandler(BaseHandler):
-    def initialize(self, wq, store, instance):
+    def initialize(self, jq, instance):
         super().initialize()
-        self.wq = wq
-        self.store = store
+        self.jq = jq
 
     @hu.basic_auth
     def get(self):
@@ -139,15 +137,13 @@ class SubmitJobHandler(BaseHandler):
         }
         task = tasktrees[query["type"]](query)
         self.write(task.response)
-        self.store.register(task.response)
-        self.wq.put(task.response["id"], task)
+        self.jq.put(task)
 
 
 class JobResultHandler(BaseHandler):
-    def initialize(self, wq, store, instance):
+    def initialize(self, jq, instance):
         super().initialize()
-        self.wq = wq
-        self.store = store
+        self.jq = jq
 
     @hu.basic_auth
     def get(self):
@@ -162,7 +158,7 @@ class JobResultHandler(BaseHandler):
         """
         query = json.loads(self.get_argument("query"))
         try:
-            data = self.store.get(query["id"])
+            data = self.jq.get_result(query["id"]).response
         except KeyError:
             self.write({
                 "id": query["id"],
@@ -171,7 +167,7 @@ class JobResultHandler(BaseHandler):
             })
         else:
             if query["command"] == "abort":
-                self.wq.abort(query["id"])
+                self.jq.abort(query["id"])
             #data["progress"] = round(
             #    data["searchDoneCount"] / data["searchCount"] * 100, 1)
             #data["recordCount"] = len(data["records"])
@@ -230,10 +226,9 @@ class SdfHandler(BaseHandler):
 
 
 class GraphHandler(BaseHandler):
-    def initialize(self, wq, store, instance):
+    def initialize(self, jq, instance):
         super().initialize()
-        self.wq = wq
-        self.store = store
+        self.jq = jq
 
     @hu.basic_auth
     def post(self):
@@ -348,17 +343,16 @@ class LoginHandler(BaseHandler):
 
 
 class ServerStatusHandler(BaseHandler):
-    def initialize(self, wq, store, instance):
+    def initialize(self, jq, instance):
         super().initialize()
-        self.wq = wq
-        self.store = store
+        self.jq = jq
         self.instance = instance
 
     @hu.basic_auth
     def get(self):
         js = {
-            "totalTasks": len(self.store.container),
-            "queuedTasks": len(self.wq.queued_ids),
+            "totalTasks": len(self.jq),
+            "queuedTasks": len(self.jq.queued_ids),
             "instance": self.instance,
             "processors": static.PROCESSES,
             "rdk": static.RDK_AVAILABLE,
@@ -374,16 +368,15 @@ class ServerStatusHandler(BaseHandler):
                 "records": []
             }
         }
-        for store in self.store.container:
-            t = time.mktime(time.strptime(store["created"], "%X %x %Z"))
-            e = t + self.store.max_age
-            expires = time.strftime("%X %x %Z", time.localtime(e))
+        for task, expires in self.jq.tasks_iter():
             js["calc"]["records"].append({
-                "id": store["id"],
-                "size": debug.total_size_str(store),
-                "status": store["status"],
-                "created": store["created"],
-                "expires": expires
+                "id": task.id,
+                "size": task.size(),
+                "status": task.status,
+                "created": time.strftime(
+                    "%X %x %Z", time.localtime(task.created)),
+                "expires": time.strftime(
+                    "%X %x %Z", time.localtime(expires)),
             })
         self.write(js)
 
@@ -393,8 +386,7 @@ def run():
     define("debug", default=False, help="run in debug mode")
     parse_command_line()
     store = {
-        "wq": wk.WorkerQueue(),
-        "store": hu.TemporaryDataStore(),
+        "jq": JobQueue(),
         "instance": time.strftime("%X %x %Z", time.localtime(time.time()))
     }
     app = web.Application(

@@ -10,6 +10,7 @@ import unittest
 from kiwiii import handlerutil
 
 
+@unittest.skip("No longer used")
 class TestHandlerUtil(unittest.TestCase):
     def test_temptbl(self):
         temp = handlerutil.TemporaryDataStore()

@@ -9,7 +9,7 @@ from chorus import substructure
 from chorus.model.graphmol import Compound
 
 from kiwiii import static
-from kiwiii.workflow.tasktree import TaskTree
+from kiwiii.task import Workflow
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.filter import AsyncFilter
 from kiwiii.node.numbergenerator import AsyncNumberGenerator
@@ -22,12 +22,12 @@ def gls_filter(qmol, row):
         return row
 
 
-class RDKitFMCS(TaskTree):
+class RDKitFMCS(Workflow):
     def __init__(self, query):
         super().__init__()
         e1, = self.add_node(SQLiteQuery())
         e2, = self.add_node(AsyncFilter(gls_filter, e1))
         e3, = self.add_node(AsyncNumberGenerator(e2))
-        res = AsyncJSONResponse(e3)
+        res = AsyncJSONResponse(e3, self)
         self.response = res.response
         self.add_node(res)

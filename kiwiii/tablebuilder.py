@@ -8,7 +8,7 @@ import functools
 import time
 import uuid
 
-from kiwiii import worker as wk
+from kiwiii.task import MPWorker
 
 
 def timestamp(data):
@@ -18,7 +18,7 @@ def timestamp(data):
     data["execTime"] = round(now - start, 1)
 
 
-class RowWiseWorker(wk.Worker):
+class RowWiseWorker(MPWorker):
     """ Multi-process worker for row by row task processing """
     def __init__(self, args, func, builder):
         super().__init__(args, func)

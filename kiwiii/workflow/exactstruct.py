@@ -10,7 +10,7 @@ from chorus import molutil
 from chorus.model.graphmol import Compound
 
 from kiwiii import static
-from kiwiii.workflow.tasktree import TaskTree
+from kiwiii.task import Workflow
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.filter import AsyncFilter
 from kiwiii.node.numbergenerator import AsyncNumberGenerator
@@ -23,7 +23,7 @@ def exact_filter(qmol, row):
         return row
 
 
-class ExactStruct(TaskTree):
+class ExactStruct(Workflow):
     def __init__(self, query):
         super().__init__()
         mw_filter = {
@@ -35,6 +35,6 @@ class ExactStruct(TaskTree):
         e1, = self.add_node(SQLiteQuery("filter", mw_filter))
         e2, = self.add_node(AsyncFilter(exact_filter, e1))
         e3, = self.add_node(AsyncNumberGenerator(e2))
-        res = AsyncJSONResponse(e3)
+        res = AsyncJSONResponse(e3, self)
         self.response = res.response
         self.add_node(res)

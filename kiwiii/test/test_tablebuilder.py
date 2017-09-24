@@ -16,6 +16,7 @@ from tornado import testing as tt
 from chorus import v2000reader
 
 
+@unittest.skip("No longer used")
 class TestTableBuilder(unittest.TestCase):
     def test_builder(self):
         builder = tb.TableBuilder()
