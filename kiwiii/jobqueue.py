@@ -10,83 +10,51 @@ from tornado import gen
 from tornado.queues import Queue
 
 
-class ResultStore(object):
-    """Temporary data store for calculation result fetcher"""
-    def __init__(self):
-        self.container = []
-        self.max_age = 86400 * 7  # Time(sec)
-
-    def register(self, task, now=time.time()):
-        self.container.append(task)
-        # remove expired data
-        alive = []
-        for task in self.container:
-            if task.created + self.max_age > now:
-                alive.append(task)
-        self.container = alive
-
-    def get(self, id_):
-        for task in self.container:
-            if task.id == id_:
-                return task
-        raise ValueError('Table not found')
-
-    def tasks_iter(self):
-        for task in self.store.container:
-            expires = task.created + self.max_age
-            yield task, expires
-
-
 class JobQueue(object):
-    def __init__(self, store=ResultStore):
-        self.queue = Queue()
-        self.store = store()
-        self.current_task_id = None
-        self.current_task = None
-        self.queued_ids = []
-        self.aborted_ids = []
+    def __init__(self):
+        self.queue = Queue(20)
+        self.store = []
+        self.task_lifetime = 86400 * 7  # Time(sec)
         self._dispatcher()
 
     def __len__(self):
-        return len(self.store.container)
+        return len(self.store)
 
-    def put(self, task):
+    @gen.coroutine
+    def put(self, task, now=time.time()):
         """ Put a job to the queue """
-        print("put {}".format(task.id))
-        self.store.register(task)
-        self.queued_ids.append(task.id)
-        self.queue.put_nowait(task)
+        self.store.append(task)
+        # remove expired data
+        alive = []
+        for task in self.store:
+            if task.created + self.task_lifetime > now:
+                alive.append(task)
+        self.store = alive
+        yield self.queue.put(task)
 
-    def get_result(self, id_):
-        return self.store.get(id_)
+    def get(self, id_):
+        for task in self.store:
+            if task.id == id_:
+                return task
+        raise ValueError('Task {} not found'.format(id_[:8]))
 
+    @gen.coroutine
     def abort(self, id_):
-        if id_ in self.queued_ids:
-            self.aborted_ids.append(id_)
-        elif id_ == self.current_task_id:
-            self.current_task.interrupt()
-
-    def status(self, id_):
-        if id_ in self.queued_ids:
-            return "Queued"
-        elif id_ == self.current_task_id:
-            return self.current_task.status
-        else:
-            return "Completed"
+        task = self.get(id_)
+        if task.status == "running":
+            yield task.interrupt()
+        if task.status == "ready":
+            task.status = "cancelled"
 
     @gen.coroutine
     def _dispatcher(self):
         while 1:
             task = yield self.queue.get()
-            self.queued_ids.remove(task.id)
-            if task.id in self.aborted_ids:
-                self.aborted_ids.remove(task.id)
+            if task.status == "cancelled":
                 continue
-            self.current_task_id = task.id
-            self.current_task = task
-            yield self.current_task.run()
-            self.current_task_id = None
-            self.current_task = None
+            yield task.run()
 
     def tasks_iter(self):
-        return self.store.tasks_iter()
+        for task in self.store:
+            expires = task.created + self.task_lifetime
+            yield task, expires

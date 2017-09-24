@@ -8,34 +8,8 @@ import base64
 import csv
 import functools
 import os
-import time
 
 from kiwiii import static
-
-
-class TemporaryDataStore(object):
-    """Temporary data store for calculation result fetcher"""
-    def __init__(self):
-        self.container = []
-        self.max_age = 86400 * 7  # Time(sec)
-
-    def register(self, data, now=time.time()):
-        # remove expired data
-        alive = []
-        for d in self.container:
-            t = time.mktime(
-                time.strptime(d["created"], "%X %x %Z"))
-            if t + self.max_age > now:
-                alive.append(d)
-        self.container = alive
-        # add new data
-        self.container.append(data)
-
-    def get(self, id_):
-        for d in self.container:
-            if d["id"] == id_:
-                return d
-        raise KeyError('Table not found')
 
 
 def session_auth(method):

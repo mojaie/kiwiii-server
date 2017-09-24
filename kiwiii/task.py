@@ -21,26 +21,24 @@ class Task(object):
         self.id = str(uuid.uuid4())
         self.status = "ready"
         self.created = time.time()
-        self.interruption_requested = False
 
     def run(self):
         pass
 
     def on_start(self):
-        pass
+        self.status = "running"
 
     def on_task_done(self, res):
         pass
 
     def on_finish(self):
-        pass
+        self.status = "done"
 
-    def on_interrupted(self):
-        pass
+    def on_aborted(self):
+        self.status = "aborted"
 
     def interrupt(self):
-        print("Interruption requested...")
-        self.interruption_requested = True
+        pass
 
     def size(self):
         return debug.total_size(self)
@@ -67,12 +65,11 @@ class MPWorker(Task):
             with cf.ProcessPoolExecutor(static.PROCESSES) as pp:
                 for i, a in enumerate(self.args):
                     yield self._queue.put(pp.submit(self.func, a))
-                    if self.interruption_requested:
+                    if self.status == "interrupted":
                         yield self._queue.join()
-                        self.on_interrupted()
+                        self.on_aborted()
                         return
                 yield self._queue.join()
-        self.status = -1
         self.on_finish()
 
     @gen.coroutine
@@ -83,6 +80,12 @@ class MPWorker(Task):
             with threading.Lock():
                 self.on_task_done(res)
             self._queue.task_done()
+
+    @gen.coroutine
+    def interrupt(self):
+        self.status = "interrupted"
+        while self.status != "aborted":
+            yield gen.sleep(0.5)
 
 
 class Node(object):
@@ -135,21 +138,15 @@ class Workflow(Task):
 
     @gen.coroutine
     def run(self):
+        self.on_start()
         order = graph.topological_sort(self.succs, self.preds)
         for node_id in order:
             # yield gen.maybe_future(self.nodes[node_id].run())
             self.nodes[node_id].run()
-        while 1:
-            if self.interruption_requested:
-                print("Workflow interrupted")
-                self.on_interrupted()
-                break
-            print("id {}".format(self.id))
-            print([n.status == "done" for n in self.nodes])
+        while self.status == "running":
             if all(n.status == "done" for n in self.nodes):
                 self.on_finish()
                 break
-            print("Waiting...")
             yield gen.sleep(0.5)
 
     def add_node(self, node):
@@ -167,6 +164,9 @@ class Workflow(Task):
             out.source = node_id
         return node.out_edges()
 
-    def on_interrupted(self):
+    @gen.coroutine
+    def interrupt(self):
+        self.status = "interrupted"
         for node in self.nodes:
-            node.interrupt()
+            yield node.interrupt()
+        self.status = "aborted"

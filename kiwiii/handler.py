@@ -158,7 +158,7 @@ class JobResultHandler(BaseHandler):
         """
         query = json.loads(self.get_argument("query"))
         try:
-            data = self.jq.get_result(query["id"]).response
+            task = self.jq.get(query["id"])
         except KeyError:
             self.write({
                 "id": query["id"],
@@ -167,11 +167,11 @@ class JobResultHandler(BaseHandler):
             })
         else:
             if query["command"] == "abort":
-                self.jq.abort(query["id"])
+                yield self.jq.abort(query["id"])
+            self.write(task.response)
             #data["progress"] = round(
             #    data["searchDoneCount"] / data["searchCount"] * 100, 1)
             #data["recordCount"] = len(data["records"])
-            self.write(data)
 
 
 class StructurePreviewHandler(BaseHandler):
@@ -352,7 +352,7 @@ class ServerStatusHandler(BaseHandler):
     def get(self):
         js = {
             "totalTasks": len(self.jq),
-            "queuedTasks": len(self.jq.queued_ids),
+            "queuedTasks": self.jq.queue.qsize(),
             "instance": self.instance,
             "processors": static.PROCESSES,
             "rdk": static.RDK_AVAILABLE,
