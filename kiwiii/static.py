@@ -16,24 +16,18 @@ from kiwiii import tablecolumn as tc
 try:
     from chorus import rdkit
     RDK_AVAILABLE = True
-    print("RDKit is available")
 except ImportError:
     RDK_AVAILABLE = False
-    print("RDKit is not available")
 try:
     import cython
     CYTHON_AVAILABLE = True
-    print("Cython is available")
 except ImportError:
     CYTHON_AVAILABLE = False
-    print("Cython is not available")
     try:
         import numexpr
         NUMEXPR_AVAILABLE = True
-        print("Numexpr is available")
     except ImportError:
         NUMEXPR_AVAILABLE = False
-        print("Numexpr is not available")
 
 
 """ Server status """
@@ -48,27 +42,26 @@ try:
         config = yaml.load(f.read())
 except FileNotFoundError:
     """ use server_config stub"""
-    config = {
-        "web_home": "",
-        "basic_auth_realm": "",
-        "user": {},
-    }
+    config = {}
 
-USERS = config["user"]
-WEB_HOME = config["web_home"]
-BASIC_AUTH_REALM = config["basic_auth_realm"]
+
+USERS = config.get("user")
+WEB_HOME = config.get("web_home")
+BASIC_AUTH_REALM = config.get("basic_auth_realm")
 
 
 def user_passwd_matched(user, passwd):
     return user in USERS and passwd == USERS[user]["password"]
 
 
-SQLITE_BASE_DIR = config.get("sqlite_base_dir", "")
-API_BASE_DIR = config.get("api_base_dir", "")
-REPORT_TEMPLATE_DIR = config.get("report_template_dir", "")
+SQLITE_BASE_DIR = config.get("sqlite_base_dir")
+API_BASE_DIR = config.get("api_base_dir")
+REPORT_TEMPLATE_DIR = config.get("report_template_dir")
+
 
 def mol_to_svg(mol):
     return SVG(mol).contents()
+
 
 CHEM_COLUMNS = [
     {"key": "_structure", "name": "Structure", "sort": "none"},
@@ -77,6 +70,7 @@ CHEM_COLUMNS = [
     {"key": "_logp", "name": "WCLogP", "sort": "numeric"},
     {"key": "_nonH", "name": "Non-H atom count", "sort": "numeric"}
 ]
+
 CHEM_FUNCTIONS = {
     "_structure": mol_to_svg,
     "_mw": molutil.mw,
@@ -86,6 +80,7 @@ CHEM_FUNCTIONS = {
 }
 
 MOLOBJ_KEY = "_mol"
+
 
 def resource_format(data):
     for tbl in data["tables"]:
@@ -137,8 +132,13 @@ def templates():
     return templates
 
 
-RESOURCES = resources()
-TEMPLATES = templates()
+try:
+    RESOURCES = resources()
+    TEMPLATES = templates()
+except TypeError:
+    RESOURCES = []
+    TEMPLATES = []
+
 SCHEMA = {
     "resources": RESOURCES,
     "templates": TEMPLATES

@@ -4,12 +4,11 @@
 # http://opensource.org/licenses/MIT
 #
 
-import itertools
 import unittest
 
 from tornado.testing import AsyncTestCase, gen_test
 
-from kiwiii.task import MPWorker
+from kiwiii.task import MPWorker, AsyncQueueEdge
 
 
 def twice(dict_):
@@ -41,6 +40,16 @@ class TestTask(AsyncTestCase):
         worker.run()
         yield worker.interrupt()
         self.assertEqual(worker.status, "aborted")
+
+    @gen_test
+    def test_asyncedge(self):
+        edge = AsyncQueueEdge()
+        in_ = 123
+        yield edge.put(in_)
+        out = yield edge.get()
+        self.assertEqual(out, 123)
+        yield edge.done()
+        self.assertEqual(edge.status, "done")
 
 
 if __name__ == '__main__':

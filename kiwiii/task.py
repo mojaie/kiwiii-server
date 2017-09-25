@@ -17,6 +17,13 @@ from kiwiii.util import graph, debug
 
 
 class Task(object):
+    """
+    Parameters:
+      status: str
+        ready, running, done, aborted
+        interrupted: method interrupt is called but the task is not yet aborted
+        cancelled: cancelled before start
+    """
     def __init__(self):
         self.id = str(uuid.uuid4())
         self.status = "ready"
@@ -89,6 +96,12 @@ class MPWorker(Task):
 
 
 class Node(object):
+    """
+    Parameters:
+      status: str
+        ready: ready to run
+        done: finished and put all results to outgoing edges
+    """
     def __init__(self):
         self.status = "ready"
 
@@ -103,6 +116,12 @@ class Node(object):
 
 
 class Edge(object):
+    """
+    Parameters:
+      status: str
+        ready: ready to put results
+        done: incoming node finished its task and put all results to the edge
+    """
     def __init__(self):
         self.records = []
         self.status = "ready"
@@ -110,22 +129,22 @@ class Edge(object):
 
 class AsyncQueueEdge(Edge):
     def __init__(self):
-        self.records = []
-        self.status = "ready"
-        self._queue = Queue(20)
+        super().__init__()
+        self.queue = Queue(20)
 
     @gen.coroutine
     def put(self, record):
-        yield self._queue.put(record)
+        yield self.queue.put(record)
 
     @gen.coroutine
     def get(self):
-        res = yield self._queue.get()
+        res = yield self.queue.get()
+        self.queue.task_done()
         return res
 
     @gen.coroutine
     def done(self):
-        yield self._queue.join()
+        yield self.queue.join()
         self.status = "done"
 
 
