@@ -28,14 +28,14 @@ class IdleTask(Task):
             if self.status == "interrupted":
                 self.on_aborted()
                 return
-            yield gen.sleep(0.5)
+            yield gen.sleep(0.2)
         self.on_finish()
 
     @gen.coroutine
     def interrupt(self):
         self.status = "interrupted"
         while self.status != "aborted":
-            yield gen.sleep(0.5)
+            yield gen.sleep(0.2)
 
 
 class TestJobQueue(AsyncTestCase):

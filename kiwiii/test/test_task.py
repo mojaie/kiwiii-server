@@ -6,9 +6,10 @@
 
 import unittest
 
+from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
-from kiwiii.task import MPWorker, AsyncQueueEdge
+from kiwiii.task import MPWorker, Node, Edge, AsyncQueueEdge, Workflow
 
 
 def twice(dict_):
@@ -22,6 +23,44 @@ class MPWorkerResults(MPWorker):
 
     def on_task_done(self, res):
         self.results.append(res)
+
+
+class FlashNode(Node):
+    def __init__(self, in_edge):
+        super().__init__()
+        self.in_edge = in_edge
+        self.out_edge = Edge()
+
+    def run(self):
+        self.status = "done"
+
+    def out_edges(self):
+        return (self.out_edge,)
+
+
+class IdleNode(Node):
+    def __init__(self, in_edge):
+        super().__init__()
+        self.in_edge = in_edge
+        self.out_edge = AsyncQueueEdge()
+
+    @gen.coroutine
+    def run(self):
+        self.on_start()
+        while 1:
+            if self.status == "interrupted":
+                self.on_aborted()
+                return
+            yield gen.sleep(0.2)
+
+    def out_edges(self):
+        return (self.out_edge,)
+
+    @gen.coroutine
+    def interrupt(self):
+        self.status = "interrupted"
+        while self.status != "aborted":
+            yield gen.sleep(0.2)
 
 
 class TestTask(AsyncTestCase):
@@ -50,6 +89,25 @@ class TestTask(AsyncTestCase):
         self.assertEqual(out, 123)
         yield edge.done()
         self.assertEqual(edge.status, "done")
+
+    @gen_test
+    def test_workflow(self):
+        wf = Workflow()
+        e0 = Edge()
+        e1 = wf.add_node(FlashNode(e0))
+        wf.add_node(FlashNode(e1))
+        yield wf.run()
+        self.assertTrue(all(n.status == "done" for n in wf.nodes))
+
+    @gen_test
+    def test_asyncworkflow(self):
+        wf = Workflow()
+        e0 = AsyncQueueEdge()
+        e1 = wf.add_node(IdleNode(e0))
+        wf.add_node(IdleNode(e1))
+        wf.run()
+        yield wf.interrupt()
+        self.assertTrue(all(n.status == "aborted" for n in wf.nodes))
 
 
 if __name__ == '__main__':

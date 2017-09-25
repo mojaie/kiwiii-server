@@ -95,7 +95,7 @@ class MPWorker(Task):
             yield gen.sleep(0.5)
 
 
-class Node(object):
+class Node(Task):
     """
     Parameters:
       status: str
@@ -103,16 +103,13 @@ class Node(object):
         done: finished and put all results to outgoing edges
     """
     def __init__(self):
-        self.status = "ready"
+        super().__init__()
 
     def in_edges(self):
         return tuple()
 
     def out_edges(self):
         return tuple()
-
-    def interrupt(self):
-        pass
 
 
 class Edge(object):
@@ -187,5 +184,5 @@ class Workflow(Task):
     def interrupt(self):
         self.status = "interrupted"
         for node in self.nodes:
-            yield node.interrupt()
-        self.status = "aborted"
+            yield gen.maybe_future(node.interrupt())
+        self.on_aborted()
