@@ -112,6 +112,31 @@ class Node(Task):
         return tuple()
 
 
+class AsyncInNode(Node):
+    """
+    Parameters:
+      status: str
+        ready: ready to run
+        done: finished and put all results to outgoing edges
+    """
+    def __init__(self):
+        super().__init__()
+
+    @gen.coroutine
+    def _dispatch(self):
+        while 1:
+            res = yield self.in_edge.get()
+            self.out_edge.put(res)
+
+    @gen.coroutine
+    def run(self):
+        self.on_start()
+        self._dispatch()
+        while self.in_edge.status != "done":
+            yield gen.sleep(0.5)
+        self.on_finish()
+
+
 class Edge(object):
     """
     Parameters:
@@ -121,13 +146,12 @@ class Edge(object):
     """
     def __init__(self):
         self.records = []
-        self.status = "ready"
 
 
-class AsyncQueueEdge(Edge):
+class AsyncQueueEdge(object):
     def __init__(self):
-        super().__init__()
         self.queue = Queue(20)
+        self.status = "ready"
 
     @gen.coroutine
     def put(self, record):

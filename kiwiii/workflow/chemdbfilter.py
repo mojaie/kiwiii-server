@@ -17,6 +17,4 @@ class ChemDBFilter(Workflow):
         e1, = self.add_node(SQLiteQuery("filter", query))
         e2, = self.add_node(ChemData(e1))
         e3, = self.add_node(NumberGenerator(e2))
-        res = JSONResponse(e3, self)
-        self.response = res.response
-        self.add_node(res)
+        self.add_node(JSONResponse(e3, self))

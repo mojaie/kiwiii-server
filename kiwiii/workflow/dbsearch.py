@@ -15,6 +15,4 @@ class DBSearch(Workflow):
         super().__init__()
         e1, = self.add_node(SQLiteQuery("search", query))
         e2, = self.add_node(NumberGenerator(e1))
-        res = JSONResponse(e2, self)
-        self.response = res.response
-        self.add_node(res)
+        self.add_node(JSONResponse(e2, self))

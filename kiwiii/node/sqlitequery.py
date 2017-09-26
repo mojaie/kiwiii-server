@@ -21,7 +21,7 @@ class SQLiteQuery(Node):
 
     def run(self):
         self.out_edge.records = self.func(self.query)
-        self.status = "done"
+        self.on_finish()
 
     def out_edges(self):
         return (self.out_edge,)

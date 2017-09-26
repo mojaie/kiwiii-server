@@ -17,7 +17,7 @@ class Filter(Node):
 
     def run(self):
         self.out_edge.records = map(self.func, self.in_edge.records)
-        self.status = "done"
+        self.on_finish()
 
     def in_edges(self):
         return (self.in_edge,)
@@ -38,11 +38,11 @@ class MPNodeWorker(MPWorker):
 
     @gen.coroutine
     def on_finish(self):
-        self.node.out_edge.done()
-        self.node.status = "done"
+        yield self.node.out_edge.done()
+        self.node.on_finish()
 
 
-class AsyncFilter(Node):
+class MPFilter(Node):
     def __init__(self, func, in_edge):
         super().__init__()
         self.func = func
@@ -52,14 +52,8 @@ class AsyncFilter(Node):
 
     @gen.coroutine
     def run(self):
-        records = []
-        if isinstance(self.in_edge, AsyncQueueEdge):
-            while self.in_edge.status != "done":
-                in_record = yield self.in_edge.get()
-                records.append(in_record)
-        else:
-            records = self.in_edge.records
-        self.worker = MPNodeWorker(records, self.func, self)
+        self.on_start()
+        self.worker = MPNodeWorker(self.in_edge.records, self.func, self)
         self.worker.run()
 
     def in_edges(self):
@@ -69,4 +63,4 @@ class AsyncFilter(Node):
         return (self.out_edge,)
 
     def interrupt(self):
-        self.worker.interrupt()
+        yield self.worker.interrupt()

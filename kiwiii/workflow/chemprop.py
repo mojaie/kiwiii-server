@@ -57,6 +57,4 @@ class ChemProp(Workflow):
         e2, = self.add_node(AsyncFilter(func, e1))
         e3, = self.add_node(AsyncChemData(e2))
         e4, = self.add_node(AsyncNumberGenerator(e3))
-        res = AsyncJSONResponse(e4, self)
-        self.response = res.response
-        self.add_node(res)
+        self.add_node(AsyncJSONResponse(e4, self))
