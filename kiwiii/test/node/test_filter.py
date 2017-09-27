@@ -8,13 +8,10 @@ import unittest
 
 from tornado.testing import AsyncTestCase, gen_test
 
+from kiwiii.test.node.util import twice
 from kiwiii.node.filter import Filter, MPFilter
 from kiwiii.node.synchronizer import Synchronizer
 from kiwiii.task import Edge
-
-
-def twice(dict_):
-    return {"value": dict_["value"] * 2}
 
 
 class TestFilter(AsyncTestCase):

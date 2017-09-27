@@ -6,61 +6,10 @@
 
 import unittest
 
-from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
-from kiwiii.task import MPWorker, Node, Edge, AsyncQueueEdge, Workflow
-
-
-def twice(dict_):
-    return {"value": dict_["value"] * 2}
-
-
-class MPWorkerResults(MPWorker):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.results = []
-
-    def on_task_done(self, res):
-        self.results.append(res)
-
-
-class FlashNode(Node):
-    def __init__(self, in_edge):
-        super().__init__()
-        self.in_edge = in_edge
-        self.out_edge = Edge()
-
-    def run(self):
-        self.status = "done"
-
-    def out_edges(self):
-        return (self.out_edge,)
-
-
-class IdleNode(Node):
-    def __init__(self, in_edge):
-        super().__init__()
-        self.in_edge = in_edge
-        self.out_edge = AsyncQueueEdge()
-
-    @gen.coroutine
-    def run(self):
-        self.on_start()
-        while 1:
-            if self.status == "interrupted":
-                self.on_aborted()
-                return
-            yield gen.sleep(0.2)
-
-    def out_edges(self):
-        return (self.out_edge,)
-
-    @gen.coroutine
-    def interrupt(self):
-        self.status = "interrupted"
-        while self.status != "aborted":
-            yield gen.sleep(0.2)
+from kiwiii.test.node.util import twice, MPWorkerResults, FlashNode, IdleNode
+from kiwiii.task import Edge, AsyncQueueEdge, Workflow
 
 
 class TestTask(AsyncTestCase):

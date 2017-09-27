@@ -8,13 +8,10 @@ import unittest
 
 from tornado.testing import AsyncTestCase, gen_test
 
+from kiwiii.test.node.util import twice
 from kiwiii.node.numbergenerator import NumberGenerator, AsyncNumberGenerator
 from kiwiii.node.synchronizer import Synchronizer, Asynchronizer
 from kiwiii.task import Edge
-
-
-def twice(dict_):
-    return {"value": dict_["value"] * 2}
 
 
 class TestNumberGenerator(AsyncTestCase):

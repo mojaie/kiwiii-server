@@ -207,9 +207,6 @@ class Workflow(Task):
             # yield gen.maybe_future(self.nodes[node_id].run())
             self.nodes[node_id].run()
         while self.status == "running":
-            print(self.status)
-            print(type(self))
-            print([n.status for n in self.nodes])
             if all(n.status == "done" for n in self.nodes):
                 self.on_finish()
                 break

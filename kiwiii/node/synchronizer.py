@@ -43,6 +43,9 @@ class Asynchronizer(Node):
     def run(self):
         self.on_start()
         for in_ in self.in_edge.records:
+            if self.status == "interrupted":
+                self.on_aborted()
+                return
             yield self.out_edge.put(in_)
         yield self.out_edge.done()
         self.on_finish()
@@ -52,3 +55,10 @@ class Asynchronizer(Node):
 
     def out_edges(self):
         return (self.out_edge,)
+
+    @gen.coroutine
+    def interrupt(self):
+        # TODO
+        self.status = "interrupted"
+        while self.status != "aborted":
+            yield gen.sleep(self.interval)
