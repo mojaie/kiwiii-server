@@ -6,7 +6,6 @@
 
 import unittest
 
-from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
 from kiwiii.node.numbergenerator import NumberGenerator, AsyncNumberGenerator
@@ -18,7 +17,6 @@ def twice(dict_):
     return {"value": dict_["value"] * 2}
 
 
-@unittest.skip("")
 class TestNumberGenerator(AsyncTestCase):
     def test_numbergenerator(self):
         in_edge = Edge()
@@ -35,13 +33,12 @@ class TestNumberGenerator(AsyncTestCase):
         in_edge.records = [{"value": i} for i in range(10)]
         a = Asynchronizer(in_edge)
         g = AsyncNumberGenerator(a.out_edges()[0], name="num")
+        g.interval = 0.05
         sync = Synchronizer(g.out_edges()[0])
+        sync.interval = 0.05
         a.run()
         g.run()
-        sync.run()
-        while 1:
-            print(a.status, g.status, sync.status)
-            yield gen.sleep(0.2)
+        yield sync.run()
         total = sum(r["num"] for r in sync.out_edges()[0].records)
         self.assertEqual(total, 45)
         self.assertEqual(g.status, "done")

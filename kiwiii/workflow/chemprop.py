@@ -14,7 +14,7 @@ from kiwiii import static
 from kiwiii.task import Workflow
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.chemdata import AsyncChemData
-from kiwiii.node.filter import AsyncFilter
+from kiwiii.node.filter import MPFilter
 from kiwiii.node.numbergenerator import AsyncNumberGenerator
 from kiwiii.node.jsonresponse import AsyncJSONResponse
 from kiwiii.util import lod
@@ -54,7 +54,7 @@ class ChemProp(Workflow):
             opfunc, v
         )
         e1, = self.add_node(SQLiteQuery("all", query))
-        e2, = self.add_node(AsyncFilter(func, e1))
+        e2, = self.add_node(MPFilter(func, e1))
         e3, = self.add_node(AsyncChemData(e2))
         e4, = self.add_node(AsyncNumberGenerator(e3))
         self.add_node(AsyncJSONResponse(e4, self))

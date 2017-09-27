@@ -112,7 +112,7 @@ class Node(Task):
         return tuple()
 
 
-class AsyncInNode(Node):
+class AsyncNode(Node):
     """
     Parameters:
       status: str
@@ -121,20 +121,42 @@ class AsyncInNode(Node):
     """
     def __init__(self):
         super().__init__()
+        self.interval = 0.5
 
     @gen.coroutine
     def _dispatch(self):
         while 1:
-            res = yield self.in_edge.get()
-            self.out_edge.put(res)
+            in_ = yield self.in_edge.get()
+            yield self.out_edge.put(in_)
 
     @gen.coroutine
     def run(self):
         self.on_start()
         self._dispatch()
-        while self.in_edge.status != "done":
-            yield gen.sleep(0.5)
-        self.on_finish()
+        while 1:
+            if self.status == "interrupted":
+                self.on_aborted()
+                break
+            if self.in_edge.status == "done":
+                self.on_finish()
+                break
+            yield gen.sleep(self.interval)
+
+    @gen.coroutine
+    def interrupt(self):
+        self.status = "interrupted"
+        while self.status != "aborted":
+            yield gen.sleep(self.interval)
+
+    @gen.coroutine
+    def on_finish(self):
+        yield self.out_edge.done()
+        self.status = "done"
+
+    @gen.coroutine
+    def on_aborted(self):
+        yield self.out_edge.done()
+        self.status = "aborted"
 
 
 class Edge(object):
@@ -175,6 +197,7 @@ class Workflow(Task):
         self.nodes = []
         self.preds = {}
         self.succs = {}
+        self.interval = 0.5
 
     @gen.coroutine
     def run(self):
@@ -184,10 +207,15 @@ class Workflow(Task):
             # yield gen.maybe_future(self.nodes[node_id].run())
             self.nodes[node_id].run()
         while self.status == "running":
+            print(self.status)
+            print(type(self))
+            print([n.status for n in self.nodes])
             if all(n.status == "done" for n in self.nodes):
                 self.on_finish()
                 break
-            yield gen.sleep(0.5)
+            if self.status == "interrupted":
+                break
+            yield gen.sleep(self.interval)
 
     def add_node(self, node):
         """parallel computation

@@ -7,7 +7,7 @@
 import time
 
 from tornado import gen
-from kiwiii.task import Node
+from kiwiii.task import Node, AsyncNode
 
 
 class JSONResponse(Node):
@@ -33,11 +33,11 @@ class JSONResponse(Node):
         return (self.in_edge,)
 
     def on_finish(self):
-        self.status == "done"
+        self.status = "done"
         self.task.response["status"] = "done"
 
 
-class AsyncJSONResponse(Node):
+class AsyncJSONResponse(AsyncNode):
     def __init__(self, in_edge, task):
         super().__init__()
         self.in_edge = in_edge
@@ -53,12 +53,10 @@ class AsyncJSONResponse(Node):
         }
 
     @gen.coroutine
-    def run(self):
-        self.on_start()
-        while self.in_edge.status == "ready":
-            res = yield self.in_edge.get()
-            self.response["records"].append(res)
-        self.on_finish()
+    def _dispatch(self):
+        while 1:
+            in_ = yield self.in_edge.get()
+            self.task.response["records"].append(in_)
 
     def in_edges(self):
         return (self.in_edge,)

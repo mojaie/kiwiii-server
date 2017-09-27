@@ -33,6 +33,7 @@ class TestFilter(AsyncTestCase):
         in_edge.records = [{"value": i} for i in range(10)]
         f = MPFilter(twice, in_edge)
         sync = Synchronizer(f.out_edges()[0])
+        sync.interval = 0.05
         f.run()
         self.assertEqual(f.status, "running")
         yield sync.run()

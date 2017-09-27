@@ -19,6 +19,7 @@ class TestSynchronizer(AsyncTestCase):
         in_edge.records = [{"value": i} for i in range(10)]
         a = Asynchronizer(in_edge)
         s = Synchronizer(a.out_edges()[0])
+        s.interval = 0.05
         a.run()
         self.assertEqual(a.status, "running")
         self.assertEqual(s.status, "ready")

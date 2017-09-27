@@ -5,10 +5,10 @@
 #
 
 from tornado import gen
-from kiwiii.task import Node, Edge, AsyncQueueEdge
+from kiwiii.task import Node, AsyncNode, Edge, AsyncQueueEdge
 
 
-class Synchronizer(Node):
+class Synchronizer(AsyncNode):
     def __init__(self, in_edge):
         super().__init__()
         self.in_edge = in_edge
@@ -17,22 +17,20 @@ class Synchronizer(Node):
     @gen.coroutine
     def _dispatch(self):
         while 1:
-            res = yield self.in_edge.get()
-            self.out_edge.records.append(res)
-
-    @gen.coroutine
-    def run(self):
-        self.on_start()
-        self._dispatch()
-        while self.in_edge.status != "done":
-            yield gen.sleep(0.5)
-        self.on_finish()
+            in_ = yield self.in_edge.get()
+            self.out_edge.records.append(in_)
 
     def in_edges(self):
         return (self.in_edge,)
 
     def out_edges(self):
         return (self.out_edge,)
+
+    def on_finish(self):
+        self.status = "done"
+
+    def on_aborted(self):
+        self.status = "aborted"
 
 
 class Asynchronizer(Node):
@@ -44,8 +42,8 @@ class Asynchronizer(Node):
     @gen.coroutine
     def run(self):
         self.on_start()
-        for rcd in self.in_edge.records:
-            yield self.out_edge.put(rcd)
+        for in_ in self.in_edge.records:
+            yield self.out_edge.put(in_)
         yield self.out_edge.done()
         self.on_finish()
 

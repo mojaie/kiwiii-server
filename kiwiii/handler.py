@@ -128,16 +128,16 @@ class SubmitJobHandler(BaseHandler):
         :statuscode 200: no error
         """
         query = json.loads(self.get_argument("query"))
-        tasktrees = {
+        workflows = {
             "substr": Substructure,
             "prop": ChemProp,
             "gls": GLS,
             "rdfmcs": RDKitFMCS,
             "rdmorgan": RDKitMorgan
         }
-        task = tasktrees[query["type"]](query)
-        self.write(task.response)
-        self.jq.put(task)
+        wf = workflows[query["type"]](query)
+        self.write(wf.response)
+        self.jq.put(wf)
 
 
 class JobResultHandler(BaseHandler):
@@ -146,6 +146,7 @@ class JobResultHandler(BaseHandler):
         self.jq = jq
 
     @hu.basic_auth
+    @gen.coroutine
     def get(self):
         """Fetch calculation results
 
@@ -158,7 +159,7 @@ class JobResultHandler(BaseHandler):
         """
         query = json.loads(self.get_argument("query"))
         try:
-            task = self.jq.get(query["id"])
+            wf = self.jq.get(query["id"])
         except KeyError:
             self.write({
                 "id": query["id"],
@@ -168,7 +169,7 @@ class JobResultHandler(BaseHandler):
         else:
             if query["command"] == "abort":
                 yield self.jq.abort(query["id"])
-            self.write(task.response)
+            self.write(wf.response)
             #data["progress"] = round(
             #    data["searchDoneCount"] / data["searchCount"] * 100, 1)
             #data["recordCount"] = len(data["records"])

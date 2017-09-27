@@ -7,7 +7,7 @@
 import itertools
 
 from tornado import gen
-from kiwiii.task import Node, Edge, AsyncQueueEdge
+from kiwiii.task import Node, AsyncNode, Edge, AsyncQueueEdge
 
 
 class NumberGenerator(Node):
@@ -19,10 +19,10 @@ class NumberGenerator(Node):
 
     def run(self):
         cnt = itertools.count()
-        for rcd in self.in_edge.records:
-            newrcd = {self.name: next(cnt)}
-            newrcd.update(rcd)
-            self.out_edge.records.append(newrcd)
+        for in_ in self.in_edge.records:
+            out = {self.name: next(cnt)}
+            out.update(in_)
+            self.out_edge.records.append(out)
         self.on_finish()
 
     def in_edges(self):
@@ -32,7 +32,7 @@ class NumberGenerator(Node):
         return (self.out_edge,)
 
 
-class AsyncNumberGenerator(Node):
+class AsyncNumberGenerator(AsyncNode):
     def __init__(self, in_edge, name="_index"):
         super().__init__()
         self.in_edge = in_edge
@@ -40,27 +40,16 @@ class AsyncNumberGenerator(Node):
         self.name = name
 
     @gen.coroutine
-    def run(self):
-        self.on_start()
+    def _dispatch(self):
         cnt = itertools.count()
-        while self.in_edge.status == "ready":
-            if self.status == "interrupted":
-                self.on_aborted()
-                return
-            in_record = yield self.in_edge.get()
-            record = {self.name: next(cnt)}
-            record.update(in_record)
-            yield self.out_edge.put(record)
-        yield self.out_edge.done()
-        self.on_finish()
+        while 1:
+            in_ = yield self.in_edge.get()
+            out = {self.name: next(cnt)}
+            out.update(in_)
+            yield self.out_edge.put(out)
 
     def in_edges(self):
         return (self.in_edge,)
 
     def out_edges(self):
         return (self.out_edge,)
-
-    def interrupt(self):
-        self.status = "interrupted"
-        while self.status != "aborted":
-            yield gen.sleep(0.5)

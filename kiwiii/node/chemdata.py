@@ -9,7 +9,7 @@ from chorus.model.graphmol import Compound
 from tornado import gen
 
 from kiwiii import static
-from kiwiii.task import Node, Edge, AsyncQueueEdge
+from kiwiii.task import Node, AsyncNode, Edge, AsyncQueueEdge
 
 
 def chem_data(row):
@@ -36,31 +36,21 @@ class ChemData(Node):
         return (self.out_edge,)
 
 
-class AsyncChemData(Node):
+class AsyncChemData(AsyncNode):
     def __init__(self, in_edge):
         super().__init__()
         self.in_edge = in_edge
         self.out_edge = AsyncQueueEdge()
 
     @gen.coroutine
-    def run(self):
-        self.on_start()
-        while self.in_edge.status != "done":
-            if self.status == "interrupted":
-                self.on_aborted()
-                return
-            in_record = yield self.in_edge.get()
-            yield self.out_edge.put(chem_data(in_record))
-        yield self.out_edge.done()
-        self.on_finish()
+    def _dispatch(self):
+        while 1:
+            in_ = yield self.in_edge.get()
+            out = chem_data(in_)
+            yield self.out_edge.put(out)
 
     def in_edges(self):
         return (self.in_edge,)
 
     def out_edges(self):
         return (self.out_edge,)
-
-    def interrupt(self):
-        self.status = "interrupted"
-        while self.status != "aborted":
-            yield gen.sleep(0.5)
