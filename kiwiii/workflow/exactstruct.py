@@ -10,7 +10,7 @@ from chorus import molutil
 from chorus.model.graphmol import Compound
 
 from kiwiii import static
-from kiwiii.task import Workflow
+from kiwiii.core.workflow import Workflow
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.filter import MPFilter
 from kiwiii.node.numbergenerator import AsyncNumberGenerator

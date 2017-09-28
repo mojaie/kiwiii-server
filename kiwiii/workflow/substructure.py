@@ -11,7 +11,7 @@ from chorus import substructure
 from chorus.model.graphmol import Compound
 
 from kiwiii import static
-from kiwiii.task import Workflow
+from kiwiii.core.workflow import Workflow
 from kiwiii import sqlitehelper as helper
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.filter import MPFilter

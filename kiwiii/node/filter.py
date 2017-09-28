@@ -33,11 +33,13 @@ class MPNodeWorker(MPWorker):
     def on_finish(self):
         yield self.node.out_edge.done()
         self.node.on_finish()
+        self.status = "done"
 
     @gen.coroutine
     def on_aborted(self):
         yield self.node.out_edge.aborted()
         self.node.on_aborted()
+        self.status = "aborted"
 
 
 class MPFilter(Asynchronizer):
@@ -50,8 +52,10 @@ class MPFilter(Asynchronizer):
     def run(self):
         self.on_start()
         self.worker = MPNodeWorker(self.in_edge.records, self.func, self)
-        self.worker.run()
+        yield self.worker.run()
 
     @gen.coroutine
     def interrupt(self):
+        if self.status != "running":
+            return
         yield self.worker.interrupt()

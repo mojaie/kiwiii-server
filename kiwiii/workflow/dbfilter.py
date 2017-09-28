@@ -4,7 +4,7 @@
 # http://opensource.org/licenses/MIT
 #
 
-from kiwiii.task import Workflow
+from kiwiii.core.workflow import Workflow
 from kiwiii.node.sqlitequery import SQLiteQuery
 from kiwiii.node.numbergenerator import NumberGenerator
 from kiwiii.node.jsonresponse import JSONResponse
