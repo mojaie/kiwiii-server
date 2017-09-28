@@ -8,10 +8,13 @@ import unittest
 
 from tornado.testing import AsyncTestCase, gen_test
 
-from kiwiii.test.node.util import twice
 from kiwiii.node.filter import Filter, MPFilter
-from kiwiii.node.synchronizer import Synchronizer
-from kiwiii.task import Edge
+from kiwiii.core.node import Synchronizer
+from kiwiii.core.edge import Edge
+
+
+def twice(dict_):
+    return {"value": dict_["value"] * 2}
 
 
 class TestFilter(AsyncTestCase):
@@ -30,7 +33,7 @@ class TestFilter(AsyncTestCase):
         in_edge.records = [{"value": i} for i in range(10)]
         f = MPFilter(twice, in_edge)
         sync = Synchronizer(f.out_edges()[0])
-        sync.interval = 0.05
+        sync.interval = 0.01
         f.run()
         self.assertEqual(f.status, "running")
         yield sync.run()

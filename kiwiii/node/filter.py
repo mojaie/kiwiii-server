@@ -5,25 +5,18 @@
 #
 
 from tornado import gen
-from kiwiii.task import Node, Edge, AsyncQueueEdge, MPWorker
+from kiwiii.core.task import MPWorker
+from kiwiii.core.node import Node, Asynchronizer
 
 
 class Filter(Node):
     def __init__(self, func, in_edge):
-        super().__init__()
+        super().__init__(in_edge)
         self.func = func
-        self.in_edge = in_edge
-        self.out_edge = Edge()
 
     def run(self):
         self.out_edge.records = map(self.func, self.in_edge.records)
         self.on_finish()
-
-    def in_edges(self):
-        return (self.in_edge,)
-
-    def out_edges(self):
-        return (self.out_edge,)
 
 
 class MPNodeWorker(MPWorker):
@@ -41,13 +34,16 @@ class MPNodeWorker(MPWorker):
         yield self.node.out_edge.done()
         self.node.on_finish()
 
+    @gen.coroutine
+    def on_aborted(self):
+        yield self.node.out_edge.aborted()
+        self.node.on_aborted()
 
-class MPFilter(Node):
+
+class MPFilter(Asynchronizer):
     def __init__(self, func, in_edge):
-        super().__init__()
+        super().__init__(in_edge)
         self.func = func
-        self.in_edge = in_edge
-        self.out_edge = AsyncQueueEdge()
         self.worker = None
 
     @gen.coroutine
@@ -56,11 +52,6 @@ class MPFilter(Node):
         self.worker = MPNodeWorker(self.in_edge.records, self.func, self)
         self.worker.run()
 
-    def in_edges(self):
-        return (self.in_edge,)
-
-    def out_edges(self):
-        return (self.out_edge,)
-
+    @gen.coroutine
     def interrupt(self):
         yield self.worker.interrupt()

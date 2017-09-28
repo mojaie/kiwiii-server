@@ -5,10 +5,11 @@
 #
 
 from kiwiii import sqlitehelper as helper
-from kiwiii.task import Node, Edge
+from kiwiii.core.task import Task
+from kiwiii.core.edge import Edge
 
 
-class SQLiteQuery(Node):
+class SQLiteQuery(Task):
     def __init__(self, type_, query=None):
         super().__init__()
         self.out_edge = Edge()

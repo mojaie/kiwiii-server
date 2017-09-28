@@ -7,14 +7,12 @@
 import itertools
 
 from tornado import gen
-from kiwiii.task import Node, AsyncNode, Edge, AsyncQueueEdge
+from kiwiii.core.node import Node, AsyncNode
 
 
 class NumberGenerator(Node):
     def __init__(self, in_edge, name="_index"):
-        super().__init__()
-        self.in_edge = in_edge
-        self.out_edge = Edge()
+        super().__init__(in_edge)
         self.name = name
 
     def run(self):
@@ -25,31 +23,17 @@ class NumberGenerator(Node):
             self.out_edge.records.append(out)
         self.on_finish()
 
-    def in_edges(self):
-        return (self.in_edge,)
-
-    def out_edges(self):
-        return (self.out_edge,)
-
 
 class AsyncNumberGenerator(AsyncNode):
     def __init__(self, in_edge, name="_index"):
-        super().__init__()
-        self.in_edge = in_edge
-        self.out_edge = AsyncQueueEdge()
+        super().__init__(in_edge)
         self.name = name
 
     @gen.coroutine
-    def _dispatch(self):
+    def _get_loop(self):
         cnt = itertools.count()
         while 1:
             in_ = yield self.in_edge.get()
             out = {self.name: next(cnt)}
             out.update(in_)
             yield self.out_edge.put(out)
-
-    def in_edges(self):
-        return (self.in_edge,)
-
-    def out_edges(self):
-        return (self.out_edge,)

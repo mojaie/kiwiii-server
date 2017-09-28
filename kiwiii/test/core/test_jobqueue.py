@@ -7,41 +7,17 @@
 import time
 import unittest
 
-from kiwiii import jobqueue
-from kiwiii.task import Task
+from kiwiii.core.jobqueue import JobQueue
+from kiwiii.core.task import FlashTask, IdleTask
 
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
 
-class FlashTask(Task):
-    @gen.coroutine
-    def run(self):
-        pass
-
-
-class IdleTask(Task):
-    @gen.coroutine
-    def run(self):
-        self.on_start()
-        while 1:
-            if self.status == "interrupted":
-                self.on_aborted()
-                return
-            yield gen.sleep(0.2)
-        self.on_finish()
-
-    @gen.coroutine
-    def interrupt(self):
-        self.status = "interrupted"
-        while self.status != "aborted":
-            yield gen.sleep(0.2)
-
-
 class TestJobQueue(AsyncTestCase):
     @gen_test
     def test_store(self):
-        jq = jobqueue.JobQueue()
+        jq = JobQueue()
         task1 = FlashTask()
         task2 = FlashTask()
         task3 = FlashTask()
@@ -56,7 +32,7 @@ class TestJobQueue(AsyncTestCase):
 
     @gen_test
     def test_queue(self):
-        jq = jobqueue.JobQueue()
+        jq = JobQueue()
         task1 = IdleTask()
         task2 = IdleTask()
         yield jq.put(task1)
