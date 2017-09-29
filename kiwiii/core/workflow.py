@@ -18,12 +18,12 @@ class Workflow(Task):
         self.preds = {}
         self.succs = {}
         self.interval = 0.5
+        self.order = None
 
     @gen.coroutine
     def run(self):
         self.on_start()
-        order = graph.topological_sort(self.succs, self.preds)
-        for node_id in order:
+        for node_id in self.order:
             self.nodes[node_id].run()
         while any(n.status == "running" for n in self.nodes):
             if self.status == "aborted":
@@ -54,3 +54,8 @@ class Workflow(Task):
         while not all(f.done() for f in fs):
             yield gen.sleep(self.interval)
         self.on_aborted()
+
+    def on_submitted(self):
+        self.order = graph.topological_sort(self.succs, self.preds)
+        for node_id in self.order:
+            self.nodes[node_id].on_submitted()

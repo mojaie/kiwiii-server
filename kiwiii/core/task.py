@@ -32,23 +32,34 @@ class Task(object):
     def run(self):
         pass
 
-    def on_start(self):
-        self.status = "running"
-
-    def on_task_done(self, res):
-        pass
-
-    def on_finish(self):
-        self.status = "done"
-
-    def on_aborted(self):
-        self.status = "aborted"
-
     def interrupt(self):
         pass
 
+    def on_submitted(self):
+        """When the task is put into the jobqueue"""
+        pass
+
+    def on_start(self):
+        """When run method is called"""
+        self.status = "running"
+
+    def on_task_done(self, rcd):
+        """When a record was processed by the task"""
+        pass
+
+    def on_finish(self):
+        """When the task is finished without interruption"""
+        self.status = "done"
+
+    def on_aborted(self):
+        """When the task is completely halted after calling interrupt method"""
+        self.status = "aborted"
+
     def size(self):
         return debug.total_size(self)
+
+    def info(self, specs):
+        pass
 
 
 class FlashTask(Task):

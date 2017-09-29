@@ -20,14 +20,13 @@ except ImportError:
     RDK_AVAILABLE = False
 try:
     import cython
-    CYTHON_AVAILABLE = True
+    NUMERIC_MODULE = "Cython"
 except ImportError:
-    CYTHON_AVAILABLE = False
     try:
         import numexpr
-        NUMEXPR_AVAILABLE = True
+        NUMERIC_MODULE = "NumExpr"
     except ImportError:
-        NUMEXPR_AVAILABLE = False
+        NUMERIC_MODULE = "Numpy"
 
 
 """ Server status """

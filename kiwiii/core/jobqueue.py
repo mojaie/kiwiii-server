@@ -31,6 +31,7 @@ class JobQueue(object):
                 alive.append(task)
         self.store = alive
         yield self.queue.put(task)
+        task.on_submitted()
 
     def get(self, id_):
         for task in self.store:

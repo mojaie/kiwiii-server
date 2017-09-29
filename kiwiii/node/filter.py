@@ -26,6 +26,7 @@ class MPNodeWorker(MPWorker):
 
     @gen.coroutine
     def on_task_done(self, record):
+        self.node.out_edge.done_count += 1
         if record is not None:
             yield self.node.out_edge.put(record)
 

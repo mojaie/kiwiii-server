@@ -23,6 +23,11 @@ class NumberGenerator(Node):
             self.out_edge.records.append(out)
         self.on_finish()
 
+    def info(self, specs):
+        specs["columns"].insert(0, {
+            "key": "_index", "name": "Index", "sort": "numeric"
+        })
+
 
 class AsyncNumberGenerator(AsyncNode):
     def __init__(self, in_edge, name="_index"):
@@ -37,3 +42,8 @@ class AsyncNumberGenerator(AsyncNode):
             out = {self.name: next(cnt)}
             out.update(in_)
             yield self.out_edge.put(out)
+
+    def info(self, specs):
+        specs["columns"].insert(0, {
+            "key": "_index", "name": "Index", "sort": "numeric"
+        })

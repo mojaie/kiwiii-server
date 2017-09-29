@@ -23,7 +23,7 @@ from kiwiii import handlerutil as hu
 from kiwiii import tablebuilder as tb
 from kiwiii import tablefilter as tf
 from kiwiii import tablecolumn as tc
-from kiwiii.jobqueue import JobQueue
+from kiwiii.core.jobqueue import JobQueue
 from kiwiii.workflow.exactstruct import ExactStruct
 from kiwiii.workflow.chemdbfilter import ChemDBFilter
 from kiwiii.workflow.chemdbsearch import ChemDBSearch
@@ -99,6 +99,7 @@ class SubmitJobHandler(BaseHandler):
         self.jq = jq
 
     @hu.basic_auth
+    @gen.coroutine
     def get(self):
         """Search database
 
@@ -136,8 +137,8 @@ class SubmitJobHandler(BaseHandler):
             "rdmorgan": RDKitMorgan
         }
         wf = workflows[query["type"]](query)
+        yield self.jq.put(wf)
         self.write(wf.response)
-        self.jq.put(wf)
 
 
 class JobResultHandler(BaseHandler):
@@ -170,9 +171,6 @@ class JobResultHandler(BaseHandler):
             if query["command"] == "abort":
                 yield self.jq.abort(query["id"])
             self.write(wf.response)
-            #data["progress"] = round(
-            #    data["searchDoneCount"] / data["searchCount"] * 100, 1)
-            #data["recordCount"] = len(data["records"])
 
 
 class StructurePreviewHandler(BaseHandler):
@@ -356,8 +354,8 @@ class ServerStatusHandler(BaseHandler):
             "queuedTasks": self.jq.queue.qsize(),
             "instance": self.instance,
             "processors": static.PROCESSES,
-            "rdk": static.RDK_AVAILABLE,
-            "cython": static.CYTHON_AVAILABLE,
+            "rdkit": static.RDK_AVAILABLE,
+            "numericModule": static.NUMERIC_MODULE,
             "calc": {
                 "columns": [
                     {"key": "id"},

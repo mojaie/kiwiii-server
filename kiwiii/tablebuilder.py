@@ -8,7 +8,7 @@ import functools
 import time
 import uuid
 
-from kiwiii.task import MPWorker
+from kiwiii.core.task import MPWorker
 
 
 def timestamp(data):

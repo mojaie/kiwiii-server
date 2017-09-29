@@ -22,6 +22,10 @@ class Node(Task):
         self.in_edge = in_edge
         self.out_edge = Edge()
 
+    def on_submitted(self):
+        if self.in_edge is not None:
+            self.out_edge.task_count = self.in_edge.task_count
+
     def in_edges(self):
         return (self.in_edge,)
 
@@ -42,11 +46,16 @@ class AsyncNode(Task):
         self.out_edge = AsyncQueueEdge()
         self.interval = 0.5
 
+    def on_submitted(self):
+        if self.in_edge is not None:
+            self.out_edge.task_count = self.in_edge.task_count
+
     @gen.coroutine
     def _get_loop(self):
         while 1:
             in_ = yield self.in_edge.get()
             yield self.out_edge.put(in_)
+            self.out_edge.done_count += 1
 
     @gen.coroutine
     def run(self):
@@ -70,12 +79,27 @@ class AsyncNode(Task):
         return (self.out_edge,)
 
 
+class LazyNode(AsyncNode):
+    """For async node test"""
+    @gen.coroutine
+    def _get_loop(self):
+        while 1:
+            in_ = yield self.in_edge.get()
+            yield gen.sleep(0.01)
+            yield self.out_edge.put(in_)
+            self.out_edge.done_count += 1
+
+
 class Synchronizer(Task):
     def __init__(self, in_edge=None):
         super().__init__()
         self.in_edge = in_edge
         self.out_edge = Edge()
         self.interval = 0.5
+
+    def on_submitted(self):
+        if self.in_edge is not None:
+            self.out_edge.task_count = self.in_edge.task_count
 
     @gen.coroutine
     def _get_loop(self):
@@ -121,6 +145,10 @@ class Asynchronizer(Task):
         self.in_edge = in_edge
         self.out_edge = AsyncQueueEdge()
 
+    def on_submitted(self):
+        if self.in_edge is not None:
+            self.out_edge.task_count = self.in_edge.task_count
+
     @gen.coroutine
     def run(self):
         self.on_start()
@@ -128,6 +156,7 @@ class Asynchronizer(Task):
             if self.status == "interrupted":
                 return
             yield self.out_edge.put(in_)
+            self.out_edge.done_count += 1
         yield self.out_edge.done()
         self.on_finish()
 
@@ -159,6 +188,7 @@ class EagerProducer(Asynchronizer):
                 self.on_aborted()
                 return
             yield self.out_edge.put(i)
+            self.out_edge.done_count += 1
         yield self.out_edge.done()
         self.on_finish()
 

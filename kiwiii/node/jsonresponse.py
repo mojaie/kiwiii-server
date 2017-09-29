@@ -11,62 +11,87 @@ from kiwiii.core.node import Node, Synchronizer
 
 
 class JSONResponse(Node):
-    def __init__(self, in_edge, task):
+    def __init__(self, in_edge, wf):
         super().__init__(in_edge)
-        self.task = task
-        self.task.response = {
-            "id": self.task.id,
-            "name": self.task.id[:8],
+        self.wf = wf
+        self.wf.response = {
+            "id": self.wf.id,
+            "name": self.wf.id[:8],
             "columns": [],
             "records": [],
             "created": time.strftime("%X %x %Z",
-                                     time.localtime(self.task.created)),
-            "status": self.task.status
+                                     time.localtime(self.wf.created)),
+            "status": self.wf.status,
+            "resultCount": 0,
+            "taskCount": 0,
+            "doneCount": 0,
+            "progress": 100
         }
 
     def run(self):
-        self.task.response["records"] = list(self.in_edge.records)
+        self.wf.response["records"] = list(self.in_edge.records)
         self.on_finish()
 
     def out_edges(self):
         return tuple()
 
+    def on_submitted(self):
+        self.wf.response["taskCount"] = self.in_edge.task_count
+
     def on_finish(self):
+        for n in self.wf.nodes:
+            n.info(self.wf.response)
+        self.wf.response["status"] = "done"
+        self.wf.response["resultCount"] = len(self.wf.response["records"])
+        self.wf.response["doneCount"] = self.in_edge.task_count
         self.status = "done"
-        self.task.response["status"] = "done"
 
 
 class AsyncJSONResponse(Synchronizer):
-    def __init__(self, in_edge, task):
+    def __init__(self, in_edge, wf):
         super().__init__(in_edge)
-        self.task = task
-        self.task.response = {
-            "id": self.task.id,
-            "name": self.task.id[:8],
-            "columns": [],
+        self.wf = wf
+        self.wf.response = {
+            "id": self.wf.id,
+            "name": self.wf.id[:8],
+            "columns": [],  # provided by the info method of predecessor nodes
             "records": [],
             "created": time.strftime("%X %x %Z",
-                                     time.localtime(self.task.created)),
-            "status": self.task.status
+                                     time.localtime(self.wf.created)),
+            "status": self.wf.status,
+            "resultCount": 0,
+            "taskCount": 0,
+            "doneCount": 0,
+            "progress": 0
         }
 
     @gen.coroutine
     def _get_loop(self):
         while 1:
             in_ = yield self.in_edge.get()
-            self.task.response["records"].append(in_)
+            self.wf.response["records"].append(in_)
+            self.wf.response["resultCount"] += 1
+            tasks = self.wf.response["taskCount"]
+            done = self.wf.response["doneCount"] = self.in_edge.done_count
+            try:
+                self.wf.response["progress"] = round(done / tasks, 1)
+            except ZeroDivisionError:
+                pass
 
     def out_edges(self):
         return tuple()
 
+    def on_submitted(self):
+        self.wf.response["taskCount"] = self.in_edge.task_count
+
     def on_start(self):
         self.status = "running"
-        self.task.response["status"] = "running"
+        self.wf.response["status"] = "running"
 
     def on_finish(self):
-        self.status == "done"
-        self.task.response["status"] = "done"
+        self.status = "done"
+        self.wf.response["status"] = "done"
 
     def on_aborted(self):
         self.status = "aborted"
-        self.task.response["status"] = "aborted"
+        self.wf.response["status"] = "aborted"

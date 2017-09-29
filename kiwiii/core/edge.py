@@ -9,20 +9,25 @@ from tornado.queues import Queue
 
 
 class Edge(object):
+    def __init__(self):
+        self.records = []
+        self.task_count = 0
+
+
+class AsyncQueueEdge(object):
     """
     Parameters:
       status: str
         ready: ready to put results
-        done: incoming node finished its task and put all results to the edge
+        done: successfully the source node sent all data to the target node
+        aborted: the source node stopped sending data and remaining data in the
+            edge is sent to the target node
     """
-    def __init__(self):
-        self.records = []
-
-
-class AsyncQueueEdge(object):
     def __init__(self):
         self.queue = Queue(20)
         self.status = "ready"
+        self.task_count = 0
+        self.done_count = 0
 
     @gen.coroutine
     def put(self, record):
