@@ -18,7 +18,7 @@ class TestNumberGenerator(AsyncTestCase):
     def test_numbergenerator(self):
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(10)]
-        f = NumberGenerator(in_edge, name="num")
+        f = NumberGenerator(in_edge, field={"key": "num"})
         f.run()
         total = sum(a["num"] for a in f.out_edges()[0].records)
         self.assertEqual(total, 45)
@@ -29,7 +29,7 @@ class TestNumberGenerator(AsyncTestCase):
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(10)]
         n1 = Asynchronizer(in_edge)
-        n2 = AsyncNumberGenerator(n1.out_edges()[0], name="num")
+        n2 = AsyncNumberGenerator(n1.out_edges()[0], field={"key": "num"})
         n3 = Synchronizer(n2.out_edges()[0])
         n2.interval = 0.01
         n3.interval = 0.01
@@ -47,7 +47,7 @@ class TestNumberGenerator(AsyncTestCase):
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(100)]
         n1 = Asynchronizer(in_edge)
-        n2 = AsyncNumberGenerator(n1.out_edges()[0], name="num")
+        n2 = AsyncNumberGenerator(n1.out_edges()[0], field={"key": "num"})
         n3 = LazyConsumer(n2.out_edges()[0])
         n2.interval = 0.01
         n3.interval = 0.01
@@ -57,7 +57,7 @@ class TestNumberGenerator(AsyncTestCase):
         yield n1.interrupt()
         yield gen.sleep(0.1)
         self.assertEqual(n3.status, "aborted")
-        self.assertGreater(len(n3.out_edges()[0].records), 0)
+        self.assertGreater(len(n3.records), 0)
 
 
 if __name__ == '__main__':

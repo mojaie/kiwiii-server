@@ -22,15 +22,15 @@ class Node(Task):
         self.in_edge = in_edge
         self.out_edge = Edge()
 
-    def on_submitted(self):
-        if self.in_edge is not None:
-            self.out_edge.task_count = self.in_edge.task_count
-
     def in_edges(self):
         return (self.in_edge,)
 
     def out_edges(self):
         return (self.out_edge,)
+
+    def on_submitted(self):
+        if self.in_edge is not None:
+            self.out_edge.task_count = self.in_edge.task_count
 
 
 class FlashNode(Node):
@@ -46,16 +46,12 @@ class AsyncNode(Task):
         self.out_edge = AsyncQueueEdge()
         self.interval = 0.5
 
-    def on_submitted(self):
-        if self.in_edge is not None:
-            self.out_edge.task_count = self.in_edge.task_count
-
     @gen.coroutine
     def _get_loop(self):
         while 1:
             in_ = yield self.in_edge.get()
             yield self.out_edge.put(in_)
-            self.out_edge.done_count += 1
+            self.out_edge.done_count = self.in_edge.done_count
 
     @gen.coroutine
     def run(self):
@@ -77,6 +73,10 @@ class AsyncNode(Task):
 
     def out_edges(self):
         return (self.out_edge,)
+
+    def on_submitted(self):
+        if self.in_edge is not None:
+            self.out_edge.task_count = self.in_edge.task_count
 
 
 class LazyNode(AsyncNode):
@@ -97,10 +97,6 @@ class Synchronizer(Task):
         self.out_edge = Edge()
         self.interval = 0.5
 
-    def on_submitted(self):
-        if self.in_edge is not None:
-            self.out_edge.task_count = self.in_edge.task_count
-
     @gen.coroutine
     def _get_loop(self):
         while 1:
@@ -128,15 +124,29 @@ class Synchronizer(Task):
     def out_edges(self):
         return (self.out_edge,)
 
+    def on_submitted(self):
+        if self.in_edge is not None:
+            self.out_edge.task_count = self.in_edge.task_count
+
 
 class LazyConsumer(Synchronizer):
     """For async node test"""
+    def __init__(self, in_edge):
+        super().__init__(in_edge)
+        self.task_count = 0
+        self.done_count = 0
+        self.records = []
+
     @gen.coroutine
     def _get_loop(self):
         while 1:
             in_ = yield self.in_edge.get()
+            self.records.append(in_)
+            self.done_count = self.in_edge.done_count
             yield gen.sleep(0.01)
-            self.out_edge.records.append(in_)
+
+    def on_submitted(self):
+        self.task_count = self.in_edge.task_count
 
 
 class Asynchronizer(Task):
@@ -144,10 +154,6 @@ class Asynchronizer(Task):
         super().__init__()
         self.in_edge = in_edge
         self.out_edge = AsyncQueueEdge()
-
-    def on_submitted(self):
-        if self.in_edge is not None:
-            self.out_edge.task_count = self.in_edge.task_count
 
     @gen.coroutine
     def run(self):
@@ -160,12 +166,6 @@ class Asynchronizer(Task):
         yield self.out_edge.done()
         self.on_finish()
 
-    def in_edges(self):
-        return (self.in_edge,)
-
-    def out_edges(self):
-        return (self.out_edge,)
-
     @gen.coroutine
     def interrupt(self):
         if self.status != "running":
@@ -174,16 +174,27 @@ class Asynchronizer(Task):
         yield self.out_edge.aborted()
         self.on_aborted()
 
+    def in_edges(self):
+        return (self.in_edge,)
+
+    def out_edges(self):
+        return (self.out_edge,)
+
+    def on_submitted(self):
+        if self.in_edge is not None:
+            self.out_edge.task_count = self.in_edge.task_count
+
 
 class EagerProducer(Asynchronizer):
     def __init__(self):
         super().__init__()
         self.out_edge = AsyncQueueEdge()
+        self.task_count = 1000
 
     @gen.coroutine
     def run(self):
         self.on_start()
-        for i in range(1000):
+        for i in range(self.task_count):
             if self.status == "interrupted":
                 self.on_aborted()
                 return
@@ -194,3 +205,6 @@ class EagerProducer(Asynchronizer):
 
     def in_edges(self):
         return tuple()
+
+    def on_submitted(self):
+        self.out_edge.task_count = self.task_count

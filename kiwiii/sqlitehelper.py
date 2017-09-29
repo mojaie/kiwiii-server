@@ -30,6 +30,21 @@ def resources_iter(targets):
         yield dbs[db], rsrc
 
 
+def resource_fields(targets):
+    fields = []
+    for rsrc in static.RESOURCES:
+        fields.extend(rsrc["columns"])
+    return lod.unique(fields)
+
+
+def record_count(targets):
+    count = 0
+    for conn, rsrc in resources_iter(targets):
+        table_key = rsrc["entity"].split(':')[1]
+        count += conn.rows_count((table_key,))
+    return count
+
+
 def records_iter(query):
     for conn, rsrc in resources_iter(query["targets"]):
         table_key = rsrc["entity"].split(':')[1]

@@ -19,11 +19,16 @@ class TestNode(AsyncTestCase):
     def test_synchronizer(self):
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(10)]
+        in_edge.task_count = len(in_edge.records)
         n1 = Asynchronizer(in_edge)
         n2 = AsyncNode(n1.out_edges()[0])
         n3 = Synchronizer(n2.out_edges()[0])
         n2.interval = 0.01
         n3.interval = 0.01
+        n1.on_submitted()
+        n2.on_submitted()
+        n3.on_submitted()
+        self.assertEqual(n3.out_edges()[0].task_count, 10)
         n1.run()
         n2.run()
         yield n3.run()

@@ -48,6 +48,8 @@ class TestWorkflow(AsyncTestCase):
         self.assertEqual(n1.status, "aborted")
         self.assertEqual(e1.status, "aborted")
         self.assertEqual(n2.status, "aborted")
+        self.assertEqual(n2.task_count, 1000)
+        self.assertGreater(n2.done_count, 0)
 
 
 if __name__ == '__main__':

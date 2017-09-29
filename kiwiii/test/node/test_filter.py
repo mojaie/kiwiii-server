@@ -54,7 +54,7 @@ class TestFilter(AsyncTestCase):
         yield n1.interrupt()
         yield gen.sleep(0.1)
         self.assertEqual(n2.status, "aborted")
-        self.assertGreater(len(n2.out_edges()[0].records), 0)
+        self.assertGreater(len(n2.records), 0)
 
 
 if __name__ == '__main__':

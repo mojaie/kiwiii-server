@@ -55,6 +55,16 @@ class TestLOD(unittest.TestCase):
             {"a": 15, "d": "Diana"}
         ])
 
+    def test_unique(self):
+        data = [
+            {"a": 12, "b": 24, "c": True, "d": "Alice"},
+            {"a": 13, "b": 26, "c": False, "d": "Beth"},
+            {"a": 14, "b": 28, "c": False, "d": "Charley"},
+            {"a": 13, "b": 22, "c": False, "d": "Diana"}
+        ]
+        filtered = lod.unique(data, key="a")
+        self.assertEqual(len(list(filtered)), 3)
+
 
 if __name__ == '__main__':
     unittest.main()

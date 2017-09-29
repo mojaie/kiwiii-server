@@ -81,16 +81,16 @@ class DBSearchHandler(BaseHandler):
         :statuscode 200: no error
         """
         query = json.loads(self.get_argument("query"))
-        tasktrees = {
+        workflows = {
             "search": DBSearch,
             "filter": DBFilter,
             "chemsearch": ChemDBSearch,
             "chemfilter": ChemDBFilter,
             "exact": ExactStruct
         }
-        task = tasktrees[query["type"]](query)
-        yield task.run()
-        self.write(task.response)
+        wf = workflows[query["type"]](query)
+        yield wf.submit()
+        self.write(wf.response)
 
 
 class SubmitJobHandler(BaseHandler):

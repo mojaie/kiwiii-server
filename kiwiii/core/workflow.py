@@ -6,7 +6,7 @@
 
 from tornado import gen
 
-from kiwiii.util import graph
+from kiwiii.util import graph, lod
 from kiwiii.core.node import Asynchronizer
 from kiwiii.core.task import Task
 
@@ -17,8 +17,14 @@ class Workflow(Task):
         self.nodes = []
         self.preds = {}
         self.succs = {}
-        self.interval = 0.5
         self.order = None
+        self.fields = []
+        self.interval = 0.5
+
+    @gen.coroutine
+    def submit(self):
+        self.on_submitted()
+        yield self.run()
 
     @gen.coroutine
     def run(self):
@@ -58,4 +64,6 @@ class Workflow(Task):
     def on_submitted(self):
         self.order = graph.topological_sort(self.succs, self.preds)
         for node_id in self.order:
+            self.fields.extend(self.nodes[node_id].fields)
             self.nodes[node_id].on_submitted()
+        self.fields = lod.unique(self.fields)

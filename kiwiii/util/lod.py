@@ -16,16 +16,11 @@ def find(key, value, lod):
 def filter_(key, value, lod):
     """Yields filtered records by the given key-value pair.
     """
-    flt = filter(lambda x: x[key] == value, lod)
-    while True:
-        try:
-            yield next(flt)
-        except StopIteration:
-            return
+    return filter(lambda x: x[key] == value, lod)
 
 
 def join(key, left, right, full_join=False):
-    """Join right LOD to the left LOD (in-place)"""
+    """Joins right LOD to the left LOD (in-place)"""
     idx = {}
     for L in left:
         idx[L[key]] = L
@@ -34,3 +29,13 @@ def join(key, left, right, full_join=False):
             idx[r[key]].update(r)
         elif full_join:
             left.append(r)
+
+
+def unique(lod, key="key"):
+    """Skips records with duplicated key"""
+    found = set()
+    for L in lod:
+        if L[key] in found:
+            continue
+        found.add(L[key])
+        yield L

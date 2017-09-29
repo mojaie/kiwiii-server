@@ -20,6 +20,7 @@ class SQLiteQuery(Node):
             "filter": helper.find_all
         }[type_]
         self.out_edge.task_count = helper.record_count(query["targets"])
+        self.fields = helper.resource_fields(query["targets"])
 
     def run(self):
         self.out_edge.records = self.func(self.query)

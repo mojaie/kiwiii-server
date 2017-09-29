@@ -17,7 +17,7 @@ class JSONResponse(Node):
         self.wf.response = {
             "id": self.wf.id,
             "name": self.wf.id[:8],
-            "columns": [],
+            "fields": [],
             "records": [],
             "created": time.strftime("%X %x %Z",
                                      time.localtime(self.wf.created)),
@@ -54,7 +54,7 @@ class AsyncJSONResponse(Synchronizer):
         self.wf.response = {
             "id": self.wf.id,
             "name": self.wf.id[:8],
-            "columns": [],  # provided by the info method of predecessor nodes
+            "fields": [],
             "records": [],
             "created": time.strftime("%X %x %Z",
                                      time.localtime(self.wf.created)),
@@ -82,6 +82,7 @@ class AsyncJSONResponse(Synchronizer):
         return tuple()
 
     def on_submitted(self):
+        self.wf.response["fields"] = self.wf.fields
         self.wf.response["taskCount"] = self.in_edge.task_count
 
     def on_start(self):
