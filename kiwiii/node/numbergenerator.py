@@ -9,14 +9,14 @@ import itertools
 from tornado import gen
 from kiwiii.core.node import Node, AsyncNode
 
-FIELD = {"key": "_index", "name": "Index", "sort": "numeric"}
+INDEX_FIELD = {"key": "_index", "name": "Index", "sort": "numeric"}
 
 
 class NumberGenerator(Node):
     def __init__(self, in_edge, field=None):
         super().__init__(in_edge)
         if field is None:
-            self.fields = [FIELD]
+            self.fields = [INDEX_FIELD]
         else:
             self.fields = [field]
 
@@ -33,7 +33,7 @@ class AsyncNumberGenerator(AsyncNode):
     def __init__(self, in_edge, field=None):
         super().__init__(in_edge)
         if field is None:
-            self.fields = [FIELD]
+            self.fields = [INDEX_FIELD]
         else:
             self.fields = [field]
 

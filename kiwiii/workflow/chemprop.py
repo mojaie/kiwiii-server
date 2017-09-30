@@ -12,10 +12,10 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.sqlitequery import SQLiteQuery
-from kiwiii.node.chemdata import AsyncChemData
+from kiwiii.node.sqlitequery import SQLiteQuery, resource_fields
+from kiwiii.node.chemdata import AsyncChemData, STRUCT_FIELD
+from kiwiii.node.numbergenerator import AsyncNumberGenerator, INDEX_FIELD
 from kiwiii.node.filter import MPFilter
-from kiwiii.node.numbergenerator import AsyncNumberGenerator
 from kiwiii.node.jsonresponse import AsyncJSONResponse
 from kiwiii.util import lod
 
@@ -39,8 +39,11 @@ def like_operator(a, b):
 class ChemProp(Workflow):
     def __init__(self, query):
         super().__init__()
+        self.query = query
+        self.fields = [INDEX_FIELD, STRUCT_FIELD]
+        self.fields.extend(resource_fields(query["targets"]))
         sortfunc = {"numeric": float, "text": str}
-        col = lod.find("key", query["key"], static.CHEM_COLUMNS)
+        col = lod.find("key", query["key"], static.CHEM_FIELDS)
         vs = [sortfunc[col["sort"]](v) for v in query["values"]]
         v = {True: vs, False: vs[0]}[query["operator"] == "in"]
         opfunc = {

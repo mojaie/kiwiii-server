@@ -25,11 +25,9 @@ from kiwiii import tablefilter as tf
 from kiwiii import tablecolumn as tc
 from kiwiii.core.jobqueue import JobQueue
 from kiwiii.workflow.exactstruct import ExactStruct
-from kiwiii.workflow.chemdbfilter import ChemDBFilter
-from kiwiii.workflow.chemdbsearch import ChemDBSearch
+from kiwiii.workflow.chemdb import ChemDBFilter, ChemDBSearch
 from kiwiii.workflow.chemprop import ChemProp
-from kiwiii.workflow.dbfilter import DBFilter
-from kiwiii.workflow.dbsearch import DBSearch
+from kiwiii.workflow.db import DBFilter, DBSearch
 from kiwiii.workflow.gls import GLS
 from kiwiii.workflow.rdkitfmcs import RDKitFMCS
 from kiwiii.workflow.rdkitmorgan import RDKitMorgan

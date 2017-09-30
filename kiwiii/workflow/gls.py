@@ -25,6 +25,7 @@ def gls_filter(qmol, row):
 class GLS(Workflow):
     def __init__(self, query):
         super().__init__()
+        self.query = query
         e1, = self.add_node(SQLiteQuery())
         e2, = self.add_node(MPFilter(gls_filter, e1))
         e3, = self.add_node(AsyncNumberGenerator(e2))

@@ -26,6 +26,7 @@ def exact_filter(qmol, row):
 class ExactStruct(Workflow):
     def __init__(self, query):
         super().__init__()
+        self.query = query
         mw_filter = {
             "targets": query["targets"],
             "key": "_mw_wo_sw",

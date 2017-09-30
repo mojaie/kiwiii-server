@@ -62,8 +62,7 @@ def mol_to_svg(mol):
     return SVG(mol).contents()
 
 
-CHEM_COLUMNS = [
-    {"key": "_structure", "name": "Structure", "sort": "none"},
+CHEM_FIELDS = [
     {"key": "_mw", "name": "MW", "sort": "numeric"},
     {"key": "_formula", "name": "Formula", "sort": "text"},
     {"key": "_logp", "name": "WCLogP", "sort": "numeric"},
@@ -84,7 +83,7 @@ MOLOBJ_KEY = "_mol"
 def resource_format(data):
     for tbl in data["tables"]:
         if data["domain"] == "chemical":
-            tc.add_calc_cols(tbl)
+            tbl["columns"].extend(CHEM_FIELDS)
         tbl["domain"] = data["domain"]
         for col in tbl["columns"]:
             if "name" not in col:

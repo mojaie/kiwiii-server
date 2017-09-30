@@ -33,6 +33,8 @@ def resources_iter(targets):
 def resource_fields(targets):
     fields = []
     for rsrc in static.RESOURCES:
+        if rsrc["entity"] not in targets:
+            continue
         fields.extend(rsrc["columns"])
     return lod.unique(fields)
 
@@ -40,6 +42,8 @@ def resource_fields(targets):
 def record_count(targets):
     count = 0
     for conn, rsrc in resources_iter(targets):
+        if rsrc["entity"] not in targets:
+            continue
         table_key = rsrc["entity"].split(':')[1]
         count += conn.rows_count((table_key,))
     return count

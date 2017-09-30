@@ -9,6 +9,10 @@ from kiwiii.core.node import Node
 from kiwiii.core.edge import Edge
 
 
+def resource_fields(targets):
+    return helper.resource_fields(targets)
+
+
 class SQLiteQuery(Node):
     def __init__(self, type_, query=None):
         super().__init__()
@@ -20,7 +24,6 @@ class SQLiteQuery(Node):
             "filter": helper.find_all
         }[type_]
         self.out_edge.task_count = helper.record_count(query["targets"])
-        self.fields = helper.resource_fields(query["targets"])
 
     def run(self):
         self.out_edge.records = self.func(self.query)
