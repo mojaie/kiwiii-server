@@ -28,7 +28,7 @@ class ExactStruct(Workflow):
         super().__init__()
         self.query = query
         mw_filter = {
-            "targets": query["targets"],
+            "targets": query["tables"],
             "key": "_mw_wo_sw",
             "operator": "eq",
             "value": molutil.mw(query["mol"])

@@ -17,59 +17,47 @@ from kiwiii import static
 from kiwiii.util import lod
 
 
-def resources_iter(targets):
-    dbs = {}
-    for rsrc in static.RESOURCES:
-        if rsrc["entity"] not in targets:
-            continue
-        db, table_key = rsrc["entity"].split(':')
-        if db in dbs:
-            continue
-        path = os.path.join(static.SQLITE_BASE_DIR, "{}.sqlite3".format(db))
-        dbs[db] = sqlite.Connection(path)
-        yield dbs[db], rsrc
+SQLITE_RESOURCES = list(lod.filter_("resourceType", "sqlite",
+                                    static.RESOURCES))
 
 
-def resource_fields(targets):
-    fields = []
-    for rsrc in static.RESOURCES:
-        if rsrc["entity"] not in targets:
-            continue
-        fields.extend(rsrc["columns"])
-    return lod.unique(fields)
+def resource_fields(tables):
+    results = []
+    for tbl in tables:
+        print(tbl)
+        found = lod.find("table", tbl, SQLITE_RESOURCES)
+        print(found)
+        fields = found["fields"]
+        results.extend(fields)
+    return lod.unique(results)
 
 
-def record_count(targets):
+def record_count(tables, filename):
+    conn = sqlite.Connection(os.path.join(static.SQLITE_BASE_DIR, filename))
     count = 0
-    for conn, rsrc in resources_iter(targets):
-        if rsrc["entity"] not in targets:
-            continue
-        table_key = rsrc["entity"].split(':')[1]
-        count += conn.rows_count((table_key,))
+    for tbl in tables:
+        count += conn.rows_count(tbl)
     return count
 
 
-def records_iter(query):
-    for conn, rsrc in resources_iter(query["targets"]):
-        table_key = rsrc["entity"].split(':')[1]
-        for res in conn.rows_iter((table_key,)):
+def records_iter(tables, filename):
+    conn = sqlite.Connection(os.path.join(static.SQLITE_BASE_DIR, filename))
+    for tbl in tables:
+        for res in conn.rows_iter(tbl):
             row = dict(res)
             mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
             row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
             yield row
 
 
-def first_match(query):
-    for val in query["values"]:
-        is_chem = []
-        for conn, rsrc in resources_iter(query["targets"]):
-            if rsrc["domain"] == "chemical":
-                is_chem.append(1)
-            key_exists = lod.find("key", query["key"], rsrc["columns"])
+def first_match(tables, filename, key, values):
+    conn = sqlite.Connection(os.path.join(static.SQLITE_BASE_DIR, filename))
+    for val in values:
+        for tbl in tables:
+            key_exists = lod.find("key", key, resource_fields((tbl,)))
             if key_exists is None:
                 continue
-            table_key = rsrc["entity"].split(':')[1]
-            res = conn.find_first(query["key"], (val,), (table_key,))
+            res = conn.find_first(key, (val,), tbl)
             if res is not None:
                 row = dict(res)
                 if static.MOLOBJ_KEY in row:
@@ -78,25 +66,24 @@ def first_match(query):
                 yield row
                 break
         else:
-            if sum(is_chem):
-                null_record = {query["key"]: val}
+            if static.MOLOBJ_KEY in row:
+                null_record = {key: val}
                 null_record[static.MOLOBJ_KEY] = json.dumps(
                     molutil.null_molecule().jsonized())
                 yield null_record
             else:
-                yield {query["key"]: val}
+                yield {key: val}
 
 
-def find_all(query):
+def find_all(tables, filename, key, values, op):
+    conn = sqlite.Connection(os.path.join(static.SQLITE_BASE_DIR, filename))
     op = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",
-          "lk": "LIKE", "in": "IN"}[query["operator"]]
-    for conn, rsrc in resources_iter(query["targets"]):
-        key_exists = lod.find("key", query["key"], rsrc["columns"])
+          "lk": "LIKE", "in": "IN"}[op]
+    for tbl in tables:
+        key_exists = lod.find("key", key, resource_fields((tbl,)))
         if key_exists is None:
             continue
-        table_key = rsrc["entity"].split(':')[1]
-        for res in conn.find_iter(query["key"], query["values"],
-                                  (table_key,), op):
+        for res in conn.find_iter(key, values, tbl, op):
             row = dict(res)
             if static.MOLOBJ_KEY in row:
                 mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
@@ -117,11 +104,8 @@ def query_mol(query):
         except (ValueError, StopIteration):
             raise TypeError()
     elif query["format"] == "dbid":
-        res = next(first_match({
-            "targets": (query["source"],),
-            "key": "ID",
-            "values": (query["value"],)
-        }))
+        res = next(first_match((query["table"],), query["resourceFile"],
+                               "id", (query["value"],)))
         if res is None:
             raise ValueError()
         qmol = Compound(json.loads(res[static.MOLOBJ_KEY]))

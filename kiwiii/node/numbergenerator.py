@@ -9,7 +9,7 @@ import itertools
 from tornado import gen
 from kiwiii.core.node import Node, AsyncNode
 
-INDEX_FIELD = {"key": "_index", "name": "Index", "sort": "numeric"}
+INDEX_FIELD = {"key": "_index", "name": "Index", "sortType": "numeric"}
 
 
 class NumberGenerator(Node):

@@ -15,7 +15,7 @@ class DBFilter(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD]
-        self.fields.extend(resource_fields(query["targets"]))
+        self.fields.extend(resource_fields(query["tables"]))
         e1, = self.add_node(SQLiteQuery("filter", query))
         e2, = self.add_node(NumberGenerator(e1))
         self.add_node(JSONResponse(e2, self))
@@ -26,7 +26,7 @@ class DBSearch(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD]
-        self.fields.extend(resource_fields(query["targets"]))
+        self.fields.extend(resource_fields(query["tables"]))
         e1, = self.add_node(SQLiteQuery("search", query))
         e2, = self.add_node(NumberGenerator(e1))
         self.add_node(JSONResponse(e2, self))

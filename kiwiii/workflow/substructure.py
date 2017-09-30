@@ -37,12 +37,12 @@ class Substructure(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(resource_fields(query["targets"]))
+        self.fields.extend(resource_fields(query["tables"]))
         func = {
             "substr": functools.partial(substr_filter,
-                                        helper.query_mol(query)),
+                                        helper.query_mol(query["queryMol"])),
             "supstr": functools.partial(supstr_filter,
-                                        helper.query_mol(query))
+                                        helper.query_mol(query["queryMol"]))
         }[query["type"]]
         e1, = self.add_node(SQLiteQuery("all", query))
         e2, = self.add_node(MPFilter(func, e1))

@@ -48,7 +48,7 @@ class DBSearchFilter(object):
 
     def _resources_iter(self):
         dbconns = {}
-        for trgt in self.query["targets"]:
+        for trgt in self.query["tables"]:
             db, table = trgt.split(':')
             if db not in dbconns:
                 path = static.sqlite_path(db)
@@ -67,7 +67,7 @@ class DBSearchFilter(object):
         data["format"] = "datatable"
         dbconns = {}
         search_cnt = []
-        for trgt in self.query["targets"]:
+        for trgt in self.query["tables"]:
             db, table = trgt.split(':')
             if db not in dbconns:
                 path = static.sqlite_path(db)
@@ -119,7 +119,7 @@ class FirstMatchFilter(DBSearchFilter):
     def initialize(self, data):
         super().initialize(data)
         data["query"] = {
-            "targets": self.query["targets"],
+            "targets": self.query["tables"],
             "key": self.query["key"],
             "values": self.query["values"],
             "operator": "fm"
@@ -287,7 +287,7 @@ class SubStructFilter(DBSearchFilter):
         super().initialize(data)
         data["query"] = {
             "method": self.query["method"],
-            "targets": self.query["targets"],
+            "targets": self.query["tables"],
             "molecule": json.dumps(self.qmol.jsonized()),
             "svg": SVG(self.qmol).contents()
         }

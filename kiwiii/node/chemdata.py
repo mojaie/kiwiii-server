@@ -12,7 +12,7 @@ from kiwiii import static
 from kiwiii.core.node import Node, AsyncNode
 
 
-STRUCT_FIELD = {"key": "_structure", "name": "Structure", "sort": "none"}
+STRUCT_FIELD = {"key": "_structure", "name": "Structure", "sortType": "none"}
 
 
 def chem_data(row):

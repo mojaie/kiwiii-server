@@ -19,10 +19,8 @@ from tornado.options import define, options, parse_command_line
 from kiwiii import excelexporter
 from kiwiii import static
 from kiwiii import screenerapi
-from kiwiii import handlerutil as hu
-from kiwiii import tablebuilder as tb
-from kiwiii import tablefilter as tf
-from kiwiii import tablecolumn as tc
+from kiwiii import auth
+from kiwiii import sqlitehelper
 from kiwiii.core.jobqueue import JobQueue
 from kiwiii.workflow.exactstruct import ExactStruct
 from kiwiii.workflow.chemdb import ChemDBFilter, ChemDBSearch
@@ -44,7 +42,7 @@ class BaseHandler(web.RequestHandler):
 
 
 class SchemaHandler(BaseHandler):
-    @hu.basic_auth
+    @auth.basic_auth
     def get(self):
         """Responds with resource schema JSON
 
@@ -54,7 +52,7 @@ class SchemaHandler(BaseHandler):
 
 
 class DBSearchHandler(BaseHandler):
-    @hu.basic_auth
+    @auth.basic_auth
     @gen.coroutine
     def get(self):
         """Search database
@@ -96,7 +94,7 @@ class SubmitJobHandler(BaseHandler):
         super().initialize()
         self.jq = jq
 
-    @hu.basic_auth
+    @auth.basic_auth
     @gen.coroutine
     def get(self):
         """Search database
@@ -144,7 +142,7 @@ class JobResultHandler(BaseHandler):
         super().initialize()
         self.jq = jq
 
-    @hu.basic_auth
+    @auth.basic_auth
     @gen.coroutine
     def get(self):
         """Fetch calculation results
@@ -172,7 +170,7 @@ class JobResultHandler(BaseHandler):
 
 
 class StructurePreviewHandler(BaseHandler):
-    @hu.basic_auth
+    @auth.basic_auth
     def get(self):
         """Structure image preview
 
@@ -186,8 +184,7 @@ class StructurePreviewHandler(BaseHandler):
         """
         query = json.loads(self.get_argument("query"))
         try:
-            qmol = tf.parse_chem_query(
-                query["value"], query["format"], query.get("source"))
+            qmol = sqlitehelper.query_mol(query)
         except TypeError:
             response = '<span class="msg_warn">Format Error</span>'
         except ValueError:
@@ -211,6 +208,7 @@ class SdfHandler(BaseHandler):
         filename = self.request.files['contents'][0]['filename']
         contents = decode(self.request.files['contents'][0]['body'])
         query = json.loads(self.get_argument("query"))
+        """
         builder = tb.TableBuilder()
         builder.data["query"] = {"sourceFile": filename}
         builder.add_filter(tf.SdfFilter(contents, query))
@@ -220,6 +218,7 @@ class SdfHandler(BaseHandler):
         tc.add_calc_cols(builder.data)
         # builder.add_filter(tc.ChemAliaseColumn(config["default_chemlib"]))
         self.write(builder.flush())
+        """
 
 
 class GraphHandler(BaseHandler):
@@ -227,7 +226,7 @@ class GraphHandler(BaseHandler):
         super().initialize()
         self.jq = jq
 
-    @hu.basic_auth
+    @auth.basic_auth
     def post(self):
         """Submit graph connection calculation job
 
@@ -246,6 +245,7 @@ class GraphHandler(BaseHandler):
         :statuscode 200: no error
         """
         query = json.loads(self.get_argument("query"))
+        """
         builder = tb.TableBuilder()
         matrix_filter = {
             "gls": tf.GlsMatrixFilter,
@@ -254,6 +254,7 @@ class GraphHandler(BaseHandler):
         }
         builder.add_filter(matrix_filter[query["measure"]](query))
         builder.queue(self)
+        """
 
 
 class ReportPreviewHandler(BaseHandler):
@@ -268,7 +269,7 @@ class ReportPreviewHandler(BaseHandler):
         layer_idxs = [int(i) for i in self.get_arguments("vsel")]
         qcs = screenerapi.get_qcs_info((qcsid,), auth_header)[0]
         layer_name = {y["layerIndex"]: y["name"] for y in qcs["layers"]}
-        tmpl = hu.TemplateMatcher(tmpl_file, "Preview", 320)
+        tmpl = auth.TemplateMatcher(tmpl_file, "Preview", 320)
         arrays = screenerapi.get_all_layer_values(qcsid, 0, auth_header)
         for i in layer_idxs:
             tmpl.add_array(arrays[i], layer_name[i])
@@ -284,7 +285,7 @@ class ReportHandler(BaseHandler):
         stat_idxs = [int(i) for i in self.get_arguments("ssel")]
         qcs = screenerapi.get_qcs_info((qcsid,), auth_header)[0]
         layer_name = {y["layerIndex"]: y["name"] for y in qcs["layers"]}
-        tmpl = hu.TemplateMatcher(tmpl_file, "Results")
+        tmpl = auth.TemplateMatcher(tmpl_file, "Results")
         for i in layer_idxs:
             array = screenerapi.get_all_plate_values(qcsid, i, auth_header)
             tmpl.add_array(array, layer_name[i])
@@ -311,13 +312,12 @@ class ExcelExportHandler(BaseHandler):
 
 class SDFileExportHandler(BaseHandler):
     def post(self):
-        MOL = tc.MolObjectColumn()
         table = json.loads(self.request.files['json'][0]['body'].decode())
         cols = [c["key"] for c in table["columns"]
                 if c["visible"] and c["sort"] != "none"]
         mols = []
         for rcd in table["records"]:
-            mol = Compound(json.loads(rcd[MOL.key]))
+            mol = Compound(json.loads(rcd[static.MOLOBJ_KEY]))
             for col in cols:
                 mol.data[col] = rcd[col]
             mols.append(mol)
@@ -345,7 +345,7 @@ class ServerStatusHandler(BaseHandler):
         self.jq = jq
         self.instance = instance
 
-    @hu.basic_auth
+    @auth.basic_auth
     def get(self):
         js = {
             "totalTasks": len(self.jq),

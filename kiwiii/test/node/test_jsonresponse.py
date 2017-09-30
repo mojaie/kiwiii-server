@@ -18,6 +18,7 @@ from kiwiii.core.workflow import Workflow
 class TestJSONResponse(AsyncTestCase):
     def test_jsonresponse(self):
         wf = Workflow()
+        wf.query = {}
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(10)]
         n = JSONResponse(in_edge, wf)
@@ -28,11 +29,13 @@ class TestJSONResponse(AsyncTestCase):
     @gen_test
     def test_asyncjsonresponse(self):
         wf = Workflow()
+        wf.query = {}
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(10)]
         n1 = Asynchronizer(in_edge)
         n2 = AsyncJSONResponse(n1.out_edges()[0], wf)
         n2.interval = 0.01
+
         n1.run()
         yield n2.run()
         self.assertEqual(n1.status, "done")
@@ -43,6 +46,7 @@ class TestJSONResponse(AsyncTestCase):
     @gen_test
     def test_interrupt(self):
         wf = Workflow()
+        wf.query = {}
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(100)]
         n1 = Asynchronizer(in_edge)

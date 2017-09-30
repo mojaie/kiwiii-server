@@ -8,7 +8,6 @@ from chorus import molutil, wclogp
 from chorus.draw.svg import SVG
 
 from kiwiii import sqliteconnection as sqlite
-from kiwiii import tablecolumn as tc
 
 
 """ Option module availability """
@@ -63,10 +62,10 @@ def mol_to_svg(mol):
 
 
 CHEM_FIELDS = [
-    {"key": "_mw", "name": "MW", "sort": "numeric"},
-    {"key": "_formula", "name": "Formula", "sort": "text"},
-    {"key": "_logp", "name": "WCLogP", "sort": "numeric"},
-    {"key": "_nonH", "name": "Non-H atom count", "sort": "numeric"}
+    {"key": "_mw", "name": "MW", "sortType": "numeric"},
+    {"key": "_formula", "name": "Formula", "sortType": "text"},
+    {"key": "_logp", "name": "WCLogP", "sortType": "numeric"},
+    {"key": "_nonH", "name": "Non-H atom count", "sortType": "numeric"}
 ]
 
 CHEM_FUNCTIONS = {
@@ -81,26 +80,30 @@ MOLOBJ_KEY = "_mol"
 
 
 def resource_format(data):
-    for tbl in data["tables"]:
-        if data["domain"] == "chemical":
-            tbl["columns"].extend(CHEM_FIELDS)
-        tbl["domain"] = data["domain"]
-        for col in tbl["columns"]:
-            if "name" not in col:
-                col["name"] = col["key"]
-            if "request" not in col:
-                col["request"] = "search"
-            if "valueType" in col:
-                col["sort"] = "numeric"
-            elif "sort" not in col:
-                col["sort"] = "text"
+    for rsrc in data["resources"]:
+        rsrc["domain"] = data["domain"]
+        rsrc["resourceType"] = data["type"]
+        rsrc["resourceFile"] = data["file"]
+        if rsrc["domain"] == "chemical":
+            rsrc["fields"].extend(CHEM_FIELDS)
+        for field in rsrc["fields"]:
+            if "name" not in field:
+                field["name"] = field["key"]
+            if "request" not in field:
+                field["request"] = "search"
+            if "valueType" not in field:
+                field["valueType"] = "numeric"
+            if field["valueType"] in ["text", "compound_id"]:
+                field["sortType"] = "text"
+            else:
+                field["sortType"] = "numeric"
 
 
 def screener_format(data):
     for rsrc in data["resources"]:
         rsrc["domain"] = data["domain"]
-        rsrc["url"] = data["url"]
-        rsrc["entity"] = "{}:{}".format(rsrc["qcsRefId"], rsrc["layerIndex"])
+        rsrc["resourceType"] = data["type"]
+        rsrc["resourceURL"] = data["url"]
 
 
 def resources():
@@ -110,7 +113,7 @@ def resources():
         conn = sqlite.Connection(filename)
         doc = conn.document()
         resource_format(doc)
-        resources.extend(doc["tables"])
+        resources.extend(doc["resources"])
     # API schema
     for filename in glob.glob(os.path.join(API_BASE_DIR, "*.yaml")):
         with open(filename) as f:

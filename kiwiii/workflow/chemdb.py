@@ -16,7 +16,7 @@ class ChemDBFilter(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(resource_fields(query["targets"]))
+        self.fields.extend(resource_fields(query["tables"]))
         e1, = self.add_node(SQLiteQuery("filter", query))
         e2, = self.add_node(ChemData(e1))
         e3, = self.add_node(NumberGenerator(e2))
@@ -28,7 +28,7 @@ class ChemDBSearch(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD]
-        self.fields.extend(resource_fields(query["targets"]))
+        self.fields.extend(resource_fields(query["tables"]))
         e1, = self.add_node(SQLiteQuery("search", query))
         e2, = self.add_node(ChemData(e1))
         e3, = self.add_node(NumberGenerator(e2))

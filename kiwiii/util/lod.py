@@ -10,13 +10,13 @@ def find(key, value, lod):
     """Returns the record found by the given key-value pair.
     if not found, return None
     """
-    return next(filter(lambda x: x[key] == value, lod), None)
+    return next(filter(lambda x: x[key] == value, list(lod)), None)
 
 
 def filter_(key, value, lod):
     """Yields filtered records by the given key-value pair.
     """
-    return filter(lambda x: x[key] == value, lod)
+    return filter(lambda x: x[key] == value, list(lod))
 
 
 def join(key, left, right, full_join=False):
@@ -34,7 +34,7 @@ def join(key, left, right, full_join=False):
 def unique(lod, key="key"):
     """Skips records with duplicated key"""
     found = set()
-    for L in lod:
+    for L in list(lod):
         if L[key] in found:
             continue
         found.add(L[key])

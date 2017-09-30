@@ -8,6 +8,9 @@ import unittest
 
 from kiwiii.util import lod
 
+# TODO: testcases with lod generator args
+# (args generator cursor retained even after calling the function)
+
 
 class TestLOD(unittest.TestCase):
     def test_filter(self):
