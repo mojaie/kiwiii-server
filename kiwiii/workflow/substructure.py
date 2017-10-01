@@ -20,15 +20,17 @@ from kiwiii.node.numbergenerator import AsyncNumberGenerator, INDEX_FIELD
 from kiwiii.node.sqlitequery import SQLiteQuery, resource_fields
 
 
-def substr_filter(qmol, row):
+def substr_filter(qmol, params, row):
     mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
-    if substructure.substructure(mol, qmol):
+    if substructure.substructure(
+            mol, qmol, ignore_hydrogen=params["ignoreHs"]):
         return row
 
 
-def supstr_filter(qmol, row):
+def supstr_filter(qmol, params, row):
     mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
-    if substructure.substructure(qmol, mol):
+    if substructure.substructure(
+            qmol, mol, ignore_hydrogen=params["ignoreHs"]):
         return row
 
 
@@ -38,11 +40,10 @@ class Substructure(Workflow):
         self.query = query
         self.fields = [INDEX_FIELD, STRUCT_FIELD]
         self.fields.extend(resource_fields(query["tables"]))
+        qmol = helper.query_mol(query["queryMol"])
         func = {
-            "substr": functools.partial(substr_filter,
-                                        helper.query_mol(query["queryMol"])),
-            "supstr": functools.partial(supstr_filter,
-                                        helper.query_mol(query["queryMol"]))
+            "substr": functools.partial(substr_filter, qmol, query["params"]),
+            "supstr": functools.partial(substr_filter, qmol, query["params"])
         }[query["type"]]
         e1, = self.add_node(SQLiteQuery("all", query))
         e2, = self.add_node(MPFilter(func, e1))
