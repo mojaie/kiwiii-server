@@ -34,36 +34,41 @@ Query API
         * **timeout**\ (*float*) - timeout for MCS calculation
 
 
-
-Response JSON format
------------------------
-
-
-**SQLite datatable response**::
-
-    {
-        "id": "hoge",
-        "format": "datatable",
-        "progress": 100
-    }
-
+**SDFile import query (POST)**::
 
 :Attributes:
-    * **id**\ (*string*) - datatable ID
-    * **name**\ (*string*) - datatable name
-    * **format**\ (*string*) - "datatable"
-    * **query**\ (*object*) - query JSON object
-    * **fields**\ (*object*) - list of fields
-    * **records**\ (*object*) - list of record
-    * **status**\ (*string*) - task status
-    * **created**\ (*string*) - date computation job created
-    * **resultCount**\ (*int*) - total number of result rows
-    * **taskCount**\ (*int*) - total number of row tasks to be processed
-    * **doneCount**\ (*int*) - total number of done tasks
-    * **progress**\ (*float*) - doneCount / taskCount * 100
+    * **contents**\ (*file*) - SDFile contents (binary)
+    * **params**\ (*object*) - optional parameters
 
-    * **responseDate**\ (*string*) - date of response sent from server
-    * **execTime**\ (*float*) - execution time
+
+**SDFile import query (POST)**::
+
+:Attributes:
+    * **json**\ (*file*) - JSON datafile (binary, stringified)
+    * **params**\ (*object*) - optional parameters
+        * **fields**\ (*object*) - list of fields to be imported
+        * **implh**\ (*bool*) - make hydrogens implicit or not
+        * **recalc**\ (*bool*) - recalculate 2D coordinates or not
+
+
+**Similarity network query (POST)**::
+
+:Attributes:
+    * **json**\ (*file*) - JSON datafile (binary, stringified)
+    * **params**\ (*object*) - optional parameters
+
+
+**Job result query (GET)**::
+
+    {
+        "id": "",
+        "command": "abort"
+    }
+
+:Attributes:
+    * **id**\ (*string*) - job ID
+    * **command**\ (*string*) - command to the server task
+
 
 
 * :ref:`genindex`

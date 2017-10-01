@@ -63,6 +63,8 @@ def mol_to_svg(mol):
 
 CHEM_FIELDS = [
     {"key": "_mw", "name": "MW", "sortType": "numeric"},
+    {"key": "_mw_wo_sw", "name": "MW w/o salt and water",
+     "sortType": "numeric"},
     {"key": "_formula", "name": "Formula", "sortType": "text"},
     {"key": "_logp", "name": "WCLogP", "sortType": "numeric"},
     {"key": "_nonH", "name": "Non-H atom count", "sortType": "numeric"}
@@ -71,6 +73,7 @@ CHEM_FIELDS = [
 CHEM_FUNCTIONS = {
     "_structure": mol_to_svg,
     "_mw": molutil.mw,
+    "_mw_wo_sw": molutil.mw_wo_sw,
     "_formula": molutil.formula,
     "_logp": wclogp.wclogp,
     "_nonH": molutil.non_hydrogen_count
