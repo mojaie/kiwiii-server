@@ -16,8 +16,8 @@ from kiwiii.node.filter import MPFilter
 from kiwiii.node.simpleio import ListInput
 
 
-def gls_filter(func, param, row):
-    arr1, arr2 = row
+def gls_matrix_filter(param, pair):
+    mol1, arr2 = pair
     result = func(arr1[1], arr2[1])
     if result[param] >= thld:
         row["source"] = arr1[0]
@@ -29,7 +29,11 @@ def gls_filter(func, param, row):
     return False
 
 
-class SimilarityNetwork(Workflow):
+def chemobj(rcd):
+    return Compound(json.loads(rcd[static.MOLOBJ_KEY]))
+
+
+class GLSSimilarityNetwork(Workflow):
     def __init__(self, contents, params):
         super().__init__()
         self.query = params
@@ -37,16 +41,13 @@ class SimilarityNetwork(Workflow):
             {"key": "source"},
             {"key": "target"}
         ]
-        mols = (Compound(json.loads(rcd[static.MOLOBJ_KEY]))
-                for rcd in contents["records"])
         diam = int(params["diameter"])
         tree = int(params["maxTreeSize"])
-        if params["measure"] == "gls":
-            mols = (mcsdr.comparison_array(m, diam, tree) for m in mols)
-        func = {
-            "gls": functools.partial(mcsdr_filter, qmolarr, params)
-        }[params["measure"]]
-        e1, = self.add_node(ListInput(mols))
-        e2, = self.add_node(MatrixSupplier(e1))
-        e3, = self.add_node(MPFilter(func, e2))
-        self.add_node(AsyncNetworkEdgesOutput(e3, self))
+        comparr = functools.partial(mcsdr.comparison_array, diam, tree)
+        filter_ = functools.partial(gls_matrix_filter, params)
+        e1, = self.add_node(ListInput(contents["records"]))
+        e2, = self.add_node(Apply(chemobj, e1))
+        e3, = self.add_node(Apply(comparr, e2))
+        e4, = self.add_node(MatrixSupplier(e3))
+        e5, = self.add_node(MPFilter(filter_, e4))
+        self.add_node(AsyncGraphOutput(e5, self))
