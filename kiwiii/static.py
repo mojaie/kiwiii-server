@@ -149,6 +149,11 @@ SCHEMA = {
 }
 
 
+EXTERNALS = [
+    "external.screenerapi"
+]
+
+
 # dummy
 def sqlite_path(db):
     return

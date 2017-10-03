@@ -18,7 +18,6 @@ from tornado.options import define, options, parse_command_line
 
 from kiwiii import excelexporter
 from kiwiii import static
-from kiwiii import screenerapi
 from kiwiii import auth
 from kiwiii import sqlitehelper
 from kiwiii.core.jobqueue import JobQueue
@@ -193,49 +192,6 @@ class ExcelExportHandler(BaseHandler):
         self.write(buf.getvalue())
 
 
-class ReportPreviewHandler(BaseHandler):
-    def get(self):
-        auth_header = self.request.headers.get('Authorization')
-        # TODO: auth_header is local servers one
-        # auth_decoded = base64.b64decode(auth_header[6:]).decode('utf-8')
-        # user, passwd = auth_decoded.split(':')
-        # print(user, passwd)
-        qcsid = self.get_argument("qcsid")
-        tmpl_file = self.get_argument("template")
-        layer_idxs = [int(i) for i in self.get_arguments("vsel")]
-        qcs = screenerapi.get_qcs_info((qcsid,), auth_header)[0]
-        layer_name = {y["layerIndex"]: y["name"] for y in qcs["layers"]}
-        tmpl = auth.TemplateMatcher(tmpl_file, "Preview", 320)
-        arrays = screenerapi.get_all_layer_values(qcsid, 0, auth_header)
-        for i in layer_idxs:
-            tmpl.add_array(arrays[i], layer_name[i])
-        self.write(tmpl.to_json())
-
-
-class ReportHandler(BaseHandler):
-    def get(self):
-        auth_header = self.request.headers.get('Authorization')
-        qcsid = self.get_argument("qcsid")
-        tmpl_file = self.get_argument("template")
-        layer_idxs = [int(i) for i in self.get_arguments("vsel")]
-        stat_idxs = [int(i) for i in self.get_arguments("ssel")]
-        qcs = screenerapi.get_qcs_info((qcsid,), auth_header)[0]
-        layer_name = {y["layerIndex"]: y["name"] for y in qcs["layers"]}
-        tmpl = auth.TemplateMatcher(tmpl_file, "Results")
-        for i in layer_idxs:
-            array = screenerapi.get_all_plate_values(qcsid, i, auth_header)
-            tmpl.add_array(array, layer_name[i])
-        data = {"tables": [tmpl.to_json()]}
-        for i in stat_idxs:
-            stat = screenerapi.get_all_plate_stats(qcsid, i, auth_header)
-            stat["name"] = layer_name[i]
-            data["tables"].append(stat)
-        buf = excelexporter.json_to_xlsx(data)
-        self.set_header("Content-Type", 'application/vnd.openxmlformats-office\
-                        document.spreadsheetml.sheet; charset="utf-8"')
-        self.write(buf.getvalue())
-
-
 """
 class LoginHandler(BaseHandler):
     def post(self):
@@ -307,8 +263,6 @@ def run():
             (r"/sdfin", SDFileParserHandler),
             (r"/sdfout", SDFileExportHandler),
             (r"/xlsx", ExcelExportHandler),
-            (r"/report", ReportHandler),
-            (r"/reportprev", ReportPreviewHandler),
             (r"/server", ServerStatusHandler, store),
             (r'/(.*)', web.StaticFileHandler, {"path": static.WEB_HOME})
         ],
@@ -316,9 +270,12 @@ def run():
         compress_response=True,
         cookie_secret="_TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE_"
     )
+    for ext in static.EXTERNALS:
+        mod = __import__(ext, fromlist=["handler"])
+        mod.handler.install(app)
     app.listen(options.port)
     try:
         print("Server started")
-        IOLoop.instance().start()
+        IOLoop.current().start()
     except KeyboardInterrupt:
         print("Server stopped")
