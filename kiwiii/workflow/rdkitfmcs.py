@@ -18,7 +18,7 @@ from kiwiii.node.chemdata import AsyncChemData, STRUCT_FIELD
 from kiwiii.node.filter import MPFilter
 from kiwiii.node.jsonresponse import AsyncJSONResponse
 from kiwiii.node.numbergenerator import AsyncNumberGenerator, INDEX_FIELD
-from kiwiii.node.sqlitequery import SQLiteQuery, resource_fields
+from kiwiii.node.sqliteio import SQLiteInput, resource_fields
 
 
 def rdfmcs_filter(qmol, params, row):
@@ -49,7 +49,7 @@ class RDKitFMCS(Workflow):
         ])
         qmol = helper.query_mol(query["queryMol"])
         func = functools.partial(rdfmcs_filter, qmol, query["params"])
-        e1, = self.add_node(SQLiteQuery("all", query))
+        e1, = self.add_node(SQLiteInput(query))
         e2, = self.add_node(MPFilter(func, e1))
         e3, = self.add_node(AsyncChemData(e2))
         e4, = self.add_node(AsyncNumberGenerator(e3))

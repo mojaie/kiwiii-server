@@ -22,16 +22,14 @@ from kiwiii import screenerapi
 from kiwiii import auth
 from kiwiii import sqlitehelper
 from kiwiii.core.jobqueue import JobQueue
-from kiwiii.workflow.exactstruct import ExactStruct
-from kiwiii.workflow.chemdb import ChemDBFilter, ChemDBSearch
+from kiwiii.workflow import db
+from kiwiii.workflow import similaritynetwork as simnet
+from kiwiii.workflow import substructure as substr
 from kiwiii.workflow.chemprop import ChemProp
-from kiwiii.workflow.db import DBFilter, DBSearch
 from kiwiii.workflow.gls import GLS
 from kiwiii.workflow.rdkitfmcs import RDKitFMCS
 from kiwiii.workflow.rdkitmorgan import RDKitMorgan
 from kiwiii.workflow.sdfparser import SDFParser
-from kiwiii.workflow.similaritynetwork import SimilarityNetwork
-from kiwiii.workflow.substructure import Substructure
 
 
 class BaseHandler(web.RequestHandler):
@@ -60,11 +58,11 @@ class WorkflowHandler(BaseHandler):
         """Runs calculation job and immediately responds"""
         query = json.loads(self.get_argument("query"))
         workflows = {
-            "search": DBSearch,
-            "filter": DBFilter,
-            "chemsearch": ChemDBSearch,
-            "chemfilter": ChemDBFilter,
-            "exact": ExactStruct
+            "search": db.DBSearch,
+            "filter": db.DBFilter,
+            "chemsearch": db.ChemDBSearch,
+            "chemfilter": db.ChemDBFilter,
+            "exact": substr.ExactStruct
         }
         wf = workflows[query["type"]](query)
         yield wf.submit()
@@ -82,7 +80,8 @@ class AsyncWorkflowHandler(BaseHandler):
         """Submits calculation job"""
         query = json.loads(self.get_argument("query"))
         workflows = {
-            "substr": Substructure,
+            "substr": substr.Substruct,
+            "supstr": substr.Superstruct,
             "prop": ChemProp,
             "gls": GLS,
             "rdfmcs": RDKitFMCS,
@@ -127,7 +126,12 @@ class SimilarityNetworkHandler(BaseHandler):
         """Submit similarity network calculation job"""
         contents = json.loads(self.request.files['json'][0]['body'].decode())
         params = json.loads(self.get_argument("params"))
-        wf = SimilarityNetwork(contents, params)
+        workflows = {
+            "gls": simnet.GLSNetwork,
+            "rdmorgan": simnet.RDKitMorganNetwork,
+            "rdfmcs": simnet.RDKitFMCSNetwork,
+        }
+        wf = workflows[params["type"]](contents, params)
         yield self.jq.put(wf)
         self.write(wf.response)
 

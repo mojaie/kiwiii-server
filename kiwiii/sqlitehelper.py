@@ -24,9 +24,7 @@ SQLITE_RESOURCES = list(lod.filter_("resourceType", "sqlite",
 def resource_fields(tables):
     results = []
     for tbl in tables:
-        print(tbl)
         found = lod.find("table", tbl, SQLITE_RESOURCES)
-        print(found)
         fields = found["fields"]
         results.extend(fields)
     return lod.unique(results)
