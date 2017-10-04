@@ -6,9 +6,11 @@
 
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.jsonresponse import JSONResponse
-from kiwiii.node.numbergenerator import NumberGenerator, INDEX_FIELD
 from kiwiii.node import sqliteio
+from kiwiii.node.jsonresponse import JSONResponse
+from kiwiii.node.merge import Merge
+from kiwiii.node.pivot import Stack
+from kiwiii.node.numbergenerator import NumberGenerator, INDEX_FIELD
 
 """ TODO: result """
 
@@ -73,8 +75,8 @@ class Profile(Workflow):
                 }
                 e1, = self.add_node(httpio.HTTPResourceFilterInput(sq))
             e1s.append(e1)
-        e2, = self.add_node(Append(e1s))
-        e3, = self.add_node(Splitter(, e2))
+        e2, = self.add_node(Merge(e1s))
+        e3, = self.add_node(Stack(('id',), e2))
         e3, = self.add_node(Apply(formatter, e2))
         e4, = self.add_node(NumberGenerator(e3))
         self.add_node(JSONResponse(e4, self))
