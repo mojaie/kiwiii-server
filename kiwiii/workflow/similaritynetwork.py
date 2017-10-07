@@ -17,7 +17,7 @@ from kiwiii.core.workflow import Workflow
 from kiwiii.node.combination import Combination
 from kiwiii.node.filter import MPFilter
 from kiwiii.node.jsonresponse import AsyncJSONResponse
-from kiwiii.node.simpleio import IteratorInput
+from kiwiii.node.basicio import IteratorInput
 
 
 def gls_filter(params, pair):

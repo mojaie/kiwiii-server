@@ -15,8 +15,7 @@ class Filter(Node):
         self.func = func
 
     def run(self):
-        # TODO: filter out None
-        self.out_edge.records = map(self.func, self.in_edge.records)
+        self.out_edge.records = filter(self.func, self.in_edge.records)
         self.on_finish()
 
 

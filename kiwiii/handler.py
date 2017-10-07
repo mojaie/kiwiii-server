@@ -26,6 +26,7 @@ from kiwiii.workflow import similaritynetwork as simnet
 from kiwiii.workflow import substructure as substr
 from kiwiii.workflow.chemprop import ChemProp
 from kiwiii.workflow.gls import GLS
+from kiwiii.workflow.profile import Profile
 from kiwiii.workflow.rdkitfmcs import RDKitFMCS
 from kiwiii.workflow.rdkitmorgan import RDKitMorgan
 from kiwiii.workflow.sdfparser import SDFParser
@@ -61,7 +62,8 @@ class WorkflowHandler(BaseHandler):
             "filter": db.DBFilter,
             "chemsearch": db.ChemDBSearch,
             "chemfilter": db.ChemDBFilter,
-            "exact": substr.ExactStruct
+            "exact": substr.ExactStruct,
+            "profile": Profile
         }
         wf = workflows[query["type"]](query)
         yield wf.submit()
@@ -81,7 +83,7 @@ class AsyncWorkflowHandler(BaseHandler):
         workflows = {
             "substr": substr.Substruct,
             "supstr": substr.Superstruct,
-            "prop": ChemProp,
+            "chemprop": ChemProp,
             "gls": GLS,
             "rdfmcs": RDKitFMCS,
             "rdmorgan": RDKitMorgan

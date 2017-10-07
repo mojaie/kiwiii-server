@@ -4,68 +4,49 @@
 # http://opensource.org/licenses/MIT
 #
 
-from kiwiii import static
+import functools
+
+from kiwiii import sqlitehelper
 from kiwiii.core.workflow import Workflow
 from kiwiii.node import sqliteio
+from kiwiii.node.apply import Apply
 from kiwiii.node.jsonresponse import JSONResponse
 from kiwiii.node.merge import Merge
-from kiwiii.node.pivot import Stack
+from kiwiii.node.reshape import Stack
 from kiwiii.node.numbergenerator import NumberGenerator, INDEX_FIELD
+from kiwiii.util import lod
 
-""" TODO: result """
 
-result = {
-    "chem": {
-        "fields": [
-            {"key": "key"},
-            {"key": "value"}
-        ],
-        "records": [
-            {"key": "id", "value": "DB00172"},
-            {"key": "name", "value": "hoge"}
-        ]
-    },
-    "aliases": {
-        "fields": [
-            {"key": "id"},
-            {"key": "source"}
-        ],
-        "records": [
-            {"id": "DB00172", "source": "DRUGBANKFDA"}
-        ]
-    },
-    "assays": {
-        "fields": [
-            {"key": "field"},
-            {"key": "source"},
-            {"key": "tags"},
-            {"key": "dataType"},
-            {"key": "value"},
-        ],
-        "records": [
-            {"field": "test1", "source": "assay.sqlite3",
-             "tags": ["hoge", "fuga"], "dataType": "type"}
-        ]
-    }
-}
+def add_rsrc_fields(fields_dict, row):
+    row.update(fields_dict[row["field"]])
+    return row
 
 
 class Profile(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        self.fields = [INDEX_FIELD]
-        self.fields.extend(sqliteio.resource_fields(query["tables"]))
+        self.fields = [
+            INDEX_FIELD,
+            {"key": "id"},
+            {"key": "field"},
+            {"key": "value"},
+        ]
         e1s = []
-        for r in static.RESOURCES:
-            if r["resourceType"] == "sqlite":
-                sq = {
-                    "type": "filter",
-                    "tables": resources,
-                    "resourceFile": r,
-                    "key": "id", "operator": "eq", "value": query[""]
-                }
-                e1, = self.add_node(sqliteio.SQLiteFilterInput(sq))
+        fields_dict = {}
+        for r in lod.filter_(
+                "domain", "activity", sqlitehelper.SQLITE_RESOURCES):
+            for f in r["fields"]:
+                fields_dict[f["key"]] = f
+            sq = {
+                "type": "filter",
+                "tables": (r["table"],),
+                "resourceFile": r["resourceFile"],
+                "key": "id", "operator": "eq", "values": (query["id"],)
+            }
+            e1, = self.add_node(sqliteio.SQLiteFilterInput(sq))
+            e1s.append(e1)
+            """
             if r["resourceType"] == "api":
                 sq = {
                     "type": "filter",
@@ -74,9 +55,10 @@ class Profile(Workflow):
                     "key": "id", "operator": "eq", "value": query[""]
                 }
                 e1, = self.add_node(httpio.HTTPResourceFilterInput(sq))
-            e1s.append(e1)
+            """
         e2, = self.add_node(Merge(e1s))
         e3, = self.add_node(Stack(('id',), e2))
-        e3, = self.add_node(Apply(formatter, e2))
-        e4, = self.add_node(NumberGenerator(e3))
-        self.add_node(JSONResponse(e4, self))
+        func = functools.partial(add_rsrc_fields, fields_dict)
+        e4, = self.add_node(Apply(func, e3))
+        e5, = self.add_node(NumberGenerator(e4))
+        self.add_node(JSONResponse(e5, self))
