@@ -6,8 +6,7 @@ Query API
 
     {
         "type": "chemsearch",
-        "tables": ["DRUGBANKFDA"],
-        "resourceFile": "sdf_demo.sqlite3",
+        "targets": ["drugbankfda"],
         "key": "id",
         "values": ["DB00189", "DB00193", "DB00203", "DB00865", "DB01143"]
     }

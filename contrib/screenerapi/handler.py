@@ -3,7 +3,7 @@ import csv
 import os
 
 from tornado import web
-from contrib.screenerapi import screenerapi
+from contrib.screenerapi import request
 from kiwiii import excelexporter
 from kiwiii import static
 
@@ -30,10 +30,10 @@ class ReportPreviewHandler(web.RequestHandler):
         qcsid = self.get_argument("qcsid")
         tmpl_file = self.get_argument("template")
         layer_idxs = [int(i) for i in self.get_arguments("vsel")]
-        qcs = screenerapi.get_qcs_info((qcsid,), auth_header)[0]
+        qcs = request.get_qcs_info((qcsid,), auth_header)[0]
         layer_name = {y["layerIndex"]: y["name"] for y in qcs["layers"]}
         tmpl = TemplateMatcher(tmpl_file, "Preview", 320)
-        arrays = screenerapi.get_all_layer_values(qcsid, 0, auth_header)
+        arrays = request.get_all_layer_values(qcsid, 0, auth_header)
         for i in layer_idxs:
             tmpl.add_array(arrays[i], layer_name[i])
         self.write(tmpl.to_json())
@@ -46,15 +46,15 @@ class ReportHandler(web.RequestHandler):
         tmpl_file = self.get_argument("template")
         layer_idxs = [int(i) for i in self.get_arguments("vsel")]
         stat_idxs = [int(i) for i in self.get_arguments("ssel")]
-        qcs = screenerapi.get_qcs_info((qcsid,), auth_header)[0]
+        qcs = request.get_qcs_info((qcsid,), auth_header)[0]
         layer_name = {y["layerIndex"]: y["name"] for y in qcs["layers"]}
         tmpl = TemplateMatcher(tmpl_file, "Results")
         for i in layer_idxs:
-            array = screenerapi.get_all_plate_values(qcsid, i, auth_header)
+            array = request.get_all_plate_values(qcsid, i, auth_header)
             tmpl.add_array(array, layer_name[i])
         data = {"tables": [tmpl.to_json()]}
         for i in stat_idxs:
-            stat = screenerapi.get_all_plate_stats(qcsid, i, auth_header)
+            stat = request.get_all_plate_stats(qcsid, i, auth_header)
             stat["name"] = layer_name[i]
             data["tables"].append(stat)
         buf = excelexporter.json_to_xlsx(data)
