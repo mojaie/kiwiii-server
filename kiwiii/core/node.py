@@ -87,7 +87,7 @@ class LazyNode(AsyncNode):
             in_ = yield self.in_edge.get()
             yield gen.sleep(0.01)
             yield self.out_edge.put(in_)
-            self.out_edge.done_count += 1
+            self.out_edge.done_count = self.in_edge.done_count
 
 
 class Synchronizer(Task):

@@ -3,7 +3,7 @@ import csv
 import os
 
 from tornado import web
-from external.screenerapi import screenerapi
+from contrib.screenerapi import screenerapi
 from kiwiii import excelexporter
 from kiwiii import static
 
@@ -100,6 +100,6 @@ def install(application):
     application.add_handlers(r".*", [
         (r"/screener/drc", DRCHandler),
         (r"/screener/compound", CompoundHandler),
-        (r"/report", ReportHandler),
-        (r"/reportprev", ReportPreviewHandler)
+        (r"/screener/report", ReportHandler),
+        (r"/screener/reportprev", ReportPreviewHandler)
     ])

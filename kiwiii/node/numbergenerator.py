@@ -45,3 +45,4 @@ class AsyncNumberGenerator(AsyncNode):
             out = {self.fields[0]["key"]: next(cnt)}
             out.update(in_)
             yield self.out_edge.put(out)
+            self.out_edge.done_count = self.in_edge.done_count

@@ -150,7 +150,7 @@ SCHEMA = {
 
 
 EXTERNALS = [
-    "external.screenerapi"
+    "contrib.screenerapi"
 ]
 
 

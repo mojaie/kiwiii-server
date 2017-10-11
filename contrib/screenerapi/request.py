@@ -26,14 +26,21 @@ def request(query, auth_header):
     return response.body
 
 
-def get_qcs_info(qcs_refids, auth_header):
+def qcs_info(qcs_refids, auth_header):
     queries = " OR ".join(["qcsRefId%3A{}".format(q) for q in qcs_refids])
     res = request("/qcSessions?q={}".format(queries), auth_header)
     obj = json.loads(res.decode())
     return obj["qcSessions"]
 
 
-def get_all_layer_values(qcs_refid, plate_idx, auth_header):
+def compound(compound_id):
+    queries = " OR ".join(["qcsRefId%3A{}".format(q) for q in qcs_refids])
+    res = request("/qcSessions?q={}".format(queries), auth_header)
+    obj = json.loads(res.decode())
+    return obj["qcSessions"]
+
+
+def layer_values(qcs_refid, plate_idx, auth_header):
     res = request("/plates?qcsRefIds={}&q=plateIndex%3A{}\
 &fields=layerIndex%2Cwells.rawValues%2Cwells.compoundIds".format(
         qcs_refid, plate_idx), auth_header)
@@ -47,7 +54,7 @@ def get_all_layer_values(qcs_refid, plate_idx, auth_header):
     return arrays
 
 
-def get_all_plate_values(qcs_refid, layer_idx, auth_header):
+def plate_values(qcs_refid, layer_idx, auth_header):
     res = request("/plates?qcsRefIds={}&layerIndices={}\
 &fields=layerIndex%2Cwells.rawValues%2Cwells.compoundIds".format(
         qcs_refid, layer_idx), auth_header)
@@ -61,7 +68,7 @@ def get_all_plate_values(qcs_refid, layer_idx, auth_header):
     return rows_gen
 
 
-def get_all_plate_stats(qcs_refid, layer_idx, auth_header):
+def plate_stats(qcs_refid, layer_idx, auth_header):
     res = request("/plates?qcsRefIds={}&layerIndices={}\
 &fields=barcode%2ClayerIndex%2CzPrime%2CwellTypes".format(
         qcs_refid, layer_idx), auth_header)

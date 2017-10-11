@@ -35,3 +35,4 @@ class AsyncChemData(AsyncNode):
             in_ = yield self.in_edge.get()
             out = chem_data(in_)
             yield self.out_edge.put(out)
+            self.out_edge.done_count = self.in_edge.done_count

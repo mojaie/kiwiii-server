@@ -26,6 +26,3 @@ class Stack(Node):
         self.out_edge.records = itertools.chain.from_iterable(
             stack(rcd, self.keys) for rcd in self.in_edge.records)
         self.on_finish()
-
-    def on_submitted(self):
-        self.out_edge.task_count = None

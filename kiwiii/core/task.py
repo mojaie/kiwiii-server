@@ -59,9 +59,6 @@ class Task(object):
     def size(self):
         return debug.total_size(self)
 
-    def info(self, specs):
-        pass
-
 
 class FlashTask(Task):
     """For sync task test"""

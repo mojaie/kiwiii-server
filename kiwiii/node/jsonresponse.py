@@ -41,8 +41,6 @@ class JSONResponse(Node):
         self.wf.response["taskCount"] = self.in_edge.task_count
 
     def on_finish(self):
-        for n in self.wf.nodes:
-            n.info(self.wf.response)
         self.wf.response["status"] = "done"
         self.wf.response["resultCount"] = len(self.wf.response["records"])
         self.wf.response["doneCount"] = self.in_edge.task_count
@@ -77,7 +75,7 @@ class AsyncJSONResponse(Synchronizer):
             tasks = self.wf.response["taskCount"]
             done = self.wf.response["doneCount"] = self.in_edge.done_count
             try:
-                self.wf.response["progress"] = round(done / tasks, 1)
+                self.wf.response["progress"] = round(done / tasks * 100, 1)
             except ZeroDivisionError:
                 pass
 
