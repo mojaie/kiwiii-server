@@ -19,7 +19,7 @@ from tornado.options import define, options, parse_command_line
 from kiwiii import excelexporter
 from kiwiii import static
 from kiwiii import auth
-from kiwiii import sqlitehelper
+from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 from kiwiii.core.jobqueue import JobQueue
 from kiwiii.workflow import db
 from kiwiii.workflow import similaritynetwork as simnet
@@ -143,7 +143,7 @@ class StructurePreviewHandler(BaseHandler):
         """Structure image preview"""
         query = json.loads(self.get_argument("query"))
         try:
-            qmol = sqlitehelper.query_mol(query)
+            qmol = sq.query_mol(query)
         except TypeError:
             response = '<span class="msg_warn">Format Error</span>'
         except ValueError:

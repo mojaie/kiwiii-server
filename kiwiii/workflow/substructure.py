@@ -11,7 +11,6 @@ from chorus import substructure
 from chorus import molutil
 from chorus.model.graphmol import Compound
 
-from kiwiii import sqlitehelper as helper
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
 from kiwiii.node.chemdata import AsyncChemData, STRUCT_FIELD
@@ -19,6 +18,7 @@ from kiwiii.node.filter import MPFilter
 from kiwiii.node.jsonresponse import AsyncJSONResponse
 from kiwiii.node.numbergenerator import AsyncNumberGenerator, INDEX_FIELD
 from kiwiii.node import sqliteio
+from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
 
 def exact_filter(qmol, params, row):
@@ -46,13 +46,13 @@ class ExactStruct(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(sqliteio.resource_fields(query["tables"]))
-        qmol = helper.query_mol(query["queryMol"])
+        self.fields.extend(sq.resource_fields(query["targets"]))
+        qmol = sq.query_mol(query["queryMol"])
         mw_filter = {
-            "tables": query["tables"],
+            "targets": query["targets"],
             "key": "_mw_wo_sw",
             "operator": "eq",
-            "values": molutil.mw(qmol)
+            "values": (molutil.mw(qmol),),
         }
         func = functools.partial(exact_filter, qmol, query["params"])
         e1, = self.add_node(sqliteio.SQLiteFilterInput(mw_filter))
@@ -67,8 +67,8 @@ class Substruct(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(sqliteio.resource_fields(query["tables"]))
-        qmol = helper.query_mol(query["queryMol"])
+        self.fields.extend(sq.resource_fields(query["targets"]))
+        qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(substr_filter, qmol, query["params"])
         e1, = self.add_node(sqliteio.SQLiteInput(query))
         e2, = self.add_node(MPFilter(func, e1))
@@ -82,8 +82,8 @@ class Superstruct(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(sqliteio.resource_fields(query["tables"]))
-        qmol = helper.query_mol(query["queryMol"])
+        self.fields.extend(sq.resource_fields(query["targets"]))
+        qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(supstr_filter, qmol, query["params"])
         e1, = self.add_node(sqliteio.SQLiteInput(query))
         e2, = self.add_node(MPFilter(func, e1))

@@ -27,6 +27,15 @@ class TestLOD(unittest.TestCase):
         selected[0]["b"] = 30
         self.assertEqual(data[3]["b"], 30)
 
+    def test_values(self):
+        data = [
+            {"a": 12, "b": 24, "c": True, "d": "Alice"},
+            {"a": 13, "b": 26, "c": False, "d": "Beth"},
+            {"a": 14, "b": 28, "c": False, "d": "Charley"},
+            {"a": 15, "b": 22, "c": False, "d": "Diana"}
+        ]
+        self.assertEqual(sum(lod.values("a", data)), 54)
+
     def test_join(self):
         data = [
             {"a": 12, "b": 24},

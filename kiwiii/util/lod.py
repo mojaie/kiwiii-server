@@ -5,18 +5,24 @@
 #
 """List of dict (LOD) utility"""
 
+import functools
+
+
+def values(key, lod):
+    return map(lambda x: x[key], lod)
+
 
 def find(key, value, lod):
     """Returns the record found by the given key-value pair.
     if not found, return None
     """
-    return next(filter(lambda x: x[key] == value, list(lod)), None)
+    return next(filter(lambda x: x[key] == value, lod), None)
 
 
 def filter_(key, value, lod):
     """Yields filtered records by the given key-value pair.
     """
-    return filter(lambda x: x[key] == value, list(lod))
+    return filter(lambda x: x[key] == value, lod)
 
 
 def join(key, left, right, full_join=False):
@@ -31,11 +37,12 @@ def join(key, left, right, full_join=False):
             left.append(r)
 
 
+def uniq_add(rcd, lod, key="key"):
+    if find(key, rcd[key], lod) is None:
+        return lod + [rcd]
+    return lod
+
+
 def unique(lod, key="key"):
     """Skips records with duplicated key"""
-    found = set()
-    for L in list(lod):
-        if L[key] in found:
-            continue
-        found.add(L[key])
-        yield L
+    return functools.reduce(lambda x, y: uniq_add(y, x, key), lod, [])

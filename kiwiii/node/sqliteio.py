@@ -4,13 +4,11 @@
 # http://opensource.org/licenses/MIT
 #
 
-from kiwiii import sqlitehelper as helper
+import itertools
+
+from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 from kiwiii.core.node import Node
 from kiwiii.core.edge import Edge
-
-
-def resource_fields(tables):
-    return helper.resource_fields(tables)
 
 
 class SQLiteInput(Node):
@@ -18,12 +16,10 @@ class SQLiteInput(Node):
         super().__init__()
         self.out_edge = Edge()
         self.query = query
-        self.out_edge.task_count = helper.record_count(
-            query["tables"], query["resourceFile"])
+        self.out_edge.task_count = sq.record_count(query["targets"])
 
     def run(self):
-        self.out_edge.records = helper.records_iter(
-            self.query["tables"], self.query["resourceFile"])
+        self.out_edge.records = sq.records_iter(self.query["targets"])
         self.on_finish()
 
     def in_edges(self):
@@ -32,22 +28,17 @@ class SQLiteInput(Node):
 
 class SQLiteSearchInput(SQLiteInput):
     def run(self):
-        self.out_edge.records = helper.first_match(
-            self.query["tables"],
-            self.query["resourceFile"],
-            self.query["key"],
-            self.query["values"]
+        self.out_edge.records = itertools.chain.from_iterable(
+            sq.search(self.query["targets"], self.query["key"], v)
+            for v in self.query["values"]
         )
         self.on_finish()
 
 
 class SQLiteFilterInput(SQLiteInput):
     def run(self):
-        self.out_edge.records = helper.find_all(
-            self.query["tables"],
-            self.query["resourceFile"],
-            self.query["key"],
-            self.query["values"],
-            self.query["operator"]
+        self.out_edge.records = sq.find_all(
+            self.query["targets"], self.query["key"],
+            self.query["values"], self.query["operator"]
         )
         self.on_finish()

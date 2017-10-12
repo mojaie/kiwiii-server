@@ -12,11 +12,12 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.sqliteio import SQLiteInput, resource_fields
+from kiwiii.node.sqliteio import SQLiteInput
 from kiwiii.node.chemdata import AsyncChemData, STRUCT_FIELD
 from kiwiii.node.numbergenerator import AsyncNumberGenerator, INDEX_FIELD
 from kiwiii.node.filter import MPFilter
 from kiwiii.node.jsonresponse import AsyncJSONResponse
+from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 from kiwiii.util import lod
 
 
@@ -48,7 +49,7 @@ class ChemProp(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(resource_fields(query["tables"]))
+        self.fields.extend(sq.resource_fields(query["targets"]))
         sortfunc = {"numeric": float, "text": str}
         field = lod.find("key", query["key"], static.CHEM_FIELDS)
         vs = [sortfunc[field["sortType"]](v) for v in query["values"]]

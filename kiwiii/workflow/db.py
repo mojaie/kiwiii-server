@@ -9,6 +9,7 @@ from kiwiii.node import sqliteio
 from kiwiii.node.chemdata import ChemData, STRUCT_FIELD
 from kiwiii.node.numbergenerator import NumberGenerator, INDEX_FIELD
 from kiwiii.node.jsonresponse import JSONResponse
+from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
 
 class DBFilter(Workflow):
@@ -16,7 +17,7 @@ class DBFilter(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD]
-        self.fields.extend(sqliteio.resource_fields(query["targets"]))
+        self.fields.extend(sq.resource_fields(query["targets"]))
         e1, = self.add_node(sqliteio.SQLiteFilterInput(query))
         e2, = self.add_node(NumberGenerator(e1))
         self.add_node(JSONResponse(e2, self))
@@ -27,7 +28,7 @@ class DBSearch(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD]
-        self.fields.extend(sqliteio.resource_fields(query["targets"]))
+        self.fields.extend(sq.resource_fields(query["targets"]))
         e1, = self.add_node(sqliteio.SQLiteSearchInput(query))
         e2, = self.add_node(NumberGenerator(e1))
         self.add_node(JSONResponse(e2, self))
@@ -38,7 +39,7 @@ class ChemDBFilter(Workflow):
         super().__init__()
         self.query = query
         self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(sqliteio.resource_fields(query["targets"]))
+        self.fields.extend(sq.resource_fields(query["targets"]))
         e1, = self.add_node(sqliteio.SQLiteFilterInput(query))
         e2, = self.add_node(ChemData(e1))
         e3, = self.add_node(NumberGenerator(e2))
@@ -49,8 +50,8 @@ class ChemDBSearch(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        self.fields = [INDEX_FIELD]
-        self.fields.extend(sqliteio.resource_fields(query["targets"]))
+        self.fields = [INDEX_FIELD, STRUCT_FIELD]
+        self.fields.extend(sq.resource_fields(query["targets"]))
         e1, = self.add_node(sqliteio.SQLiteSearchInput(query))
         e2, = self.add_node(ChemData(e1))
         e3, = self.add_node(NumberGenerator(e2))
