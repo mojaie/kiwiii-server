@@ -223,7 +223,7 @@ class ServerStatusHandler(BaseHandler):
             "rdkit": static.RDK_AVAILABLE,
             "numericModule": static.NUMERIC_MODULE,
             "calc": {
-                "columns": [
+                "fields": [
                     {"key": "id"},
                     {"key": "size"},
                     {"key": "status"},

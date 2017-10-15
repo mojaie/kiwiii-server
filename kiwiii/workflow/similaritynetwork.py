@@ -83,7 +83,7 @@ def rdkit_mol(params, rcd):
 class GLSNetwork(Workflow):
     def __init__(self, contents, params):
         super().__init__()
-        self.datatype = "networkedges"
+        self.datatype = "edges"
         self.query = params
         self.fields = [
             {"key": "source"},
@@ -102,7 +102,7 @@ class GLSNetwork(Workflow):
 class RDKitMorganNetwork(Workflow):
     def __init__(self, contents, params):
         super().__init__()
-        self.datatype = "networkedges"
+        self.datatype = "edges"
         self.query = params
         self.fields = [
             {"key": "source"},
@@ -120,7 +120,7 @@ class RDKitMorganNetwork(Workflow):
 class RDKitFMCSNetwork(Workflow):
     def __init__(self, contents, params):
         super().__init__()
-        self.datatype = "networkedges"
+        self.datatype = "edges"
         self.query = params
         self.fields = [
             {"key": "source"},
