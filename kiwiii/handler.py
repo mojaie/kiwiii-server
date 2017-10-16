@@ -125,14 +125,14 @@ class SimilarityNetworkHandler(BaseHandler):
     @gen.coroutine
     def post(self):
         """Submit similarity network calculation job"""
-        contents = json.loads(self.request.files['json'][0]['body'].decode())
+        js = json.loads(self.request.files['contents'][0]['body'].decode())
         params = json.loads(self.get_argument("params"))
         workflows = {
             "gls": simnet.GLSNetwork,
             "rdmorgan": simnet.RDKitMorganNetwork,
             "rdfmcs": simnet.RDKitFMCSNetwork,
         }
-        wf = workflows[params["type"]](contents, params)
+        wf = workflows[params["measure"]](js, params)
         yield self.jq.put(wf)
         self.write(wf.response)
 
