@@ -17,11 +17,11 @@ from xlsxwriter.workbook import Workbook
 from chorus.model.graphmol import Compound
 from chorus.draw.matplotlib import Matplotlib
 
-from kiwiii import tablecolumn as tc
+from kiwiii import static
 from kiwiii.util import lod
 
-MOL = tc.MolObjectColumn()
-STRUCT = tc.StructureColumn()
+
+STRUCT_KEY = "_structure"
 
 EXPORT_OPTIONS = {
     "in_memory": {"in_memory": True},
@@ -59,23 +59,21 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
         sheet_name = re.sub(r"[\[\]\:\*\?\/\\]", "_", table["name"])
         sheet = wb.add_worksheet(sheet_name)
         # TODO: appropriate row height
-        struct = lod.find("key", STRUCT.key, table["columns"])
+        struct = lod.find("key", STRUCT_KEY, table["fields"])
         if struct is not None and struct["visible"]:
             sheet.set_default_row(opts["struct_row_height"])
         else:
             sheet.set_default_row(opts["default_row_height"])
         sheet.set_row(0, opts["header_row_height"])
         i = 0
-        for col in table["columns"]:
+        for col in table["fields"]:
             if not col["visible"]:
                 continue
-            if "name" not in col:
-                col["name"] = col["key"]
             sheet.write(0, i, col["name"], text_format)
             col_width = [opts["default_col_width"]]
             for j, row in enumerate(table["records"]):
-                if col["key"] == STRUCT.key:
-                    mol = Compound(json.loads(row[MOL.key]))
+                if col["key"] == STRUCT_KEY:
+                    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
                     mpl = Matplotlib(mol)
                     size = opts["struct_row_height"] - opts[
                         "img_options"]["y_offset"] * 2

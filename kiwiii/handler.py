@@ -105,7 +105,7 @@ class ResultHandler(BaseHandler):
         query = json.loads(self.get_argument("query"))
         try:
             wf = self.jq.get(query["id"])
-        except KeyError:
+        except ValueError:
             self.write({
                 "id": query["id"],
                 "status": "failure",
@@ -122,7 +122,7 @@ class SimilarityNetworkHandler(BaseHandler):
         super().initialize()
         self.jq = jq
 
-    @auth.basic_auth
+    @gen.coroutine
     def post(self):
         """Submit similarity network calculation job"""
         contents = json.loads(self.request.files['json'][0]['body'].decode())
@@ -154,6 +154,7 @@ class StructurePreviewHandler(BaseHandler):
 
 
 class SDFileParserHandler(BaseHandler):
+    @gen.coroutine
     def post(self):
         """Responds with datatable JSON made of query SDFile"""
         filename = self.request.files['contents'][0]['filename']
@@ -170,11 +171,11 @@ class SDFileParserHandler(BaseHandler):
 
 class SDFileExportHandler(BaseHandler):
     def post(self):
-        contents = json.loads(self.request.files['json'][0]['body'].decode())
-        cols = [c["key"] for c in contents["fields"]
-                if c["visible"] and c["sort"] != "none"]
+        js = json.loads(self.request.files['contents'][0]['body'].decode())
+        cols = [c["key"] for c in js["fields"]
+                if c["visible"] and c["sortType"] != "none"]
         mols = []
-        for rcd in contents["records"]:
+        for rcd in js["records"]:
             mol = Compound(json.loads(rcd[static.MOLOBJ_KEY]))
             for col in cols:
                 mol.data[col] = rcd[col]
@@ -186,7 +187,7 @@ class SDFileExportHandler(BaseHandler):
 
 class ExcelExportHandler(BaseHandler):
     def post(self):
-        js = json.loads(self.request.files['json'][0]['body'].decode())
+        js = json.loads(self.request.files['contents'][0]['body'].decode())
         data = {"tables": [js]}
         buf = excelexporter.json_to_xlsx(data)
         self.set_header("Content-Type", 'application/vnd.openxmlformats-office\

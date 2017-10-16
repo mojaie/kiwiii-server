@@ -4,9 +4,13 @@
 # http://opensource.org/licenses/MIT
 #
 
+import json
+
 from chorus import v2000reader, v2000writer
 from chorus import molutil
 from chorus.draw import calc2dcoords
+
+from kiwiii import static
 from kiwiii.core.node import Node
 from kiwiii.core.edge import Edge
 
@@ -14,11 +18,15 @@ from kiwiii.core.edge import Edge
 def sdfile_records(contents, params):
     mols = v2000reader.mols_from_text(contents)
     for m in mols:
+        row = {}
         if params["implh"]:
             m = molutil.make_Hs_implicit(m)
         if params["recalc"]:
             calc2dcoords.calc2dcoords(m)
-        yield m
+        row[static.MOLOBJ_KEY] = json.dumps(m.jsonized())
+        for p in params["fields"]:
+            row[p] = m.data.get(p, "")
+        yield row
 
 
 class SDFileInput(Node):
