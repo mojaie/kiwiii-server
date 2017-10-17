@@ -21,10 +21,7 @@ class Merge(Task):
     def out_edges(self):
         return (self.out_edge,)
 
-    def run(self):
+    def on_submitted(self):
         self.out_edge.records = itertools.chain.from_iterable(
             i.records for i in self._in_edges)
-        self.on_finish()
-
-    def on_submitted(self):
         self.out_edge.task_count = sum([i.task_count for i in self._in_edges])

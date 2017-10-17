@@ -12,7 +12,6 @@ from chorus.draw import calc2dcoords
 
 from kiwiii import static
 from kiwiii.core.node import Node
-from kiwiii.core.edge import Edge
 
 
 def sdfile_records(contents, params):
@@ -32,14 +31,12 @@ def sdfile_records(contents, params):
 class SDFileInput(Node):
     def __init__(self, contents, params):
         super().__init__()
-        self.out_edge = Edge()
         self.contents = contents
         self.params = params
-        self.out_edge.task_count = v2000reader.inspect_text(contents)[1]
 
-    def run(self):
+    def on_submitted(self):
         self.out_edge.records = sdfile_records(self.contents, self.params)
-        self.on_finish()
+        self.out_edge.task_count = v2000reader.inspect_text(self.contents)[1]
 
     def in_edges(self):
         return tuple()

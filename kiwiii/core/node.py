@@ -22,6 +22,9 @@ class Node(Task):
         self.in_edge = in_edge
         self.out_edge = Edge()
 
+    def run(self):
+        self.on_finish()
+
     def in_edges(self):
         return (self.in_edge,)
 

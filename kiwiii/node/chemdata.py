@@ -23,9 +23,9 @@ def chem_data(row):
 
 
 class ChemData(Node):
-    def run(self):
+    def on_submitted(self):
         self.out_edge.records = map(chem_data, self.in_edge.records)
-        self.on_finish()
+        self.out_edge.task_count = self.in_edge.task_count
 
 
 class AsyncChemData(AsyncNode):
@@ -34,5 +34,5 @@ class AsyncChemData(AsyncNode):
         while 1:
             in_ = yield self.in_edge.get()
             out = chem_data(in_)
-            yield self.out_edge.put(out)
             self.out_edge.done_count = self.in_edge.done_count
+            yield self.out_edge.put(out)

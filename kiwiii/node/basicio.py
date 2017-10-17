@@ -4,20 +4,19 @@
 # http://opensource.org/licenses/MIT
 #
 
+import itertools
 from kiwiii.core.node import Node
-from kiwiii.core.edge import Edge
 
 
 class IteratorInput(Node):
-    def __init__(self, rcds):
+    def __init__(self, iter_input):
         super().__init__()
-        self.out_edge = Edge()
-        self.records = rcds
-        self.out_edge.task_count = len(list(rcds))
+        self.iter_input = iter_input
 
-    def run(self):
-        self.out_edge.records = self.records
-        self.on_finish()
+    def on_submitted(self):
+        main, counter = itertools.tee(self.iter_input)
+        self.out_edge.records = main
+        self.out_edge.task_count = len(list(counter))
 
     def in_edges(self):
         return tuple()

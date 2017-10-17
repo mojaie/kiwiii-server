@@ -4,7 +4,7 @@
 # http://opensource.org/licenses/MIT
 #
 
-from itertools import combinations
+import itertools
 
 from kiwiii.core.node import Node
 
@@ -14,6 +14,8 @@ class Combination(Node):
         super().__init__(in_edge)
         self.r = r
 
-    def run(self):
-        self.out_edge.records = combinations(self.in_edge.records, self.r)
-        self.on_finish()
+    def on_submitted(self):
+        comb = itertools.combinations(self.in_edge.records, self.r)
+        main, counter = itertools.tee(comb)
+        self.out_edge.records = main
+        self.out_edge.task_count = len(list(counter))

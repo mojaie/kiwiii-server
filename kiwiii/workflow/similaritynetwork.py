@@ -22,10 +22,10 @@ from kiwiii.node.basicio import IteratorInput
 
 def gls_filter(params, pair):
     row1, row2 = pair
-    thld = int(params["threshold"])
-    sm, bg = sorted([row1["array"], row2["array"]])
+    thld = float(params["threshold"])
+    sm, bg = sorted((row1["array"][1], row2["array"][1]))
     if sm < bg * thld:  # threshold filter
-        return False
+        return
     res = mcsdr.local_sim(row1["array"], row2["array"])
     if res["local_sim"] >= thld:
         row = {

@@ -22,7 +22,9 @@ class Stack(Node):
         super().__init__(in_edge)
         self.keys = keys
 
-    def run(self):
-        self.out_edge.records = itertools.chain.from_iterable(
+    def on_submitted(self):
+        stacked = itertools.chain.from_iterable(
             stack(rcd, self.keys) for rcd in self.in_edge.records)
-        self.on_finish()
+        main, counter = itertools.tee(stacked)
+        self.out_edge.records = main
+        self.out_edge.task_count = len(list(counter))

@@ -14,9 +14,9 @@ class Filter(Node):
         super().__init__(in_edge)
         self.func = func
 
-    def run(self):
+    def on_submitted(self):
         self.out_edge.records = filter(self.func, self.in_edge.records)
-        self.on_finish()
+        self.out_edge.task_count = self.in_edge.task_count
 
 
 class MPNodeWorker(MPWorker):
@@ -27,7 +27,7 @@ class MPNodeWorker(MPWorker):
     @gen.coroutine
     def on_task_done(self, record):
         self.node.out_edge.done_count += 1
-        if record is not None:
+        if record:
             yield self.node.out_edge.put(record)
 
     @gen.coroutine
