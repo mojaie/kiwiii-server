@@ -4,8 +4,6 @@
 # http://opensource.org/licenses/MIT
 #
 
-import itertools
-
 from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 from kiwiii.core.node import Node
 
@@ -25,7 +23,7 @@ class SQLiteInput(Node):
 
 class SQLiteSearchInput(SQLiteInput):
     def on_submitted(self):
-        self.out_edge.records = itertools.chain.from_iterable(
+        self.out_edge.records = (
             sq.search(self.query["targets"], self.query["key"], v)
             for v in self.query["values"]
         )

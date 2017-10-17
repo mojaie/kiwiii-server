@@ -56,27 +56,25 @@ class SQLiteHelper(object):
                 yield row
 
     def search(self, rsrc_ids, key, value):
-        for r, tbl, conn in self.origins_iter(rsrc_ids):
-            key_exists = lod.find("key", key, self.resource_fields(rsrc_ids))
-            if key_exists is None:
-                continue
-            res = conn.find_first(key, (value,), tbl)
-            if res is not None:
-                row = dict(res)
-                if static.MOLOBJ_KEY in row:
-                    mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
-                    row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
-                    row["source"] = r
-                yield row
-                break
+        key_exists = lod.find("key", key, self.resource_fields(rsrc_ids))
+        if key_exists is not None:
+            for r, tbl, conn in self.origins_iter(rsrc_ids):
+                res = conn.find_first(key, (value,), tbl)
+                if res is not None:
+                    row = dict(res)
+                    if static.MOLOBJ_KEY in row:
+                        mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
+                        row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
+                        row["source"] = r
+                    return row
+        rsrcs = filter(lambda x: x["id"] in rsrc_ids, SQLITE_RESOURCES)
+        if any(r["domain"] == "chemical" for r in rsrcs):
+            null_record = {key: value}
+            null_record[static.MOLOBJ_KEY] = json.dumps(
+                molutil.null_molecule().jsonized())
+            return null_record
         else:
-            if static.MOLOBJ_KEY in row:
-                null_record = {key: value}
-                null_record[static.MOLOBJ_KEY] = json.dumps(
-                    molutil.null_molecule().jsonized())
-                yield null_record
-            else:
-                yield {key: value}
+            return {key: value}
 
     def find_all(self, rsrc_ids, key, values, op):
         op = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",

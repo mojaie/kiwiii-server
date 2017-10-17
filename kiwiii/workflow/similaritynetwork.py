@@ -84,6 +84,7 @@ class GLSNetwork(Workflow):
     def __init__(self, contents, params):
         super().__init__()
         self.datatype = "edges"
+        self.nodesid = contents["id"]
         self.query = params
         self.fields = [
             {"key": "source"},
@@ -97,6 +98,10 @@ class GLSNetwork(Workflow):
         e2, = self.add_node(Combination(e1))
         e3, = self.add_node(MPFilter(filter_, e2))
         self.add_node(AsyncJSONResponse(e3, self))
+
+    def on_submitted(self):
+        super().on_submitted()
+        self.response["nodesID"] = self.nodesid
 
 
 class RDKitMorganNetwork(Workflow):
@@ -116,6 +121,10 @@ class RDKitMorganNetwork(Workflow):
         e3, = self.add_node(MPFilter(filter_, e2))
         self.add_node(AsyncJSONResponse(e3, self))
 
+    def on_submitted(self):
+        super().on_submitted()
+        self.response["nodesID"] = self.nodesid
+
 
 class RDKitFMCSNetwork(Workflow):
     def __init__(self, contents, params):
@@ -133,3 +142,7 @@ class RDKitFMCSNetwork(Workflow):
         e2, = self.add_node(Combination(e1))
         e3, = self.add_node(MPFilter(filter_, e2))
         self.add_node(AsyncJSONResponse(e3, self))
+
+    def on_submitted(self):
+        super().on_submitted()
+        self.response["nodesID"] = self.nodesid
