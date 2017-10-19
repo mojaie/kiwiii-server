@@ -34,6 +34,7 @@ class SQLiteFilterInput(SQLiteInput):
     def on_submitted(self):
         self.out_edge.records = sq.find_all(
             self.query["targets"], self.query["key"],
-            self.query["values"], self.query["operator"]
+            self.query["values"], self.query["operator"],
+            fields=self.query.get("fields")
         )
         self.out_edge.task_count = sq.record_count(self.query["targets"])

@@ -1,9 +1,9 @@
 {
   "created": "20:35:29 11/13/16 JST",
-  "columns": [{
+  "fields": [{
     "key": "colmaptest",
     "name": "Imported activity data",
-    "sort": "numeric",
+    "sortType": "numeric",
     "visible": true
   },{
     "key": "colmaptest2",
@@ -11,7 +11,7 @@
     "sort": "numeric",
     "visible": true
   }],
-  "key": "ID",
+  "key": "id",
   "mapping": {
     "DB00186": [99.8, 101.1],
     "DB00189": [2.5, 23.3],

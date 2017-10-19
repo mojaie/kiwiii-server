@@ -1,13 +1,13 @@
 {
   "created": "20:35:29 11/13/16 JST",
-  "column": {
+  "field": {
     "key": "plottest",
     "name": "Plot import test",
-    "sort": "none",
+    "sortType": "none",
     "valueType": "plot",
     "visible": true
   },
-  "key": "ID",
+  "key": "id",
   "mapping": {
     "DB00193": {
       "$schema": "https://vega.github.io/schema/vega/v3.0.json",

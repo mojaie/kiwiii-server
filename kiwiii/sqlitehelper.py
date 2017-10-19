@@ -76,7 +76,7 @@ class SQLiteHelper(object):
         else:
             return {key: value}
 
-    def find_all(self, rsrc_ids, key, values, op):
+    def find_all(self, rsrc_ids, key, values, op, fields=None):
         op = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",
               "lk": "LIKE", "in": "IN"}[op]
         for r, tbl, conn in self.origins_iter(rsrc_ids):
@@ -84,7 +84,10 @@ class SQLiteHelper(object):
             if key_exists is None:
                 continue
             for res in conn.find_iter(key, values, tbl, op):
-                row = dict(res)
+                if fields is None:
+                    row = dict(res)
+                else:
+                    row = {f: res[f] for f in fields if f in res.keys()}
                 if static.MOLOBJ_KEY in row:
                     mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
                     row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
@@ -104,7 +107,7 @@ class SQLiteHelper(object):
             except (ValueError, StopIteration):
                 raise TypeError()
         elif query["format"] == "dbid":
-            res = next(self.search((query["source"],), "id", query["value"]))
+            res = self.search((query["source"],), "id", query["value"])
             if res is None:
                 raise ValueError()
             qmol = Compound(json.loads(res[static.MOLOBJ_KEY]))

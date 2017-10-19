@@ -13,24 +13,23 @@ Query API
 
 :Attributes:
     * **type**\ (*string*) - query task type
-    * **tables**\ (*object*) - list of target resource table
-    * **resourceFile**\ (*string*) - target SQLite db file name
+    * **targets**\ (*object*) - list of target resource ID
+    * **targetFields**\ (*object*) - list of target resource field keys
     * **key**\ (*string*) - key
     * **values**\ (*object*) - list of values
     * **operator**\ (*string*) - query operator
     * **queryMol**\ (*object*) - query molecule object
         * **format**\ (*string*) - "dbid", "molfile" or "smiles"
-        * **table**\ (*string*) - query resource table
-        * **resourceFile**\ (*string*) - query SQLite db file name
-        * **value**\ (*string*) - value
+        * **source**\ (*string*) - (if format is "dbid") target resource ID
+        * **value**\ (*string*) - Compound ID, MOLFile text or SMILES text
     * **params**\ (*object*) - optional parameters
         * **ignoreHs**\ (*bool*) - ignore hydrogens in substructure match
         * **measure**\ (*int*) - similarity measure
         * **threshold**\ (*int*) - similarity threshold
         * **diameter**\ (*int*) - MCS-DR diameter
         * **maxTreeSize**\ (*int*) - MCS-DR max tree size
-        * **molSizeCutoff**\ (*int*) - molecule size cutoff
-        * **timeout**\ (*float*) - timeout for MCS calculation
+        * **molSizeCutoff**\ (*int*) - MCS-DR molecule size cutoff
+        * **timeout**\ (*float*) - timeout for rdkit FMCS
 
 
 **SDFile import query (POST)**::
@@ -38,22 +37,21 @@ Query API
 :Attributes:
     * **contents**\ (*file*) - SDFile contents (binary)
     * **params**\ (*object*) - optional parameters
-
-
-**SDFile import query (POST)**::
-
-:Attributes:
-    * **json**\ (*file*) - JSON datafile (binary, stringified)
-    * **params**\ (*object*) - optional parameters
         * **fields**\ (*object*) - list of fields to be imported
         * **implh**\ (*bool*) - make hydrogens implicit or not
         * **recalc**\ (*bool*) - recalculate 2D coordinates or not
 
 
+**SDFile export query (POST)**::
+
+:Attributes:
+    * **contents**\ (*file*) - JSON datafile (binary, stringified)
+
+
 **Similarity network query (POST)**::
 
 :Attributes:
-    * **json**\ (*file*) - JSON datafile (binary, stringified)
+    * **contents**\ (*file*) - JSON datafile (binary, stringified)
     * **params**\ (*object*) - optional parameters
 
 

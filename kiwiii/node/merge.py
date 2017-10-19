@@ -12,6 +12,7 @@ from kiwiii.core.task import Task
 
 class Merge(Task):
     def __init__(self, in_edges):
+        super().__init__()
         self._in_edges = in_edges
         self.out_edge = Edge()
 

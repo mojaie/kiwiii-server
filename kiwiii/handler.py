@@ -25,7 +25,7 @@ from kiwiii.workflow import db
 from kiwiii.workflow import similaritynetwork as simnet
 from kiwiii.workflow import substructure as substr
 from kiwiii.workflow.chemprop import ChemProp
-from kiwiii.workflow.field import FieldSearch
+from kiwiii.workflow.field import FieldFilter
 from kiwiii.workflow.gls import GLS
 from kiwiii.workflow.profile import Profile
 from kiwiii.workflow.rdkitfmcs import RDKitFMCS
@@ -63,7 +63,7 @@ class WorkflowHandler(BaseHandler):
             "filter": db.DBFilter,
             "chemsearch": db.ChemDBSearch,
             "chemfilter": db.ChemDBFilter,
-            "fieldsearch": FieldSearch,
+            "fieldfilter": FieldFilter,
             "exact": substr.ExactStruct,
             "profile": Profile
         }
