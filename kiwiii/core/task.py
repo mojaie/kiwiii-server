@@ -27,7 +27,8 @@ class Task(object):
     def __init__(self):
         self.id = str(uuid.uuid4())
         self.status = "ready"
-        self.created = time.time()
+        self.creation_time = time.time()
+        self.start_time = None
         self.fields = []
 
     def run(self):
@@ -42,6 +43,7 @@ class Task(object):
 
     def on_start(self):
         """When run method is called"""
+        self.start_time = time.time()
         self.status = "running"
 
     def on_task_done(self, rcd):

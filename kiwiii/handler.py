@@ -242,7 +242,7 @@ class ServerStatusHandler(BaseHandler):
                 "size": task.size(),
                 "status": task.status,
                 "created": time.strftime(
-                    "%X %x %Z", time.localtime(task.created)),
+                    "%X %x %Z", time.localtime(task.creation_time)),
                 "expires": time.strftime(
                     "%X %x %Z", time.localtime(expires)),
             })

@@ -26,6 +26,8 @@ class TestStack(AsyncTestCase):
         in_edge = Edge()
         in_edge.records = RECORDS
         f = reshape.Stack(('id',), in_edge)
+        f.on_submitted()
+        self.assertEqual(f.out_edges()[0].task_count, 10)
         f.run()
         self.assertEqual(len(list(f.out_edges()[0].records)), 10)
 

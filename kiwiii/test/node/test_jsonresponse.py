@@ -10,54 +10,46 @@ from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
 from kiwiii.node.jsonresponse import JSONResponse, AsyncJSONResponse
+from kiwiii.node.basicio import IteratorInput
 from kiwiii.core.node import LazyNode, Asynchronizer
-from kiwiii.core.edge import Edge
 from kiwiii.core.workflow import Workflow
 
 
 class TestJSONResponse(AsyncTestCase):
+    @gen_test
     def test_jsonresponse(self):
         wf = Workflow()
-        wf.query = {}
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(10)]
-        n = JSONResponse(in_edge, wf)
-        n.run()
+        e, = wf.add_node(IteratorInput({"value": i} for i in range(10)))
+        wf.add_node(JSONResponse(e, wf))
+        yield wf.submit()
         self.assertEqual(len(wf.response["records"]), 10)
         self.assertEqual(wf.response["status"], "done")
 
     @gen_test
     def test_asyncjsonresponse(self):
         wf = Workflow()
-        wf.query = {}
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(10)]
-        n1 = Asynchronizer(in_edge)
-        n2 = AsyncJSONResponse(n1.out_edges()[0], wf)
+        e1, = wf.add_node(IteratorInput({"value": i} for i in range(10)))
+        e2, = wf.add_node(Asynchronizer(e1))
+        n2 = AsyncJSONResponse(e2, wf)
+        wf.add_node(n2)
         n2.interval = 0.01
-
-        n1.run()
-        yield n2.run()
-        self.assertEqual(n1.status, "done")
-        self.assertEqual(n2.status, "done")
+        yield wf.submit()
         self.assertEqual(len(wf.response["records"]), 10)
         self.assertEqual(wf.response["status"], "done")
 
     @gen_test
     def test_interrupt(self):
         wf = Workflow()
-        wf.query = {}
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(100)]
-        n1 = Asynchronizer(in_edge)
-        n2 = LazyNode(n1.out_edges()[0])
-        n3 = AsyncJSONResponse(n2.out_edges()[0], wf)
-        n2.interval = 0.01
+        e1, = wf.add_node(IteratorInput({"value": i} for i in range(100)))
+        e2, = wf.add_node(Asynchronizer(e1))
+        n3 = LazyNode(e2)
+        e3, = wf.add_node(n3)
+        n4 = AsyncJSONResponse(e3, wf)
+        wf.add_node(n4)
         n3.interval = 0.01
-        n1.run()
-        n2.run()
-        n3.run()
-        yield n1.interrupt()
+        n4.interval = 0.01
+        wf.submit()
+        yield wf.interrupt()
         yield gen.sleep(0.1)
         self.assertEqual(n3.status, "aborted")
         self.assertGreater(len(wf.response["records"]), 0)

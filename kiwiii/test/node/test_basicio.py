@@ -14,8 +14,9 @@ from kiwiii.node.basicio import IteratorInput
 class TestBasicIO(AsyncTestCase):
     def test_iterator_input(self):
         f = IteratorInput(range(100))
-        f.run()
+        f.on_submitted()
         self.assertEqual(f.out_edges()[0].task_count, 100)
+        f.run()
         self.assertEqual(sum(f.out_edges()[0].records), 4950)
 
 

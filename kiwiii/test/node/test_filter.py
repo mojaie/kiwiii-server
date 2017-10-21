@@ -10,7 +10,7 @@ from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
 from kiwiii.node.filter import Filter, MPFilter
-from kiwiii.core.node import Synchronizer, LazyConsumer
+from kiwiii.core.node import AsyncNode, LazyConsumer
 from kiwiii.core.edge import Edge
 
 
@@ -24,6 +24,7 @@ class TestFilter(AsyncTestCase):
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(10)]
         f = Filter(odd, in_edge)
+        f.on_submitted()
         f.run()
         total = sum(a["value"] for a in f.out_edges()[0].records)
         self.assertEqual(total, 25)
@@ -32,16 +33,23 @@ class TestFilter(AsyncTestCase):
     @gen_test
     def test_mpfilter(self):
         in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(10)]
+        in_edge.records = [{"value": i} for i in range(100)]
+        in_edge.task_count = 100
         n1 = MPFilter(odd, in_edge)
-        n2 = Synchronizer(n1.out_edges()[0])
+        n2 = AsyncNode(n1.out_edges()[0])
         n2.interval = 0.01
+        n1.on_submitted()
+        n2.on_submitted()
+        self.assertEqual(n2.out_edges()[0].task_count, 100)
         n1.run()
         self.assertEqual(n1.status, "running")
-        yield n2.run()
-        total = sum(a["value"] for a in n2.out_edges()[0].records)
-        self.assertEqual(total, 25)
-        self.assertEqual(n2.status, "done")
+        n2.run()
+        res = []
+        while n2.in_edges()[0].status != "done":
+            r = yield n2.out_edges()[0].get()
+            res.append(r)
+        self.assertEqual(n2.out_edges()[0].done_count, 100)
+        self.assertEqual(sum(a["value"] for a in res), 2500)
 
     @gen_test
     def test_interrupt(self):

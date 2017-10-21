@@ -29,6 +29,9 @@ class MPNodeWorker(MPWorker):
         self.node.out_edge.done_count += 1
         if record:
             yield self.node.out_edge.put(record)
+        # TODO:
+        # if not done_count % 100:
+        #     yield self.node.out_edge.proceed()
 
     @gen.coroutine
     def on_finish(self):

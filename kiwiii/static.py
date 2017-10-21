@@ -10,6 +10,8 @@ from chorus.draw.svg import SVG
 from kiwiii import sqliteconnection as sqlite
 
 
+SCHEMA_VERSION = 0.8
+
 """ Option module availability """
 
 try:

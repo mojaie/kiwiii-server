@@ -23,7 +23,7 @@ class TestJobQueue(AsyncTestCase):
         task3 = FlashTask()
         yield jq.put(task1)
         yield jq.put(task2)
-        task3.created = time.time() - jq.task_lifetime - 100
+        task3.creation_time = time.time() - jq.task_lifetime - 100
         yield jq.put(task3)
         self.assertEqual(len(jq.store), 2)
         self.assertEqual(jq.get(task2.id).id, task2.id)

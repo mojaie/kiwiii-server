@@ -7,6 +7,8 @@
 import time
 
 from tornado import gen
+
+from kiwiii import static
 from kiwiii.core.node import Node, Synchronizer
 
 
@@ -17,12 +19,15 @@ class JSONResponse(Node):
         self.wf.response = {
             "id": self.wf.id,
             "name": self.wf.id[:8],
-            "query": self.wf.query,
             "dataType": self.wf.datatype,
+            "schemaVersion": static.SCHEMA_VERSION,
+            "revision": 0,
+            "query": self.wf.query,
             "fields": [],
             "records": [],
             "created": time.strftime("%X %x %Z",
-                                     time.localtime(self.wf.created)),
+                                     time.localtime(self.wf.creation_time)),
+            "execTime": 0,
             "status": self.wf.status,
             "resultCount": 0,
             "taskCount": 0,
@@ -45,6 +50,8 @@ class JSONResponse(Node):
         self.wf.response["status"] = "done"
         self.wf.response["resultCount"] = len(self.wf.response["records"])
         self.wf.response["doneCount"] = self.in_edge.task_count
+        exec_time = time.time() - self.wf.start_time
+        self.wf.response["execTime"] = round(exec_time, 1)
         self.status = "done"
 
 
@@ -55,12 +62,15 @@ class AsyncJSONResponse(Synchronizer):
         self.wf.response = {
             "id": self.wf.id,
             "name": self.wf.id[:8],
-            "query": self.wf.query,
             "dataType": self.wf.datatype,
+            "schemaVersion": static.SCHEMA_VERSION,
+            "revision": 0,
+            "query": self.wf.query,
             "fields": [],
             "records": [],
             "created": time.strftime("%X %x %Z",
-                                     time.localtime(self.wf.created)),
+                                     time.localtime(self.wf.creation_time)),
+            "execTime": 0,
             "status": self.wf.status,
             "resultCount": 0,
             "taskCount": 0,
@@ -80,6 +90,8 @@ class AsyncJSONResponse(Synchronizer):
                 self.wf.response["progress"] = round(done / tasks * 100, 1)
             except ZeroDivisionError:
                 pass
+            exec_time = time.time() - self.wf.start_time
+            self.wf.response["execTime"] = round(exec_time, 1)
 
     def out_edges(self):
         return tuple()
@@ -93,9 +105,16 @@ class AsyncJSONResponse(Synchronizer):
         self.wf.response["status"] = "running"
 
     def on_finish(self):
-        self.status = "done"
         self.wf.response["status"] = "done"
+        # TODO: mpfilter should send doneCount even if the row is filtered out
+        self.wf.response["doneCount"] = self.in_edge.task_count
+        self.wf.response["progress"] = 100
+        exec_time = time.time() - self.wf.start_time
+        self.wf.response["execTime"] = round(exec_time, 1)
+        self.status = "done"
 
     def on_aborted(self):
         self.status = "aborted"
         self.wf.response["status"] = "aborted"
+        exec_time = time.time() - self.wf.start_time
+        self.wf.response["execTime"] = round(exec_time, 1)

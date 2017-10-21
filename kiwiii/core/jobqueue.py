@@ -27,7 +27,7 @@ class JobQueue(object):
         # remove expired data
         alive = []
         for task in self.store:
-            if task.created + self.task_lifetime > now:
+            if task.creation_time + self.task_lifetime > now:
                 alive.append(task)
         self.store = alive
         yield self.queue.put(task)
@@ -57,5 +57,5 @@ class JobQueue(object):
 
     def tasks_iter(self):
         for task in self.store:
-            expires = task.created + self.task_lifetime
+            expires = task.creation_time + self.task_lifetime
             yield task, expires
