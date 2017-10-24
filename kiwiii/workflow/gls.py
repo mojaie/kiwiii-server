@@ -22,6 +22,7 @@ from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
 def mcsdr_filter(qmolarr, params, row):
     mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    type_ = {"sim": "local_sim", "edge": "mcsdr_edges"}
     if len(mol) > params["molSizeCutoff"]:  # mol size filter
         return
     try:
@@ -31,12 +32,12 @@ def mcsdr_filter(qmolarr, params, row):
         return
     sm, bg = sorted([arr[1], qmolarr[1]])
     thld = float(params["threshold"])
-    if params["measure"] == "gls" and sm < bg * thld:
+    if params["measure"] == "sim" and sm < bg * thld:
         return  # threshold filter
-    if params["measure"] == "mcsdr" and sm < thld:
+    if params["measure"] == "edge" and sm < thld:
         return  # fragment size filter
     res = mcsdr.local_sim(arr, qmolarr)
-    if res[params["measure"]] >= thld:
+    if res[type_[params["measure"]]] >= thld:
         row["_local_sim"] = res["local_sim"]
         row["_mcsdr"] = res["mcsdr_edges"]
         return row

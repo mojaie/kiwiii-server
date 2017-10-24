@@ -38,7 +38,7 @@ def gls_filter(params, pair):
 
 def morgan_filter(params, pair):
     row1, row2 = pair
-    thld = int(params["threshold"])
+    thld = float(params["threshold"])
     sim = rdkit.morgan_sim(row1["mol"], row2["mol"], radius=2)
     if sim >= thld:
         row = {
@@ -51,7 +51,7 @@ def morgan_filter(params, pair):
 
 def fmcs_filter(params, pair):
     row1, row2 = pair
-    thld = int(params["threshold"])
+    thld = float(params["threshold"])
     res = rdkit.fmcs(row1["mol"], row2["mol"], timeout=params["timeout"])
     if res["similarity"] >= thld:
         row = {
@@ -108,13 +108,14 @@ class RDKitMorganNetwork(Workflow):
     def __init__(self, contents, params):
         super().__init__()
         self.datatype = "edges"
+        self.nodesid = contents["id"]
         self.query = params
         self.fields = [
             {"key": "source"},
             {"key": "target"},
             {"key": "weight"}
         ]
-        mols = map(rdkit_mol, contents["records"])
+        mols = map(functools.partial(rdkit_mol, params), contents["records"])
         filter_ = functools.partial(morgan_filter, params)
         e1, = self.add_node(IteratorInput(mols))
         e2, = self.add_node(Combination(e1))
@@ -130,13 +131,14 @@ class RDKitFMCSNetwork(Workflow):
     def __init__(self, contents, params):
         super().__init__()
         self.datatype = "edges"
+        self.nodesid = contents["id"]
         self.query = params
         self.fields = [
             {"key": "source"},
             {"key": "target"},
             {"key": "weight"}
         ]
-        mols = map(rdkit_mol, contents["records"])
+        mols = map(functools.partial(rdkit_mol, params), contents["records"])
         filter_ = functools.partial(fmcs_filter, params)
         e1, = self.add_node(IteratorInput(mols))
         e2, = self.add_node(Combination(e1))
