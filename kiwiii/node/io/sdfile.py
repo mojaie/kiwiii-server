@@ -33,9 +33,13 @@ class SDFileInput(Node):
         super().__init__()
         self.contents = contents
         self.params = params
+        self.fields = []
+        for q in params["fields"]:
+            self.fields.append({"key": q, "name": q, "sortType": "text"})
 
     def on_submitted(self):
         self.out_edge.records = sdfile_records(self.contents, self.params)
+        self.out_edge.fields.extend(self.fields)
         self.out_edge.task_count = v2000reader.inspect_text(self.contents)[1]
 
     def in_edges(self):

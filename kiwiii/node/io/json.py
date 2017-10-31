@@ -16,43 +16,21 @@ class JSONResponse(Node):
     def __init__(self, in_edge, wf):
         super().__init__(in_edge)
         self.wf = wf
-        self.wf.response = {
-            "id": self.wf.id,
-            "name": self.wf.id[:8],
-            "dataType": self.wf.datatype,
-            "schemaVersion": static.SCHEMA_VERSION,
-            "revision": 0,
-            "query": self.wf.query,
-            "fields": [],
-            "records": [],
-            "created": time.strftime("%X %x %Z",
-                                     time.localtime(self.wf.creation_time)),
-            "execTime": 0,
-            "status": self.wf.status,
-            "resultCount": 0,
-            "taskCount": 0,
-            "doneCount": 0,
-            "progress": 100
-        }
 
     def run(self):
-        self.wf.response["records"] = list(self.in_edge.records)
+        self.wf.resultRecords = list(self.in_edge.records)
+        self.wf.resultCount = len(self.wf.reslutRecords)
+        self.wf.doneCount = self.in_edge.task_count
         self.on_finish()
 
     def out_edges(self):
         return tuple()
 
     def on_submitted(self):
-        self.wf.response["fields"] = self.wf.fields
-        self.wf.response["taskCount"] = self.in_edge.task_count
-
-    def on_finish(self):
-        self.wf.response["status"] = "done"
-        self.wf.response["resultCount"] = len(self.wf.response["records"])
-        self.wf.response["doneCount"] = self.in_edge.task_count
-        exec_time = time.time() - self.wf.start_time
-        self.wf.response["execTime"] = round(exec_time, 1)
-        self.status = "done"
+        # TODO: reorder fields
+        self.wf.fields = self.in_edge.fields
+        self.wf.doneCount = 0
+        self.wf.taskCount = self.in_edge.task_count
 
 
 class AsyncJSONResponse(Synchronizer):

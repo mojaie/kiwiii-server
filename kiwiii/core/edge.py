@@ -11,6 +11,7 @@ from tornado.queues import Queue
 class Edge(object):
     def __init__(self):
         self.records = []
+        self.fields = []
         self.task_count = 0
 
 
@@ -26,6 +27,7 @@ class AsyncQueueEdge(object):
     def __init__(self):
         self.queue = Queue(20)
         self.status = "ready"
+        self.fields = []
         self.task_count = 0
         self.done_count = 0
 

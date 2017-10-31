@@ -12,10 +12,12 @@ class SQLiteInput(Node):
     def __init__(self, query):
         super().__init__()
         self.query = query
+        self.fields = sq.resource_fields(query["targets"])
 
     def on_submitted(self):
         self.out_edge.records = sq.records_iter(self.query["targets"])
         self.out_edge.task_count = sq.record_count(self.query["targets"])
+        self.out_edge.fields.extend(self.fields)
 
     def in_edges(self):
         return tuple()
@@ -28,6 +30,7 @@ class SQLiteSearchInput(SQLiteInput):
             for v in self.query["values"]
         )
         self.out_edge.task_count = sq.record_count(self.query["targets"])
+        self.out_edge.fields.extend(self.fields)
 
 
 class SQLiteFilterInput(SQLiteInput):
@@ -38,6 +41,7 @@ class SQLiteFilterInput(SQLiteInput):
             fields=self.query.get("fields")
         )
         self.out_edge.task_count = sq.record_count(self.query["targets"])
+        self.out_edge.fields.extend(self.fields)
 
 
 class SQLiteWriter(Synchronizer):
