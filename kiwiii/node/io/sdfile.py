@@ -39,8 +39,9 @@ class SDFileInput(Node):
 
     def on_submitted(self):
         self.out_edge.records = sdfile_records(self.contents, self.params)
-        self.out_edge.fields.extend(self.fields)
         self.out_edge.task_count = v2000reader.inspect_text(self.contents)[1]
+        self.out_edge.fields.extend(self.in_edge.fields)
+        self.out_edge.fields.extend(self.fields)
 
     def in_edges(self):
         return tuple()

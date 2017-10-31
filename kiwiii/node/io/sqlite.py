@@ -17,6 +17,7 @@ class SQLiteInput(Node):
     def on_submitted(self):
         self.out_edge.records = sq.records_iter(self.query["targets"])
         self.out_edge.task_count = sq.record_count(self.query["targets"])
+        self.out_edge.fields.extend(self.in_edge.fields)
         self.out_edge.fields.extend(self.fields)
 
     def in_edges(self):

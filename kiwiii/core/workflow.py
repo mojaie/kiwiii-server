@@ -99,5 +99,13 @@ class Workflow(Task):
         if hasattr(self, "taskCount") and hasattr(self, "doneCount"):
             data["taskCount"] = self.taskCount
             data["doneCount"] = self.doneCount
-            data["progress"] = round(self.doneCount / self.taskCount * 100, 1)
+            try:
+                p = round(self.doneCount / self.taskCount * 100, 1)
+            except ZeroDivisionError:
+                p = None
+            # TODO: mpfilter should send doneCount even if the row is filtered out
+            if self.status == "done":
+                data["progress"] = 100
+            else:
+                data["progress"] = p
         return data
