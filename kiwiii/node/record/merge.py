@@ -10,7 +10,7 @@ from kiwiii.core.edge import Edge
 from kiwiii.core.task import Task
 
 
-class Merge(Task):
+class MergeRecords(Task):
     def __init__(self, in_edges):
         super().__init__()
         self._in_edges = in_edges

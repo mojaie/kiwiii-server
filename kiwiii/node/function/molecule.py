@@ -22,13 +22,13 @@ def chem_data(row):
     return record
 
 
-class ChemData(Node):
+class Molecule(Node):
     def on_submitted(self):
         self.out_edge.records = map(chem_data, self.in_edge.records)
         self.out_edge.task_count = self.in_edge.task_count
 
 
-class AsyncChemData(AsyncNode):
+class AsyncMolecule(AsyncNode):
     @gen.coroutine
     def _get_loop(self):
         while 1:

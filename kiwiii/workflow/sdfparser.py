@@ -7,10 +7,10 @@
 from kiwiii import static
 
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.sdfileio import SDFileInput
-from kiwiii.node.chemdata import ChemData, STRUCT_FIELD
-from kiwiii.node.numbergenerator import NumberGenerator, INDEX_FIELD
-from kiwiii.node.jsonresponse import JSONResponse
+from kiwiii.node.function.molecule import Molecule, STRUCT_FIELD
+from kiwiii.node.function.number import Number, INDEX_FIELD
+from kiwiii.node.io.json import JSONResponse
+from kiwiii.node.io.sdfile import SDFileInput
 
 
 class SDFParser(Workflow):
@@ -24,6 +24,6 @@ class SDFParser(Workflow):
             for q in query["params"]["fields"]
         ])
         e1, = self.add_node(SDFileInput(contents, query["params"]))
-        e2, = self.add_node(ChemData(e1))
-        e3, = self.add_node(NumberGenerator(e2))
+        e2, = self.add_node(Molecule(e1))
+        e3, = self.add_node(Number(e2))
         self.add_node(JSONResponse(e3, self))

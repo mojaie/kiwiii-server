@@ -9,7 +9,7 @@ from kiwiii.core.task import MPWorker
 from kiwiii.core.node import Node, Asynchronizer
 
 
-class Filter(Node):
+class FilterRecords(Node):
     def __init__(self, func, in_edge):
         super().__init__(in_edge)
         self.func = func
@@ -46,7 +46,7 @@ class MPNodeWorker(MPWorker):
         self.status = "aborted"
 
 
-class MPFilter(Asynchronizer):
+class MPFilterRecords(Asynchronizer):
     def __init__(self, func, in_edge):
         super().__init__(in_edge)
         self.func = func

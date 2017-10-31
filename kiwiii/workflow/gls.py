@@ -12,11 +12,11 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.chemdata import AsyncChemData, STRUCT_FIELD
-from kiwiii.node.filter import MPFilter
-from kiwiii.node.jsonresponse import AsyncJSONResponse
-from kiwiii.node.numbergenerator import AsyncNumberGenerator, INDEX_FIELD
-from kiwiii.node.sqliteio import SQLiteInput
+from kiwiii.node.function.molecule import AsyncMolecule, STRUCT_FIELD
+from kiwiii.node.function.number import AsyncNumber, INDEX_FIELD
+from kiwiii.node.record.filter import MPFilterRecords
+from kiwiii.node.io.json import AsyncJSONResponse
+from kiwiii.node.io.sqlite import SQLiteInput
 from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
 
@@ -58,7 +58,7 @@ class GLS(Workflow):
             qmol, query["params"]["diameter"], query["params"]["maxTreeSize"])
         func = functools.partial(mcsdr_filter, qmolarr, query["params"])
         e1, = self.add_node(SQLiteInput(query))
-        e2, = self.add_node(MPFilter(func, e1))
-        e3, = self.add_node(AsyncChemData(e2))
-        e4, = self.add_node(AsyncNumberGenerator(e3))
+        e2, = self.add_node(MPFilterRecords(func, e1))
+        e3, = self.add_node(AsyncMolecule(e2))
+        e4, = self.add_node(AsyncNumber(e3))
         self.add_node(AsyncJSONResponse(e4, self))

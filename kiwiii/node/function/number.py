@@ -12,7 +12,7 @@ from kiwiii.core.node import Node, AsyncNode
 INDEX_FIELD = {"key": "_index", "name": "Index", "sortType": "numeric"}
 
 
-class NumberGenerator(Node):
+class Number(Node):
     def __init__(self, in_edge, field=None):
         super().__init__(in_edge)
         if field is None:
@@ -29,7 +29,7 @@ class NumberGenerator(Node):
         self.on_finish()
 
 
-class AsyncNumberGenerator(AsyncNode):
+class AsyncNumber(AsyncNode):
     def __init__(self, in_edge, field=None):
         super().__init__(in_edge)
         if field is None:

@@ -9,11 +9,11 @@ import itertools
 from kiwiii import sqlitehelper
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
-from kiwiii.node import sqliteio
-from kiwiii.node.jsonresponse import JSONResponse
-from kiwiii.node.merge import Merge
-from kiwiii.node.groupby import GroupBy
-from kiwiii.node.numbergenerator import NumberGenerator, INDEX_FIELD
+from kiwiii.node.io import sqlite
+from kiwiii.node.function.number import Number, INDEX_FIELD
+from kiwiii.node.io.json import JSONResponse
+from kiwiii.node.record.merge import MergeRecords
+from kiwiii.node.transform.groupby import GroupBy
 from kiwiii.util import lod
 
 
@@ -42,7 +42,7 @@ class FieldFilter(Workflow):
             "key": "id", "operator": "in", "values": query["values"],
             "fields": ["id"] + query["targetFields"]
         }
-        e1, = self.add_node(sqliteio.SQLiteFilterInput(q))
+        e1, = self.add_node(sqlite.SQLiteFilterInput(q))
         e1s.append(e1)
         """
         if r["resourceType"] == "api":
@@ -54,7 +54,7 @@ class FieldFilter(Workflow):
             }
             e1, = self.add_node(httpio.HTTPResourceFilterInput(sq))
         """
-        e2, = self.add_node(Merge(e1s))
+        e2, = self.add_node(MergeRecords(e1s))
         e3, = self.add_node(GroupBy("id", e2))
-        e4, = self.add_node(NumberGenerator(e3))
+        e4, = self.add_node(Number(e3))
         self.add_node(JSONResponse(e4, self))
