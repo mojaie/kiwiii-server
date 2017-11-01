@@ -5,21 +5,20 @@
 #
 
 import functools
-import itertools
 
 from kiwiii import sqlitehelper
 from kiwiii.core.workflow import Workflow
 from kiwiii.node.io import sqlite
 from kiwiii.node.function.apply import Apply
-from kiwiii.node.function.number import Number, INDEX_FIELD
+from kiwiii.node.function.number import Number
 from kiwiii.node.io.json import JSONResponse
 from kiwiii.node.record.merge import MergeRecords
 from kiwiii.node.transform.stack import Stack
-from kiwiii.util import lod
+from kiwiii.lod import LOD
 
 
 def add_rsrc_fields(fields_dict, row):
-    row.update(fields_dict[row["field"]])
+    row.update(fields_dict[row["_field"]])
     del row["key"]
     return row
 
@@ -28,21 +27,15 @@ class Profile(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        self.fields = [
-            INDEX_FIELD,
-            {"key": "id"},
-            {"key": "field"},
-            {"key": "value"},
-        ]
         e1s = []
-        ac = list(lod.filter_(
-            "domain", "activity", sqlitehelper.SQLITE_RESOURCES))
-        fs = lod.unique(
-            itertools.chain.from_iterable(lod.values("fields", ac)))
+        ac = LOD(sqlitehelper.SQLITE_RESOURCES.filter("domain", "activity"))
+        fs = LOD()
+        for vs in ac.values("fields"):
+            fs.merge(vs)
         fields_dict = {f["key"]: f for f in fs}
         sq = {
             "type": "filter",
-            "targets": list(lod.values("id", ac)),
+            "targets": list(ac.values("id")),
             "key": "id", "operator": "eq", "values": (query["id"],)
         }
         e1, = self.add_node(sqlite.SQLiteFilterInput(sq))

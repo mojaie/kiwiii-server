@@ -12,8 +12,8 @@ from kiwiii.core.node import Node
 def stack(row, keys):
     for nk in set(row.keys()) - set(keys):
         d = {k: v for k, v in row.items() if k in keys}
-        d["field"] = nk
-        d["value"] = row[nk]
+        d["_field"] = nk
+        d["_value"] = row[nk]
         yield d
 
 
@@ -27,7 +27,7 @@ class Stack(Node):
             stack(rcd, self.keys) for rcd in self.in_edge.records)
         main, counter = itertools.tee(stacked)
         self.out_edge.records = main
-        self.out_edge.task_count = len(list(counter))
-        # TODO
-        self.out_edge.fields.merge(self.in_edge.fields)
-        self.out_edge.fields.merge(self.fields)
+        self.out_edge.task_count = sum(1 for i in counter)
+        fs = filter(lambda x: x["key"] in self.keys, self.in_edge.fields)
+        self.out_edge.fields.merge(fs)
+        self.out_edge.fields.merge([{"key": "_field"}, {"key": "_value"}])

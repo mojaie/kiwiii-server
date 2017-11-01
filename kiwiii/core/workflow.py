@@ -62,6 +62,7 @@ class Workflow(Task):
     def interrupt(self):
         self.status = "interrupted"
         # TODO: Only an Asynchronizer might be running which will be stopped
+        # TODO: sqlitewriter should allow interruption
         fs = [
             n.interrupt() for n in self.nodes if isinstance(n, Asynchronizer)]
         while not all(f.done() for f in fs):
@@ -107,4 +108,6 @@ class Workflow(Task):
                 data["progress"] = 100
             else:
                 data["progress"] = p
+        if hasattr(self, "nodesid"):
+            data["nodesID"] = self.nodesid
         return data

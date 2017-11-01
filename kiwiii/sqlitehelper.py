@@ -14,11 +14,10 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import sqliteconnection as sqlite
 from kiwiii import static
-from kiwiii.util import lod
+from kiwiii.lod import LOD
 
 
-SQLITE_RESOURCES = list(lod.filter_("resourceType", "sqlite",
-                                    static.RESOURCES))
+SQLITE_RESOURCES = LOD(static.RESOURCES.filter("resourceType", "sqlite"))
 
 
 class SQLiteHelper(object):
@@ -27,7 +26,7 @@ class SQLiteHelper(object):
 
     def origins_iter(self, rsrc_ids):
         for r in rsrc_ids:
-            found = lod.find("id", r, SQLITE_RESOURCES)
+            found = SQLITE_RESOURCES.find("id", r)
             self.dbs.setdefault(r, found["resourceFile"])
             conn = sqlite.Connection(
                 os.path.join(static.SQLITE_BASE_DIR, self.dbs[r]))
@@ -40,11 +39,11 @@ class SQLiteHelper(object):
         return count
 
     def resource_fields(self, rsrc_ids):
-        results = []
+        results = LOD()
         for r in rsrc_ids:
-            found = lod.find("id", r, SQLITE_RESOURCES)
-            results.extend(found["fields"])
-        return lod.unique(results)
+            found = SQLITE_RESOURCES.find("id", r)
+            results.merge(found["fields"])
+        return results
 
     def records_iter(self, rsrc_ids):
         for r, tbl, conn in self.origins_iter(rsrc_ids):
@@ -56,7 +55,7 @@ class SQLiteHelper(object):
                 yield row
 
     def search(self, rsrc_ids, key, value):
-        key_exists = lod.find("key", key, self.resource_fields(rsrc_ids))
+        key_exists = self.resource_fields(rsrc_ids).find("key", key)
         if key_exists is not None:
             for r, tbl, conn in self.origins_iter(rsrc_ids):
                 res = conn.find_first(key, (value,), tbl)
@@ -80,7 +79,7 @@ class SQLiteHelper(object):
         op = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",
               "lk": "LIKE", "in": "IN"}[op]
         for r, tbl, conn in self.origins_iter(rsrc_ids):
-            key_exists = lod.find("key", key, self.resource_fields(rsrc_ids))
+            key_exists = self.resource_fields(rsrc_ids).find("key", key)
             if key_exists is None:
                 continue
             for res in conn.find_iter(key, values, tbl, op):

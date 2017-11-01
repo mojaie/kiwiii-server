@@ -4,11 +4,9 @@
 # http://opensource.org/licenses/MIT
 #
 
-from kiwiii import static
-
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.function.molecule import Molecule, STRUCT_FIELD
-from kiwiii.node.function.number import Number, INDEX_FIELD
+from kiwiii.node.function.molecule import Molecule
+from kiwiii.node.function.number import Number
 from kiwiii.node.io.json import JSONResponse
 from kiwiii.node.io.sdfile import SDFileInput
 
@@ -17,9 +15,7 @@ class SDFParser(Workflow):
     def __init__(self, contents, query):
         super().__init__()
         self.query = query
-        self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(static.CHEM_FIELDS)
-        self.fields.extend([
+        self.fields.merge([
             {"key": q, "name": q, "sortType": "text"}
             for q in query["params"]["fields"]
         ])

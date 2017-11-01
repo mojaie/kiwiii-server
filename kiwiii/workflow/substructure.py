@@ -13,10 +13,10 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.function.molecule import AsyncMolecule, STRUCT_FIELD
+from kiwiii.node.function.molecule import AsyncMolecule
 from kiwiii.node.record.filter import MPFilterRecords
 from kiwiii.node.io.json import AsyncJSONResponse
-from kiwiii.node.function.number import AsyncNumber, INDEX_FIELD
+from kiwiii.node.function.number import AsyncNumber
 from kiwiii.node.io import sqlite
 from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
@@ -45,8 +45,6 @@ class ExactStruct(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(sq.resource_fields(query["targets"]))
         qmol = sq.query_mol(query["queryMol"])
         mw_filter = {
             "targets": query["targets"],
@@ -66,8 +64,6 @@ class Substruct(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(sq.resource_fields(query["targets"]))
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(substr_filter, qmol, query["params"])
         e1, = self.add_node(sqlite.SQLiteInput(query))
@@ -81,8 +77,6 @@ class Superstruct(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(sq.resource_fields(query["targets"]))
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(supstr_filter, qmol, query["params"])
         e1, = self.add_node(sqlite.SQLiteInput(query))

@@ -86,11 +86,11 @@ class GLSNetwork(Workflow):
         self.datatype = "edges"
         self.nodesid = contents["id"]
         self.query = params
-        self.fields = [
+        self.fields.merge([
             {"key": "source"},
             {"key": "target"},
             {"key": "weight"}
-        ]
+        ])
         arrgen = functools.partial(gls_array, params)
         arrs = map(arrgen, contents["records"])
         filter_ = functools.partial(gls_filter, params)
@@ -99,10 +99,6 @@ class GLSNetwork(Workflow):
         e3, = self.add_node(MPFilterRecords(filter_, e2))
         self.add_node(AsyncJSONResponse(e3, self))
 
-    def on_submitted(self):
-        super().on_submitted()
-        self.response["nodesID"] = self.nodesid
-
 
 class RDKitMorganNetwork(Workflow):
     def __init__(self, contents, params):
@@ -110,21 +106,17 @@ class RDKitMorganNetwork(Workflow):
         self.datatype = "edges"
         self.nodesid = contents["id"]
         self.query = params
-        self.fields = [
+        self.fields.merge([
             {"key": "source"},
             {"key": "target"},
             {"key": "weight"}
-        ]
+        ])
         mols = map(functools.partial(rdkit_mol, params), contents["records"])
         filter_ = functools.partial(morgan_filter, params)
         e1, = self.add_node(IteratorInput(mols))
         e2, = self.add_node(Combination(e1))
         e3, = self.add_node(MPFilterRecords(filter_, e2))
         self.add_node(AsyncJSONResponse(e3, self))
-
-    def on_submitted(self):
-        super().on_submitted()
-        self.response["nodesID"] = self.nodesid
 
 
 class RDKitFMCSNetwork(Workflow):
@@ -133,18 +125,14 @@ class RDKitFMCSNetwork(Workflow):
         self.datatype = "edges"
         self.nodesid = contents["id"]
         self.query = params
-        self.fields = [
+        self.fields.merge([
             {"key": "source"},
             {"key": "target"},
             {"key": "weight"}
-        ]
+        ])
         mols = map(functools.partial(rdkit_mol, params), contents["records"])
         filter_ = functools.partial(fmcs_filter, params)
         e1, = self.add_node(IteratorInput(mols))
         e2, = self.add_node(Combination(e1))
         e3, = self.add_node(MPFilterRecords(filter_, e2))
         self.add_node(AsyncJSONResponse(e3, self))
-
-    def on_submitted(self):
-        super().on_submitted()
-        self.response["nodesID"] = self.nodesid

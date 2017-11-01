@@ -8,6 +8,7 @@ from chorus import molutil, wclogp
 from chorus.draw.svg import SVG
 
 from kiwiii import sqliteconnection as sqlite
+from kiwiii.lod import ListOfDict
 
 
 SCHEMA_VERSION = 0.8
@@ -63,7 +64,7 @@ def mol_to_svg(mol):
     return SVG(mol).contents()
 
 
-CHEM_FIELDS = [
+CHEM_FIELDS = ListOfDict([
     {"key": "_structure", "name": "Structure", "sortType": "none"},
     {"key": "_mw", "name": "MW", "sortType": "numeric"},
     {"key": "_mw_wo_sw", "name": "MW w/o salt and water",
@@ -71,7 +72,7 @@ CHEM_FIELDS = [
     {"key": "_formula", "name": "Formula", "sortType": "text"},
     {"key": "_logp", "name": "WCLogP", "sortType": "numeric"},
     {"key": "_nonH", "name": "Non-H atom count", "sortType": "numeric"}
-]
+])
 
 CHEM_FUNCTIONS = {
     "_structure": mol_to_svg,
@@ -113,7 +114,7 @@ def screener_format(data):
 
 
 def resources():
-    resources = []
+    resources = ListOfDict()
     # SQLite databases
     for filename in glob.glob(os.path.join(SQLITE_BASE_DIR, "*.sqlite3")):
         conn = sqlite.Connection(filename)
@@ -130,7 +131,7 @@ def resources():
 
 
 def templates():
-    templates = []
+    templates = ListOfDict()
     for tm in glob.glob(os.path.join(REPORT_TEMPLATE_DIR, "*.csv")):
         templates.append({
             "name": os.path.splitext(os.path.basename(tm))[0],

@@ -13,11 +13,11 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.function.molecule import AsyncMolecule, STRUCT_FIELD
-from kiwiii.node.record.filter import MPFilterRecords
+from kiwiii.node.function.molecule import AsyncMolecule
+from kiwiii.node.function.number import AsyncNumber
 from kiwiii.node.io.json import AsyncJSONResponse
-from kiwiii.node.function.number import AsyncNumber, INDEX_FIELD
 from kiwiii.node.io.sqlite import SQLiteInput
+from kiwiii.node.record.filter import MPFilterRecords
 from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
 
@@ -40,8 +40,6 @@ class RDKitFMCS(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(sq.resource_fields(query["targets"]))
         self.fields.extend([
             {"key": "_fmcs_sim", "name": "MCS size", "sortType": "numeric"},
             {"key": "_fmcs_edges", "name": "MCS similarity",

@@ -13,8 +13,8 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.function.molecule import AsyncMolecule, STRUCT_FIELD
-from kiwiii.node.function.number import AsyncNumber, INDEX_FIELD
+from kiwiii.node.function.molecule import AsyncMolecule
+from kiwiii.node.function.number import AsyncNumber
 from kiwiii.node.io.json import AsyncJSONResponse
 from kiwiii.node.io.sqlite import SQLiteInput
 from kiwiii.node.record.filter import MPFilterRecords
@@ -38,9 +38,7 @@ class RDKitMorgan(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        self.fields = [INDEX_FIELD, STRUCT_FIELD]
-        self.fields.extend(sq.resource_fields(query["targets"]))
-        self.fields.append({
+        self.fields.add({
             "key": "_morgan_sim", "name": "Fingerprint similarity",
             "sortType": "numeric"})
         qmol = sq.query_mol(query["queryMol"])

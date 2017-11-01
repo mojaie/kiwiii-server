@@ -5,7 +5,7 @@
 #
 
 from kiwiii.sqlitehelper import SQLITE_HELPER as sq
-from kiwiii.core.node import Node, Synchronizer
+from kiwiii.core.node import Node
 
 
 class SQLiteInput(Node):
@@ -42,16 +42,3 @@ class SQLiteFilterInput(SQLiteInput):
         )
         self.out_edge.task_count = sq.record_count(self.query["targets"])
         self.out_edge.fields.merge(self.fields)
-
-
-class SQLiteWriter(Synchronizer):
-    def __init__(self, query):
-        super().__init__()
-        self.query = query
-
-    def on_submitted(self):
-        self.out_edge.records = sq.records_iter(self.query["targets"])
-        self.out_edge.task_count = sq.record_count(self.query["targets"])
-
-    def in_edges(self):
-        return tuple()

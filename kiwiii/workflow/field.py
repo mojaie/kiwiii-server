@@ -4,13 +4,10 @@
 # http://opensource.org/licenses/MIT
 #
 
-import itertools
-
 from kiwiii import sqlitehelper
-from kiwiii import static
 from kiwiii.core.workflow import Workflow
 from kiwiii.node.io import sqlite
-from kiwiii.node.function.number import Number, INDEX_FIELD
+from kiwiii.node.function.number import Number
 from kiwiii.node.io.json import JSONResponse
 from kiwiii.node.record.merge import MergeRecords
 from kiwiii.node.transform.groupby import GroupBy
@@ -27,11 +24,6 @@ class FieldFilter(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        self.fields = [INDEX_FIELD]
-        rsrc_fields = list(itertools.chain.from_iterable(
-            r["fields"] for r in static.RESOURCES))
-        fs = [lod.find("key", i, rsrc_fields) for i in query["targetFields"]]
-        self.fields.extend(fs)
         e1s = []
         # SQLite
         sq_rsrcs = list(lod.filter_(

@@ -21,35 +21,33 @@ class ListOfDict(list):
         """
         return next(self.filter(key, value), None)
 
-    def add(self, rcd, key="key", dupkey="add"):
+    def add(self, rcd, key="key", dupkey="replace"):
         """Adds a new record.
         Args:
             dupkey:
-                add - add new record without check
-                skip - add no record when the key is duplicated
-                replace - replace existing record with the new one
+                replace - replace existing record with the new one (default)
                 update - update exisiting record (dict.update)
+                skip - add no record when the key is duplicated
                 replace or update will be applied for only the first one found
         """
-        if dupkey != "add":
-            for i, r in enumerate(self):
-                if r[key] == rcd[key]:
-                    if dupkey == "skip":
-                        return
-                    if dupkey == "update":
-                        self[i].update(rcd)
-                        return
-                    if dupkey == "replace":
-                        self[i] = rcd
-                        return
+        for i, r in enumerate(self):
+            if r[key] == rcd[key]:
+                if dupkey == "skip":
+                    return
+                if dupkey == "update":
+                    self[i].update(rcd)
+                    return
+                if dupkey == "replace":
+                    self[i] = rcd
+                    return
         self.append(rcd)
 
     def reduce(self, key="key", dupkey="update"):
         """Removes records with duplicated key
         Args:
             dupkey:
-                skip - add no record when the key is duplicated
                 update - update exisiting record (dict.update)
+                skip - add no record when the key is duplicated
         """
         new = ListOfDict()
         for r in self:
