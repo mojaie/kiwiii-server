@@ -7,11 +7,13 @@
 from tornado import gen
 from tornado.queues import Queue
 
+from kiwiii.lod import ListOfDict
+
 
 class Edge(object):
     def __init__(self):
         self.records = []
-        self.fields = []
+        self.fields = ListOfDict()
         self.task_count = 0
 
 
@@ -27,7 +29,7 @@ class AsyncQueueEdge(object):
     def __init__(self):
         self.queue = Queue(20)
         self.status = "ready"
-        self.fields = []
+        self.fields = ListOfDict()
         self.task_count = 0
         self.done_count = 0
 

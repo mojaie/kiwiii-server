@@ -26,3 +26,4 @@ class MergeRecords(Task):
         self.out_edge.records = itertools.chain.from_iterable(
             i.records for i in self._in_edges)
         self.out_edge.task_count = sum([i.task_count for i in self._in_edges])
+        self.out_edge.fields.merge(self._in_edges[0].fields) # TODO

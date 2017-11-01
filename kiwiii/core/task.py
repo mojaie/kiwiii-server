@@ -13,6 +13,7 @@ from tornado import gen
 from tornado.queues import Queue
 
 from kiwiii import static
+from kiwiii.lod import ListOfDict
 from kiwiii.util import debug
 
 
@@ -29,7 +30,7 @@ class Task(object):
         self.status = "ready"
         self.creation_time = time.time()
         self.start_time = None
-        self.fields = []
+        self.fields = ListOfDict()
 
     def run(self):
         pass

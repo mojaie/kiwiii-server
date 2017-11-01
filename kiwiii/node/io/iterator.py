@@ -18,7 +18,7 @@ class IteratorInput(Node):
         main, counter = itertools.tee(self.iter_input)
         self.out_edge.records = main
         if self.fields:
-            self.out_edge.fields.extend(self.fields)
+            self.out_edge.fields.merge(self.fields)
         self.out_edge.task_count = len(list(counter))
 
     def in_edges(self):

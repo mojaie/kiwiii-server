@@ -21,7 +21,6 @@ class Workflow(Task):
         self.preds = {}
         self.succs = {}
         self.order = None
-        self.fields = []
         self.interval = 0.5
         self.query = {}
         self.datatype = "nodes"

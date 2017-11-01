@@ -34,6 +34,8 @@ class Node(Task):
     def on_submitted(self):
         if self.in_edge is not None:
             self.out_edge.task_count = self.in_edge.task_count
+        self.out_edge.fields.merge(self.in_edge.fields)
+        self.out_edge.fields.merge(self.fields)
 
 
 class FlashNode(Node):
@@ -80,6 +82,8 @@ class AsyncNode(Task):
     def on_submitted(self):
         if self.in_edge is not None:
             self.out_edge.task_count = self.in_edge.task_count
+        self.out_edge.fields.merge(self.in_edge.fields)
+        self.out_edge.fields.merge(self.fields)
 
 
 class LazyNode(AsyncNode):
@@ -130,6 +134,8 @@ class Synchronizer(Task):
     def on_submitted(self):
         if self.in_edge is not None:
             self.out_edge.task_count = self.in_edge.task_count
+        self.out_edge.fields.merge(self.in_edge.fields)
+        self.out_edge.fields.merge(self.fields)
 
 
 class LazyConsumer(Synchronizer):
@@ -186,6 +192,8 @@ class Asynchronizer(Task):
     def on_submitted(self):
         if self.in_edge is not None:
             self.out_edge.task_count = self.in_edge.task_count
+        self.out_edge.fields.merge(self.in_edge.fields)
+        self.out_edge.fields.merge(self.fields)
 
 
 class EagerProducer(Asynchronizer):

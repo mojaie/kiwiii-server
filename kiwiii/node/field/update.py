@@ -16,10 +16,10 @@ def rename(mapping, row):
     return row
 
 
-class RenameFields(Node):
+class UpdateFields(Node):
     def __init__(self, in_edge, conv_fields):
         super().__init__(in_edge)
-        self.conv = conv_fields
+        self.fields = conv_fields.values()
         conv_keys = {}
         for old_key, new_dict in conv_fields.items():
             if old_key != new_dict["key"]:
@@ -33,9 +33,5 @@ class RenameFields(Node):
         else:
             self.out_edge.records = self.in_edge.records
         self.out_edge.task_count = self.in_edge.task_count
-        for f in self.in_edge.fields:
-            if f["key"] in self.conv.keys():
-                self.out_edge.fields.append(self.conv[f["key"]])
-            else:
-                self.out_edge.fields.append(f)
-        self.out_edge.fields.extend(self.fields)
+        self.out_edge.fields.merge(self.in_edge.fields)
+        self.out_edge.fields.merge(self.fields, dupkey="replace")
