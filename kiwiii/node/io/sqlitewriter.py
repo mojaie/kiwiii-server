@@ -4,56 +4,102 @@
 # http://opensource.org/licenses/MIT
 #
 
+import os
 import sqlite3
 
-from tornado import gen
+from kiwiii.core.node import Task
 
-from kiwiii.core.node import Synchronizer
+data_type = {
+    "compound_id": "text",
+    "text": "text",
+    "numeric": "real",
+    "count": "integer",
+    "flag": "integer"
+}
 
 
-class SQLiteWriter(Synchronizer):
-    def __init__(self, in_edge, wf):
-        super().__init__(in_edge)
+class SQLiteWriter(Task):
+    def __init__(self, in_edges, wf, dest_path, allow_overwrite=True):
+        super().__init__()
+        self._in_edges = in_edges
         self.wf = wf
-        self.records = []
+        self.dest_path = dest_path
+        self.allow_overwrite = allow_overwrite
 
-    @gen.coroutine
-    def _get_loop(self):
-        while 1:
-            in_ = yield self.in_edge.get()
-            self.records.append(in_)
-            self.wf.resultCount += 1
-            self.wf.doneCount = self.in_edge.done_count
-
-    @gen.coroutine
-    def run(self):
-        self.on_start()
-        self._get_loop()
-        while 1:
-            if self.in_edge.status == "aborted":
-                self.out_edge.status = "aborted"
-                self.on_aborted()
-                return
-            if self.in_edge.status == "done":
-                self.out_edge.status = "done"
-                break
-            yield gen.sleep(self.interval)
-        try:
-            # TODO: insert records
-            pass
-        except sqlite3.Error:
-            self.on_aborted()
-        else:
-            self.on_finish()
+    def in_edges(self):
+        return self._in_edges
 
     def out_edges(self):
         return tuple()
 
+    def run(self):
+        self.on_start()
+        conn = sqlite3.connect(self.dest_path)
+        conn.isolation_level = None
+        cur = conn.cursor()
+        cur.execute("PRAGMA page_size = 4096")
+        cur.execute("BEGIN")
+        try:
+            if os.path.exists(self.dest_path) and self.allow_overwrite:
+                # This can be rolled back when the operation failed
+                # unlike delete file and generate new one
+                print("Truncate existing database ...")
+                cur.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'")
+                tables = [row[0] for row in cur.fetchall()]
+                for t in tables:
+                    cur.execute("DROP TABLE {}".format(t))
+                    print("Table {} dropped".format(t))
+            cur.execute("CREATE TABLE document(document text)")
+            for in_edge in self.in_edges:
+                # Create table
+                sqcols = []
+                for field in in_edge.fields:
+                    sqtype = " {}".format(data_type[field["valueType"]])
+                    sqpk = ""
+                    if field["key"] == "id":
+                        sqpk = " primary key check(id != '')"
+                    sqnocase = ""
+                    if field["valueType"] in ("text",):
+                        sqnocase = " collate nocase"
+                    sqcol = "".join((field["key"], sqtype, sqpk, sqnocase))
+                    sqcols.append(sqcol)
+                sql = "CREATE TABLE {} ({})".format(in_edge.name,
+                                                    ", ".join(sqcols))
+                cur.execute(sql)
+                # Insert records
+                for i, rcd in enumerate(in_edge.records):
+                    sqflds = "{} ({})".format(
+                        in_edge.name, ", ".join(rcd.keys()))
+                    ph = ", ".join(["?"] * len(rcd))
+                    sql_row = "INSERT INTO {} VALUES ({})".format(sqflds, ph)
+                    values = [rcd[c] for c in rcd.keys()]
+                    try:
+                        cur.execute(sql_row, values)
+                    except sqlite3.IntegrityError as e:
+                        print("skip #{}: {}".format(i, e))
+                    if i and not i % 10000:
+                        print("{} rows processed...".format(i))
+                cnt = cur.execute(
+                    "SELECT COUNT(*) FROM {}".format(in_edge.name))
+                print("{} rows -> {}".format(cnt.fetchone()[0], in_edge.name))
+                # Resources
+                doc["resources"].append(rsrc)
+            """Save document"""
+            cur.execute("INSERT INTO document VALUES (?)", (json.dumps(doc),))
+
+        except ValueError:  # TODO: which error raised when interrupt
+            self.on_aborted()
+        else:
+            self.wf.done_count = self.wf.result_count = self.in_edge.task_count
+            self.on_finish()
+
     def on_submitted(self):
-        self.wf.fields.merge(self.in_edge.fields)
-        self.wf.resultCount = 0
-        self.wf.taskCount = self.in_edge.task_count
-        self.wf.doneCount = 0
+        self.wf.task_count = sum(i.task_count for i in self._in_edges)
+        self.wf.result_count = 0
+        self.wf.done_count = 0
+        if os.path.exists(self.dest_path) and not self.allow_overwrite:
+            raise ValueError("SQLite file already exists.")
 
     def interrupt(self):
         # TODO: core.workflow will call this when interrupted

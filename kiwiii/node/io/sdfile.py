@@ -18,21 +18,23 @@ def sdfile_records(contents, params):
     mols = v2000reader.mols_from_text(contents)
     for m in mols:
         row = {}
-        if params["implh"]:
+        if params.get("implh", False):
             m = molutil.make_Hs_implicit(m)
-        if params["recalc"]:
+        if params.get("recalc", False):
             calc2dcoords.calc2dcoords(m)
         row[static.MOLOBJ_KEY] = json.dumps(m.jsonized())
-        for p in params["fields"]:
+        for p in params.get("fields", []):
             row[p] = m.data.get(p, "")
         yield row
 
 
 class SDFileInput(Node):
-    def __init__(self, contents, params):
+    def __init__(self, contents, params=None):
         super().__init__()
         self.contents = contents
         self.params = params
+        if params is None:
+            self.params = {}
         self.fields.merge(
             {"key": q, "name": q, "sortType": "text"} for q in params["fields"]
         )

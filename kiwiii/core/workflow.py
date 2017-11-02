@@ -70,6 +70,7 @@ class Workflow(Task):
         self.on_aborted()
 
     def on_submitted(self):
+        # TODO: catch exceptions on submit (ex. file path error, format error)
         self.order = graph.topological_sort(self.succs, self.preds)
         for node_id in self.order:
             self.nodes[node_id].on_submitted()
@@ -92,15 +93,15 @@ class Workflow(Task):
             data["query"] = self.query
         if hasattr(self, "fields"):
             data["fields"] = self.fields
-        if hasattr(self, "resultRecords"):
-            data["records"] = self.resultRecords
-        if hasattr(self, "resultCount"):
-            data["resultCount"] = self.resultCount
-        if hasattr(self, "taskCount") and hasattr(self, "doneCount"):
-            data["taskCount"] = self.taskCount
-            data["doneCount"] = self.doneCount
+        if hasattr(self, "result_records"):
+            data["records"] = self.result_records
+        if hasattr(self, "result_count"):
+            data["resultCount"] = self.result_count
+        if hasattr(self, "task_count") and hasattr(self, "done_count"):
+            data["taskCount"] = self.task_count
+            data["doneCount"] = self.done_count
             try:
-                p = round(self.doneCount / self.taskCount * 100, 1)
+                p = round(self.done_count / self.task_count * 100, 1)
             except ZeroDivisionError:
                 p = None
             # TODO: mpfilter should send doneCount even if the row is filtered out
