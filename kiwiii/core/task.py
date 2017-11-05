@@ -31,6 +31,7 @@ class Task(object):
         self.creation_time = time.time()
         self.start_time = None
         self.fields = ListOfDict()
+        self.params = {}
 
     def run(self):
         pass

@@ -27,3 +27,4 @@ class MergeRecords(Task):
             i.records for i in self._in_edges)
         self.out_edge.task_count = sum([i.task_count for i in self._in_edges])
         self.out_edge.fields.merge(self._in_edges[0].fields) # TODO
+        self.out_edge.params.update(self.in_edge.params)

@@ -17,7 +17,7 @@ def stack(row, keys):
         yield d
 
 
-class Stack(Node):
+class Unstack(Node):
     def __init__(self, keys, in_edge):
         super().__init__(in_edge)
         self.keys = keys

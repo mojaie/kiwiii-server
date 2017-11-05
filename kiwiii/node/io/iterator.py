@@ -20,6 +20,7 @@ class IteratorInput(Node):
         self.out_edge.task_count = len(list(counter))
         if self.fields:
             self.out_edge.fields.merge(self.fields)
+        self.out_edge.params.update(self.in_edge.params)
 
     def in_edges(self):
         return tuple()

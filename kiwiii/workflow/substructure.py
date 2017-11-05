@@ -13,8 +13,8 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
+from kiwiii.node.function.filter import MPFilter
 from kiwiii.node.function.molecule import AsyncMolecule
-from kiwiii.node.record.filter import MPFilterRecords
 from kiwiii.node.io.json import AsyncJSONResponse
 from kiwiii.node.function.number import AsyncNumber
 from kiwiii.node.io import sqlite
@@ -54,7 +54,7 @@ class ExactStruct(Workflow):
         }
         func = functools.partial(exact_filter, qmol, query["params"])
         e1, = self.add_node(sqlite.SQLiteFilterInput(mw_filter))
-        e2, = self.add_node(MPFilterRecords(func, e1))
+        e2, = self.add_node(MPFilter(func, e1))
         e3, = self.add_node(AsyncMolecule(e2))
         e4, = self.add_node(AsyncNumber(e3))
         self.add_node(AsyncJSONResponse(e4, self))
@@ -67,7 +67,7 @@ class Substruct(Workflow):
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(substr_filter, qmol, query["params"])
         e1, = self.add_node(sqlite.SQLiteInput(query))
-        e2, = self.add_node(MPFilterRecords(func, e1))
+        e2, = self.add_node(MPFilter(func, e1))
         e3, = self.add_node(AsyncMolecule(e2))
         e4, = self.add_node(AsyncNumber(e3))
         self.add_node(AsyncJSONResponse(e4, self))
@@ -80,7 +80,7 @@ class Superstruct(Workflow):
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(supstr_filter, qmol, query["params"])
         e1, = self.add_node(sqlite.SQLiteInput(query))
-        e2, = self.add_node(MPFilterRecords(func, e1))
+        e2, = self.add_node(MPFilter(func, e1))
         e3, = self.add_node(AsyncMolecule(e2))
         e4, = self.add_node(AsyncNumber(e3))
         self.add_node(AsyncJSONResponse(e4, self))

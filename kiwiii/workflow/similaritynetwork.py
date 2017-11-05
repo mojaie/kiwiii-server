@@ -14,9 +14,9 @@ from chorus.model.graphmol import Compound
 
 from kiwiii import static
 from kiwiii.core.workflow import Workflow
+from kiwiii.node.function.filter import MPFilter
 from kiwiii.node.io.json import AsyncJSONResponse
 from kiwiii.node.io.iterator import IteratorInput
-from kiwiii.node.record.filter import MPFilterRecords
 from kiwiii.node.transform.combination import Combination
 
 
@@ -96,7 +96,7 @@ class GLSNetwork(Workflow):
         filter_ = functools.partial(gls_filter, params)
         e1, = self.add_node(IteratorInput(arrs))
         e2, = self.add_node(Combination(e1))
-        e3, = self.add_node(MPFilterRecords(filter_, e2))
+        e3, = self.add_node(MPFilter(filter_, e2))
         self.add_node(AsyncJSONResponse(e3, self))
 
 
@@ -115,7 +115,7 @@ class RDKitMorganNetwork(Workflow):
         filter_ = functools.partial(morgan_filter, params)
         e1, = self.add_node(IteratorInput(mols))
         e2, = self.add_node(Combination(e1))
-        e3, = self.add_node(MPFilterRecords(filter_, e2))
+        e3, = self.add_node(MPFilter(filter_, e2))
         self.add_node(AsyncJSONResponse(e3, self))
 
 
@@ -134,5 +134,5 @@ class RDKitFMCSNetwork(Workflow):
         filter_ = functools.partial(fmcs_filter, params)
         e1, = self.add_node(IteratorInput(mols))
         e2, = self.add_node(Combination(e1))
-        e3, = self.add_node(MPFilterRecords(filter_, e2))
+        e3, = self.add_node(MPFilter(filter_, e2))
         self.add_node(AsyncJSONResponse(e3, self))

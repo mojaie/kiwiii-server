@@ -20,3 +20,4 @@ class Combination(Node):
         self.out_edge.records = main
         self.out_edge.task_count = len(list(counter))
         self.out_edge.fields.merge(self.in_edge.fields)
+        self.out_edge.params.update(self.in_edge.params)

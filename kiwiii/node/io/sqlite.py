@@ -4,6 +4,7 @@
 # http://opensource.org/licenses/MIT
 #
 
+from kiwiii.sqliteconnection import Connection
 from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 from kiwiii.core.node import Node
 
@@ -18,6 +19,7 @@ class SQLiteInput(Node):
         self.out_edge.records = sq.records_iter(self.query["targets"])
         self.out_edge.task_count = sq.record_count(self.query["targets"])
         self.out_edge.fields.merge(self.fields)
+        self.out_edge.params.update(self.in_edge.params)
 
     def in_edges(self):
         return tuple()
@@ -31,6 +33,7 @@ class SQLiteSearchInput(SQLiteInput):
         )
         self.out_edge.task_count = sq.record_count(self.query["targets"])
         self.out_edge.fields.merge(self.fields)
+        self.out_edge.params.update(self.in_edge.params)
 
 
 class SQLiteFilterInput(SQLiteInput):
@@ -42,3 +45,25 @@ class SQLiteFilterInput(SQLiteInput):
         )
         self.out_edge.task_count = sq.record_count(self.query["targets"])
         self.out_edge.fields.merge(self.fields)
+        self.out_edge.params.update(self.in_edge.params)
+
+
+class SQLiteCustomQueryInput(Node):
+    def __init__(self, sql, table, fields=None):
+        super().__init__()
+        self.sql = sql
+        self.table = table
+        if fields is None:
+            self.fields = []
+        else:
+            self.fields = fields
+
+    def on_submitted(self):
+        conn = Connection()
+        self.out_edge.records = conn.fetch_iter(self.sql)
+        self.out_edge.task_count = conn.rows_count(self.table)
+        self.out_edge.fields.merge(self.fields)
+        self.out_edge.params.update(self.in_edge.params)
+
+    def in_edges(self):
+        return tuple()

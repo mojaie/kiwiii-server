@@ -19,6 +19,18 @@ class Connection(object):
         sql = "SELECT * FROM document"
         return json.loads(self._cursor.execute(sql).fetchone()["document"])
 
+    def fetch_iter(self, query, arraysize=1000):
+        """Execute custom fetch query"""
+        self._cursor.execute(query)
+        while True:
+            # successive fetchmany(arraysize) instead of fetchAll()
+            # improved performance and memory consumption
+            rows = self._cursor.fetchmany(arraysize)
+            if not rows:
+                break
+            for row in rows:
+                yield row
+
     def rows_iter(self, table, orderby="", arraysize=1000):
         """Iterate over rows of tables"""
         if orderby != "":

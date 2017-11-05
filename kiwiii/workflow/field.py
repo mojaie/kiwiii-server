@@ -7,35 +7,33 @@
 from kiwiii import sqlitehelper
 from kiwiii.core.workflow import Workflow
 from kiwiii.node.io import sqlite
+from kiwiii.node.field.concat import ConcatFields
 from kiwiii.node.function.number import Number
 from kiwiii.node.io.json import JSONResponse
+from kiwiii.node.record.filter import FilterRecords
 from kiwiii.node.record.merge import MergeRecords
-from kiwiii.node.transform.groupby import GroupBy
-from kiwiii.util import lod
-
-
-def add_rsrc_fields(fields_dict, row):
-    row.update(fields_dict[row["field"]])
-    del row["key"]
-    return row
+from kiwiii.node.transform.unstack import Unstack
 
 
 class FieldFilter(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        e1s = []
+        es = []
         # SQLite
-        sq_rsrcs = list(lod.filter_(
-            "domain", "activity", sqlitehelper.SQLITE_RESOURCES))
+        targets = list(sqlitehelper.SQLITE_RESOURCES.filter(
+            "domain", "activity").values("id"))
         q = {
             "type": "filter",
-            "targets": list(lod.values("id", sq_rsrcs)),
-            "key": "id", "operator": "in", "values": query["values"],
-            "fields": ["id"] + query["targetFields"]
+            "targets": targets,
+            "key": "compoundID", "operator": "in", "values": query["values"]
         }
         e1, = self.add_node(sqlite.SQLiteFilterInput(q))
-        e1s.append(e1)
+        e2, = self.add_node(
+            FilterRecords(e1, "assayID", query["targetAssays"]))
+        e3, = self.add_node(
+            FilterRecords(e2, "field", query["targetFields"]))
+        es.append(e3)
         """
         if r["resourceType"] == "api":
             sq = {
@@ -46,7 +44,11 @@ class FieldFilter(Workflow):
             }
             e1, = self.add_node(httpio.HTTPResourceFilterInput(sq))
         """
-        e2, = self.add_node(MergeRecords(e1s))
-        e3, = self.add_node(GroupBy("id", e2))
-        e4, = self.add_node(Number(e3))
-        self.add_node(JSONResponse(e4, self))
+        es1, = self.add_node(MergeRecords(es))
+        es2, = self.add_node(ConcatFields(
+            es1, ("assayID", "field"), delimiter="_",
+            field="field"))
+        es3, = self.add_node(Unstack(
+            "id", es2, field_key="field", value_key="value"))
+        es4, = self.add_node(Number(es3))
+        self.add_node(JSONResponse(es4, self))

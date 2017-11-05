@@ -36,6 +36,7 @@ class Node(Task):
             self.out_edge.task_count = self.in_edge.task_count
         self.out_edge.fields.merge(self.in_edge.fields)
         self.out_edge.fields.merge(self.fields)
+        self.out_edge.params.update(self.in_edge.params)
 
 
 class FlashNode(Node):
@@ -84,6 +85,7 @@ class AsyncNode(Task):
             self.out_edge.task_count = self.in_edge.task_count
         self.out_edge.fields.merge(self.in_edge.fields)
         self.out_edge.fields.merge(self.fields)
+        self.out_edge.params.update(self.in_edge.params)
 
 
 class LazyNode(AsyncNode):
@@ -136,6 +138,7 @@ class Synchronizer(Task):
             self.out_edge.task_count = self.in_edge.task_count
         self.out_edge.fields.merge(self.in_edge.fields)
         self.out_edge.fields.merge(self.fields)
+        self.out_edge.params.update(self.in_edge.params)
 
 
 class LazyConsumer(Synchronizer):
@@ -194,6 +197,7 @@ class Asynchronizer(Task):
             self.out_edge.task_count = self.in_edge.task_count
         self.out_edge.fields.merge(self.in_edge.fields)
         self.out_edge.fields.merge(self.fields)
+        self.out_edge.params.update(self.in_edge.params)
 
 
 class EagerProducer(Asynchronizer):

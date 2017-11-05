@@ -35,3 +35,4 @@ class UpdateFields(Node):
         self.out_edge.task_count = self.in_edge.task_count
         self.out_edge.fields.merge(self.in_edge.fields)
         self.out_edge.fields.merge(self.fields, dupkey="replace")
+        self.out_edge.params.update(self.in_edge.params)

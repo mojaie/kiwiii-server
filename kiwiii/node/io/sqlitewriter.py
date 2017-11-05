@@ -4,6 +4,7 @@
 # http://opensource.org/licenses/MIT
 #
 
+import json
 import os
 import sqlite3
 
@@ -51,26 +52,29 @@ class SQLiteWriter(Task):
                     cur.execute("DROP TABLE {}".format(t))
                     print("Table {} dropped".format(t))
             cur.execute("CREATE TABLE document(document text)")
-            for in_edge in self.in_edges:
+            schema = self.wf.params
+            schema["resources"] = []
+            for in_edge in self.in_edges():
                 # Create table
                 sqcols = []
                 for field in in_edge.fields:
-                    sqtype = " {}".format(data_type[field["valueType"]])
+                    sqtype = " {}".format(
+                        data_type.get(field.get("valueType"), "text"))
                     sqpk = ""
                     if field["key"] == "id":
                         sqpk = " primary key check(id != '')"
                     sqnocase = ""
-                    if field["valueType"] in ("text",):
+                    if field.get("valueType", "text") in ("text",):
                         sqnocase = " collate nocase"
                     sqcol = "".join((field["key"], sqtype, sqpk, sqnocase))
                     sqcols.append(sqcol)
-                sql = "CREATE TABLE {} ({})".format(in_edge.name,
+                sql = "CREATE TABLE {} ({})".format(in_edge.params["table"],
                                                     ", ".join(sqcols))
                 cur.execute(sql)
                 # Insert records
                 for i, rcd in enumerate(in_edge.records):
                     sqflds = "{} ({})".format(
-                        in_edge.name, ", ".join(rcd.keys()))
+                        in_edge.params["table"], ", ".join(rcd.keys()))
                     ph = ", ".join(["?"] * len(rcd))
                     sql_row = "INSERT INTO {} VALUES ({})".format(sqflds, ph)
                     values = [rcd[c] for c in rcd.keys()]
@@ -78,16 +82,19 @@ class SQLiteWriter(Task):
                         cur.execute(sql_row, values)
                     except sqlite3.IntegrityError as e:
                         print("skip #{}: {}".format(i, e))
-                    if i and not i % 10000:
+                    if i and not i % 100:
                         print("{} rows processed...".format(i))
                 cnt = cur.execute(
-                    "SELECT COUNT(*) FROM {}".format(in_edge.name))
-                print("{} rows -> {}".format(cnt.fetchone()[0], in_edge.name))
+                    "SELECT COUNT(*) FROM {}".format(in_edge.params["table"]))
+                print("{} rows -> {}".format(
+                    cnt.fetchone()[0], in_edge.params["table"]))
                 # Resources
-                doc["resources"].append(rsrc)
+                schema["resources"].append(in_edge.params)
             """Save document"""
-            cur.execute("INSERT INTO document VALUES (?)", (json.dumps(doc),))
-
+            cur.execute(
+                "INSERT INTO document VALUES (?)",
+                (json.dumps(schema),)
+            )
         except ValueError:  # TODO: which error raised when interrupt
             self.on_aborted()
         else:
