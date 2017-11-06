@@ -18,17 +18,20 @@ class CSVFileInput(Node):
         if params is not None:
             self.params.update(params)
 
-    def on_submitted(self):
+    def reader(self):
+        # TODO
         with open(self.in_file, newline="") as f:
-            reader = csv.DictReader(f, delimiter=self.delimiter)
-            self.out_edge.records = reader
-            if not self.fields:
-                for field in reader.fieldnames:
-                    self.out_edge.fields.merge(
-                        {"key": f, "name": f, "sortType": "text"}
-                        for f in field)
-            self.out_edge.task_count = sum(1 for _ in f.readlines()) - 1
-            self.out_edge.params.update(self.in_edge.params)
+            for row in csv.DictReader(f, delimiter=self.delimiter):
+                yield row
+
+    def on_submitted(self):
+        self.out_edge.records = self.reader
+        if not self.fields:
+            for field in self.reader().fieldnames:
+                self.out_edge.fields.merge(
+                    {"key": f, "name": f, "sortType": "text"} for f in field)
+        # self.out_edge.task_count = sum(1 for _ in f.readlines()) - 1
+        self.out_edge.params.update(self.params)
 
     def in_edges(self):
         return tuple()

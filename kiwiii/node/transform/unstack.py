@@ -18,7 +18,7 @@ def stack(row, keys):
 
 
 class Unstack(Node):
-    def __init__(self, keys, in_edge):
+    def __init__(self, in_edge, keys):
         super().__init__(in_edge)
         self.keys = keys
 

@@ -22,7 +22,7 @@ def groupby(key, rows, row):
 
 
 class GroupBy(Node):
-    def __init__(self, key, in_edge):
+    def __init__(self, in_edge, key):
         super().__init__(in_edge)
         self.key = key
 
