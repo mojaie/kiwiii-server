@@ -62,6 +62,7 @@ def mol_to_svg(mol):
 
 
 CHEM_FIELDS = ListOfDict([
+    {"key": "_molobj"},
     {"key": "_structure", "name": "Structure", "sortType": "none"},
     {"key": "_mw", "name": "MW", "sortType": "numeric"},
     {"key": "_mw_wo_sw", "name": "MW w/o salt and water",

@@ -22,7 +22,7 @@ from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
 
 def rdfmcs_filter(qmol, params, row):
-    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    mol = Compound(json.loads(row["_molobj"]))
     type_ = {"sim": "similarity", "edge": "mcs_edges"}
     try:
         res = rdkit.fmcs(mol, qmol, timeout=params["timeout"])

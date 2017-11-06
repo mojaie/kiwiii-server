@@ -73,7 +73,7 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
             col_width = [opts["default_col_width"]]
             for j, row in enumerate(table["records"]):
                 if col["key"] == STRUCT_KEY:
-                    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+                    mol = Compound(json.loads(row["_molobj"]))
                     mpl = Matplotlib(mol)
                     size = opts["struct_row_height"] - opts[
                         "img_options"]["y_offset"] * 2

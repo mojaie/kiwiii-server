@@ -21,7 +21,7 @@ from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
 
 def mcsdr_filter(qmolarr, params, row):
-    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    mol = Compound(json.loads(row["_molobj"]))
     type_ = {"sim": "local_sim", "edge": "mcsdr_edges"}
     if len(mol) > params["molSizeCutoff"]:  # mol size filter
         return

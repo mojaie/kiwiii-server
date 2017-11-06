@@ -64,7 +64,7 @@ def fmcs_filter(params, pair):
 
 
 def gls_array(params, rcd):
-    mol = Compound(json.loads(rcd[static.MOLOBJ_KEY]))
+    mol = Compound(json.loads(rcd["_molobj"]))
     if params["ignoreHs"]:
         mol = molutil.make_Hs_implicit(mol)
     diam = int(params["diameter"])
@@ -74,7 +74,7 @@ def gls_array(params, rcd):
 
 
 def rdkit_mol(params, rcd):
-    mol = Compound(json.loads(rcd[static.MOLOBJ_KEY]))
+    mol = Compound(json.loads(rcd["_molobj"]))
     if params["ignoreHs"]:
         mol = molutil.make_Hs_implicit(mol)
     return {"index": rcd["_index"], "mol": mol}

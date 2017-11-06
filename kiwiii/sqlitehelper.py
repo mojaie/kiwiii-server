@@ -49,8 +49,8 @@ class SQLiteHelper(object):
         for r, tbl, conn in self.origins_iter(rsrc_ids):
             for res in conn.rows_iter(tbl):
                 row = dict(res)
-                mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
-                row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
+                mol = Compound(pickle.loads(row["_molobj"]))
+                row["_molobj"] = json.dumps(mol.jsonized())
                 row["source"] = r
                 yield row
 
@@ -61,15 +61,15 @@ class SQLiteHelper(object):
                 res = conn.find_first(key, (value,), tbl)
                 if res is not None:
                     row = dict(res)
-                    if static.MOLOBJ_KEY in row:
-                        mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
-                        row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
+                    if "_molobj" in row:
+                        mol = Compound(pickle.loads(row["_molobj"]))
+                        row["_molobj"] = json.dumps(mol.jsonized())
                         row["source"] = r
                     return row
         rsrcs = filter(lambda x: x["id"] in rsrc_ids, SQLITE_RESOURCES)
         if any(r["domain"] == "chemical" for r in rsrcs):
             null_record = {key: value}
-            null_record[static.MOLOBJ_KEY] = json.dumps(
+            null_record["_molobj"] = json.dumps(
                 molutil.null_molecule().jsonized())
             return null_record
         else:
@@ -87,9 +87,9 @@ class SQLiteHelper(object):
                     row = dict(res)
                 else:
                     row = {f: res[f] for f in fields if f in res.keys()}
-                if static.MOLOBJ_KEY in row:
-                    mol = Compound(pickle.loads(row[static.MOLOBJ_KEY]))
-                    row[static.MOLOBJ_KEY] = json.dumps(mol.jsonized())
+                if "_molobj" in row:
+                    mol = Compound(pickle.loads(row["_molobj"]))
+                    row["_molobj"] = json.dumps(mol.jsonized())
                     row["source"] = r
                 yield row
 
@@ -109,7 +109,7 @@ class SQLiteHelper(object):
             res = self.search((query["source"],), "id", query["value"])
             if res is None:
                 raise ValueError()
-            qmol = Compound(json.loads(res[static.MOLOBJ_KEY]))
+            qmol = Compound(json.loads(res["_molobj"]))
         return qmol
 
 

@@ -16,6 +16,8 @@ def resource_format(data):
         if rsrc["domain"] == "chemical":
             rsrc["fields"].extend(static.CHEM_FIELDS)
         for field in rsrc["fields"]:
+            if field["key"] == "_molobj":
+                continue
             if "name" not in field:
                 field["name"] = field["key"]
             if "request" not in field:

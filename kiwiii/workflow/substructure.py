@@ -22,20 +22,20 @@ from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
 
 def exact_filter(qmol, params, row):
-    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    mol = Compound(json.loads(row["_molobj"]))
     if substructure.equal(mol, qmol, ignore_hydrogen=params["ignoreHs"]):
         return row
 
 
 def substr_filter(qmol, params, row):
-    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    mol = Compound(json.loads(row["_molobj"]))
     if substructure.substructure(
             mol, qmol, ignore_hydrogen=params["ignoreHs"]):
         return row
 
 
 def supstr_filter(qmol, params, row):
-    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    mol = Compound(json.loads(row["_molobj"]))
     if substructure.substructure(
             qmol, mol, ignore_hydrogen=params["ignoreHs"]):
         return row

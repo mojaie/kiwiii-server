@@ -22,7 +22,7 @@ from kiwiii.sqlitehelper import SQLITE_HELPER as sq
 
 
 def rdmorgan_filter(qmol, params, row):
-    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
+    mol = Compound(json.loads(row["_molobj"]))
     try:
         score = rdkit.morgan_sim(mol, qmol, 4)
     except:

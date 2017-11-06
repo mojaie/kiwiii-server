@@ -6,6 +6,8 @@
 
 import functools
 import json
+import pickle
+
 from chorus.model.graphmol import Compound
 from tornado import gen
 
@@ -13,25 +15,26 @@ from kiwiii import static
 from kiwiii.core.node import Node, AsyncNode
 
 
-def chem_data(chem_calcs, row):
-    mol = Compound(json.loads(row[static.MOLOBJ_KEY]))
-    record = {k: v(mol) for k, v in chem_calcs.items()}
-    record.update(row)
-    return record
+def chem_data(chem_calcs, pickle_mol, row):
+    mol = Compound(json.loads(row["_molobj"]))
+    rcd = {k: v(mol) for k, v in chem_calcs.items()}
+    rcd.update(row)
+    if pickle_mol:
+        rcd["_molobj"] = pickle.dumps(json.loads(row["_molobj"]), protocol=4)
+    return rcd
 
 
 class Molecule(Node):
-    def __init__(self, in_edge, fields=None, chem_calcs=None):
+    def __init__(self, in_edge, fields=None, chem_calcs=None,
+                 pickle_mol=False):
         super().__init__(in_edge)
         if fields is None:
             self.fields.merge(static.CHEM_FIELDS)
         else:
             self.fields.merge(fields)
         if chem_calcs is None:
-            self.chem_calcs = static.CHEM_FUNCTIONS
-        else:
-            self.chem_calcs = chem_calcs
-        self.func = functools.partial(chem_data, self.chem_calcs)
+            chem_calcs = static.CHEM_FUNCTIONS
+        self.func = functools.partial(chem_data, chem_calcs, pickle_mol)
 
     def on_submitted(self):
         self.out_edge.records = map(self.func, self.in_edge.records)

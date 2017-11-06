@@ -9,23 +9,23 @@ import functools
 from kiwiii.core.node import Node
 
 
-def rename(mapping, row):
-    for old, new in mapping.items():
+def rename(updates, row):
+    for old, new in updates.items():
         row[new] = row[old]
         del row[old]
     return row
 
 
 class UpdateFields(Node):
-    def __init__(self, in_edge, conv_fields):
+    def __init__(self, in_edge, mapping):
         super().__init__(in_edge)
-        self.fields = conv_fields.values()
-        conv_keys = {}
-        for old_key, new_dict in conv_fields.items():
-            if old_key != new_dict["key"]:
-                conv_keys[old_key] = new_dict["key"]
-        if conv_keys:
-            self.func = functools.partial(rename, conv_keys)
+        self.fields = mapping.values()
+        self.updates = {}
+        for old_key, field in mapping.items():
+            if old_key != field["key"]:
+                self.updates[old_key] = field["key"]
+        if self.updates:
+            self.func = functools.partial(rename, self.updates)
 
     def on_submitted(self):
         if hasattr(self, "func"):
@@ -33,6 +33,8 @@ class UpdateFields(Node):
         else:
             self.out_edge.records = self.in_edge.records
         self.out_edge.task_count = self.in_edge.task_count
-        self.out_edge.fields.merge(self.in_edge.fields)
+        for f in self.in_edge.fields:
+            if f["key"] not in self.updates.keys():
+                self.out_edge.fields.add(f)
         self.out_edge.fields.merge(self.fields, dupkey="replace")
         self.out_edge.params.update(self.in_edge.params)
