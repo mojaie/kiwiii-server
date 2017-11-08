@@ -11,7 +11,6 @@ from chorus import substructure
 from chorus import molutil
 from chorus.model.graphmol import Compound
 
-from kiwiii import static
 from kiwiii.core.workflow import Workflow
 from kiwiii.node.function.filter import MPFilter
 from kiwiii.node.function.molecule import AsyncMolecule

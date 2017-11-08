@@ -9,27 +9,27 @@ import unittest
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
-from kiwiii.node.numbergenerator import NumberGenerator, AsyncNumberGenerator
+from kiwiii.node.function.number import Number, AsyncNumber
 from kiwiii.core.node import LazyConsumer, Synchronizer, Asynchronizer
 from kiwiii.core.edge import Edge
 
 
-class TestNumberGenerator(AsyncTestCase):
-    def test_numbergenerator(self):
+class TestNumber(AsyncTestCase):
+    def test_number(self):
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(10)]
-        f = NumberGenerator(in_edge, field={"key": "num"})
+        f = Number(in_edge, name="num")
         f.run()
         total = sum(a["num"] for a in f.out_edges()[0].records)
         self.assertEqual(total, 45)
         self.assertEqual(f.status, "done")
 
     @gen_test
-    def test_asyncnumbergenerator(self):
+    def test_asyncnumber(self):
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(10)]
         n1 = Asynchronizer(in_edge)
-        n2 = AsyncNumberGenerator(n1.out_edges()[0], field={"key": "num"})
+        n2 = AsyncNumber(n1.out_edges()[0], name="num")
         n3 = Synchronizer(n2.out_edges()[0])
         n2.interval = 0.01
         n3.interval = 0.01
@@ -47,7 +47,7 @@ class TestNumberGenerator(AsyncTestCase):
         in_edge = Edge()
         in_edge.records = [{"value": i} for i in range(100)]
         n1 = Asynchronizer(in_edge)
-        n2 = AsyncNumberGenerator(n1.out_edges()[0], field={"key": "num"})
+        n2 = AsyncNumber(n1.out_edges()[0], name="num")
         n3 = LazyConsumer(n2.out_edges()[0])
         n2.interval = 0.01
         n3.interval = 0.01

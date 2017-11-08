@@ -8,10 +8,10 @@ import unittest
 
 from tornado.testing import AsyncTestCase
 
-from kiwiii.node.basicio import IteratorInput
+from kiwiii.node.io.iterator import IteratorInput
 
 
-class TestBasicIO(AsyncTestCase):
+class TestIteratorInput(AsyncTestCase):
     def test_iterator_input(self):
         f = IteratorInput(range(100))
         f.on_submitted()

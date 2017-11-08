@@ -59,7 +59,7 @@ class ListOfDict(list):
         """Aliase of reduce(dupkey="skip")"""
         return self.reduce(key, dupkey="skip")
 
-    def merge(self, rcds, key="key", dupkey="skip"):
+    def merge(self, rcds, key="key", dupkey="replace"):
         """Adds records"""
         for r in rcds:
             self.add(r, key=key, dupkey=dupkey)
@@ -74,6 +74,12 @@ class ListOfDict(list):
                 idx[r[key]].update(r)
             elif full_join:
                 self.append(r)
+
+    def delete(self, key, value):
+        """Remove records with the given key."""
+        new = ListOfDict(filter(lambda x: x[key] != value, self))
+        self.clear()
+        self.extend(new)
 
 
 LOD = ListOfDict  # aliase

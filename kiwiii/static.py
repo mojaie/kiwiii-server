@@ -44,7 +44,8 @@ except FileNotFoundError:
 
 
 USERS = config.get("user")
-WEB_HOME = config.get("web_home")
+WEB_BUILD = config.get("web_build")
+WEB_DIST = config.get("web_dist")
 BASIC_AUTH_REALM = config.get("basic_auth_realm")
 
 

@@ -22,15 +22,19 @@ def groupby(key, rows, row):
 
 
 class GroupBy(Node):
-    def __init__(self, in_edge, key):
+    def __init__(self, in_edge, key, params=None):
         super().__init__(in_edge)
         self.key = key
+        if params is not None:
+            self.params.update(params)
 
     def on_submitted(self):
         func = functools.partial(groupby, self.key)
         grouped = functools.reduce(func, self.in_edge.records, [])
         main, counter = itertools.tee(grouped)
         self.out_edge.records = main
-        self.out_edge.task_count = len(list(counter))
+        self.out_edge.task_count = sum(1 for i in counter)
         self.out_edge.fields.merge(self.in_edge.fields)
+        self.out_edge.fields.merge(self.fields)
         self.out_edge.params.update(self.in_edge.params)
+        self.out_edge.params.update(self.params)

@@ -18,9 +18,11 @@ def stack(row, keys):
 
 
 class Stack(Node):
-    def __init__(self, in_edge, keys):
+    def __init__(self, in_edge, keys, params=None):
         super().__init__(in_edge)
         self.keys = keys
+        if params is not None:
+            self.params.update(params)
 
     def on_submitted(self):
         stacked = itertools.chain.from_iterable(
@@ -32,3 +34,4 @@ class Stack(Node):
         self.out_edge.fields.merge(fs)
         self.out_edge.fields.merge([{"key": "_field"}, {"key": "_value"}])
         self.out_edge.params.update(self.in_edge.params)
+        self.out_edge.params.update(self.params)

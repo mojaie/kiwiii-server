@@ -8,8 +8,8 @@ import unittest
 
 from tornado.testing import AsyncTestCase
 
-from kiwiii.node import reshape
-from kiwiii.core.edge import Edge
+from kiwiii.node.io.iterator import IteratorInput
+from kiwiii.node.transform.stack import Stack
 
 
 RECORDS = [
@@ -23,9 +23,8 @@ RECORDS = [
 
 class TestStack(AsyncTestCase):
     def test_stack(self):
-        in_edge = Edge()
-        in_edge.records = RECORDS
-        f = reshape.Stack(('id',), in_edge)
+        n = IteratorInput(RECORDS)
+        f = Stack(('id',), n.out_edges()[0])
         f.on_submitted()
         self.assertEqual(f.out_edges()[0].task_count, 10)
         f.run()

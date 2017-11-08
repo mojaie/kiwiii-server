@@ -11,10 +11,10 @@ from chorus.demo import MOL
 from chorus import v2000reader as reader
 from chorus.model.graphmol import Compound
 
-from kiwiii.node.chemdata import chem_data
+from kiwiii.node.function.molecule import chem_data
 
 
-class TestChemdata(unittest.TestCase):
+class TestMolecule(unittest.TestCase):
     def test_chemdata(self):
         in_ = reader.mol_from_text(MOL["demo"])
         row = {

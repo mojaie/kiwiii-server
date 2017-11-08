@@ -17,6 +17,7 @@ from tornado.ioloop import IOLoop
 from tornado.options import define, options, parse_command_line
 
 from kiwiii import excelexporter
+from kiwiii import schema
 from kiwiii import static
 from kiwiii import auth
 from kiwiii.sqlitehelper import SQLITE_HELPER as sq
@@ -49,7 +50,7 @@ class SchemaHandler(BaseHandler):
 
         :statuscode 200: no error
         """
-        self.write(static.SCHEMA)
+        self.write(schema.SCHEMA)
 
 
 class WorkflowHandler(BaseHandler):
@@ -257,6 +258,7 @@ def run():
         "jq": JobQueue(),
         "instance": time.strftime("%X %x %Z", time.localtime(time.time()))
     }
+    wpath = {True: static.WEB_BUILD, False: static.WEB_DIST}[options.debug]
     app = web.Application(
         [
             (r"/schema", SchemaHandler),
@@ -269,7 +271,7 @@ def run():
             (r"/sdfout", SDFileExportHandler),
             (r"/xlsx", ExcelExportHandler),
             (r"/server", ServerStatusHandler, store),
-            (r'/(.*)', web.StaticFileHandler, {"path": static.WEB_HOME})
+            (r'/(.*)', web.StaticFileHandler, {"path": wpath})
         ],
         debug=options.debug,
         compress_response=True,

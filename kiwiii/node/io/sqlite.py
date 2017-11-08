@@ -10,16 +10,18 @@ from kiwiii.core.node import Node
 
 
 class SQLiteInput(Node):
-    def __init__(self, query):
+    def __init__(self, query, params=None):
         super().__init__()
         self.query = query
         self.fields = sq.resource_fields(query["targets"])
+        if params is not None:
+            self.params.update(params)
 
     def on_submitted(self):
         self.out_edge.records = sq.records_iter(self.query["targets"])
         self.out_edge.task_count = sq.record_count(self.query["targets"])
         self.out_edge.fields.merge(self.fields)
-        self.out_edge.params.update(self.in_edge.params)
+        self.out_edge.params.update(self.params)
 
     def in_edges(self):
         return tuple()
@@ -33,7 +35,7 @@ class SQLiteSearchInput(SQLiteInput):
         )
         self.out_edge.task_count = sq.record_count(self.query["targets"])
         self.out_edge.fields.merge(self.fields)
-        self.out_edge.params.update(self.in_edge.params)
+        self.out_edge.params.update(self.params)
 
 
 class SQLiteFilterInput(SQLiteInput):
@@ -45,7 +47,7 @@ class SQLiteFilterInput(SQLiteInput):
         )
         self.out_edge.task_count = sq.record_count(self.query["targets"])
         self.out_edge.fields.merge(self.fields)
-        self.out_edge.params.update(self.in_edge.params)
+        self.out_edge.params.update(self.params)
 
 
 class SQLiteCustomQueryInput(Node):
@@ -63,7 +65,7 @@ class SQLiteCustomQueryInput(Node):
         self.out_edge.records = conn.fetch_iter(self.sql)
         self.out_edge.task_count = conn.rows_count(self.table)
         self.out_edge.fields.merge(self.fields)
-        self.out_edge.params.update(self.in_edge.params)
+        self.out_edge.params.update(self.params)
 
     def in_edges(self):
         return tuple()

@@ -17,7 +17,6 @@ from xlsxwriter.workbook import Workbook
 from chorus.model.graphmol import Compound
 from chorus.draw.matplotlib import Matplotlib
 
-from kiwiii import static
 from kiwiii.util import lod
 
 

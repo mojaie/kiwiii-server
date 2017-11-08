@@ -11,10 +11,12 @@ from kiwiii.core.task import Task
 
 
 class MergeRecords(Task):
-    def __init__(self, in_edges):
+    def __init__(self, in_edges, params=None):
         super().__init__()
         self._in_edges = in_edges
         self.out_edge = Edge()
+        if params is not None:
+            self.params.update(params)
 
     def in_edges(self):
         return self._in_edges

@@ -9,7 +9,7 @@ import unittest
 from tornado.testing import AsyncTestCase
 
 from kiwiii.core.edge import Edge
-from kiwiii.node.combination import Combination
+from kiwiii.node.transform.combination import Combination
 
 
 def odd(dict_):

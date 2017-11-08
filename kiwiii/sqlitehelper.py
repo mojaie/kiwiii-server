@@ -13,11 +13,12 @@ from chorus.draw import calc2dcoords
 from chorus.model.graphmol import Compound
 
 from kiwiii import sqliteconnection as sqlite
+from kiwiii import schema
 from kiwiii import static
 from kiwiii.lod import LOD
 
 
-SQLITE_RESOURCES = LOD(static.RESOURCES.filter("resourceType", "sqlite"))
+SQLITE_RESOURCES = LOD(schema.RESOURCES.filter("resourceType", "sqlite"))
 
 
 class SQLiteHelper(object):

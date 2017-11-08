@@ -40,7 +40,8 @@ def screener_format(data):
 def resources():
     resources = ListOfDict()
     # SQLite databases
-    for filename in glob.glob(os.path.join(static.SQLITE_BASE_DIR, "*.sqlite3")):
+    for filename in glob.glob(
+            os.path.join(static.SQLITE_BASE_DIR, "*.sqlite3")):
         conn = sqlite.Connection(filename)
         doc = conn.document()
         resource_format(doc)

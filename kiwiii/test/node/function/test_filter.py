@@ -9,9 +9,9 @@ import unittest
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
-from kiwiii.node.filter import Filter, MPFilter
+from kiwiii.node.function.filter import Filter, MPFilter
+from kiwiii.node.io.iterator import IteratorInput
 from kiwiii.core.node import AsyncNode, LazyConsumer
-from kiwiii.core.edge import Edge
 
 
 def odd(dict_):
@@ -21,9 +21,9 @@ def odd(dict_):
 
 class TestFilter(AsyncTestCase):
     def test_filter(self):
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(10)]
-        f = Filter(odd, in_edge)
+        n = IteratorInput({"value": i} for i in range(10))
+        f = Filter(odd, n.out_edges()[0])
+        n.on_submitted()
         f.on_submitted()
         f.run()
         total = sum(a["value"] for a in f.out_edges()[0].records)
@@ -32,12 +32,11 @@ class TestFilter(AsyncTestCase):
 
     @gen_test
     def test_mpfilter(self):
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(100)]
-        in_edge.task_count = 100
-        n1 = MPFilter(odd, in_edge)
+        n = IteratorInput({"value": i} for i in range(10))
+        n1 = MPFilter(odd, n.out_edges()[0])
         n2 = AsyncNode(n1.out_edges()[0])
         n2.interval = 0.01
+        n.on_submitted()
         n1.on_submitted()
         n2.on_submitted()
         self.assertEqual(n2.out_edges()[0].task_count, 100)
@@ -53,11 +52,14 @@ class TestFilter(AsyncTestCase):
 
     @gen_test
     def test_interrupt(self):
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(100)]
-        n1 = MPFilter(odd, in_edge)
+        n = IteratorInput({"value": i} for i in range(100))
+        n1 = MPFilter(odd, n.out_edges()[0])
         n2 = LazyConsumer(n1.out_edges()[0])
         n2.interval = 0.01
+        n.on_submitted()
+        n1.on_submitted()
+        n2.on_submitted()
+        n.run()
         n1.run()
         n2.run()
         yield n1.interrupt()

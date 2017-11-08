@@ -42,6 +42,8 @@ class CSVFileInput(Node):
         if not self.fields:
             self.out_edge.fields.merge(
                 {"key": f, "name": f, "sortType": "text"} for f in fnames)
+        else:
+            self.out_edge.fields.merge(self.fields)
         self.out_edge.task_count = count
         self.out_edge.params.update(self.params)
 

@@ -9,8 +9,8 @@ import unittest
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
-from kiwiii.node.jsonresponse import JSONResponse, AsyncJSONResponse
-from kiwiii.node.basicio import IteratorInput
+from kiwiii.node.io.json import JSONResponse, AsyncJSONResponse
+from kiwiii.node.io.iterator import IteratorInput
 from kiwiii.core.node import LazyNode, Asynchronizer
 from kiwiii.core.workflow import Workflow
 

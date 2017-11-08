@@ -6,7 +6,7 @@
 
 import functools
 
-from kiwiii.core.node import Node
+from kiwiii.node.function.apply import Apply
 
 
 def concat(old_keys, new_field, separator, row):
@@ -16,17 +16,17 @@ def concat(old_keys, new_field, separator, row):
     return row
 
 
-class ConcatFields(Node):
-    def __init__(self, in_edge, old_keys, new_field, separator="_"):
-        super().__init__(in_edge)
-        self.field = new_field
+class ConcatFields(Apply):
+    def __init__(self, in_edge, old_keys, new_field, separator="_",
+                 params=None):
+        super().__init__(
+            in_edge,
+            functools.partial(concat, old_keys, new_field, separator),
+            fields=[new_field], params=params
+        )
         self.old_keys = old_keys
-        self.func = functools.partial(concat, old_keys, new_field, separator)
 
     def on_submitted(self):
-        self.out_edge.records = map(self.func, self.in_edge.records)
-        self.out_edge.task_count = self.in_edge.task_count
-        for f in self.old_keys:
-            self.out_edge.fields.remove(f)
-        self.out_edge.fields.add(self.fields, dupkey="replace")
-        self.out_edge.params.update(self.in_edge.params)
+        super().on_submitted()
+        for k in self.old_keys:
+            self.out_edge.fields.delete("key", k)

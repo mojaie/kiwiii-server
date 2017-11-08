@@ -10,11 +10,13 @@ from kiwiii.core.node import Node, Asynchronizer
 
 
 class Filter(Node):
-    def __init__(self, in_edge, func, fields=None):
+    def __init__(self, in_edge, func, fields=None, params=None):
         super().__init__(in_edge)
         self.func = func
         if fields is not None:
             self.fields.merge(fields)
+        if params is not None:
+            self.params.update(params)
 
     def on_submitted(self):
         self.out_edge.records = filter(self.func, self.in_edge.records)
@@ -22,6 +24,7 @@ class Filter(Node):
         self.out_edge.fields.merge(self.in_edge.fields)
         self.out_edge.fields.merge(self.fields)
         self.out_edge.params.update(self.in_edge.params)
+        self.out_edge.params.update(self.params)
 
 
 class MPNodeWorker(MPWorker):
@@ -52,12 +55,14 @@ class MPNodeWorker(MPWorker):
 
 
 class MPFilter(Asynchronizer):
-    def __init__(self, func, in_edge, fields=None):
+    def __init__(self, func, in_edge, fields=None, params=None):
         super().__init__(in_edge)
         self.func = func
         self.worker = None
         if fields is not None:
             self.fields.merge(fields)
+        if params is not None:
+            self.params.update(params)
 
     @gen.coroutine
     def run(self):

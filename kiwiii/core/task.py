@@ -20,10 +20,14 @@ from kiwiii.util import debug
 class Task(object):
     """
     Parameters:
-      status: str
-        ready, running, done, aborted
-        interrupted: method interrupt is called but the task is not yet aborted
-        cancelled: cancelled before start
+        status: str
+            ready, running, done, aborted
+            interrupted: interrupted but the task is not yet aborted
+            cancelled: submitted but cancelled before start
+        fields: ListOfDict
+            Data fields (columns)
+        params: dict
+            Additional parameters which would be passed to downstream nodes
     """
     def __init__(self):
         self.id = str(uuid.uuid4())
@@ -42,6 +46,11 @@ class Task(object):
     def on_submitted(self):
         """When the task is put into the jobqueue"""
         pass
+
+    def submit(self):
+        """Submit and run shortcut for unit testing"""
+        self.on_submitted()
+        self.run()
 
     def on_start(self):
         """When run method is called"""

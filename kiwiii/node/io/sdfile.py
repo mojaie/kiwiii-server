@@ -14,8 +14,8 @@ from kiwiii.core.node import Node
 
 
 class SDFileInputBase(Node):
-    def __init__(self, fields=None, implicit_hydrogen=False,
-                 recalc_coords=False, params=None):
+    def __init__(self, implicit_hydrogen=False, recalc_coords=False,
+                 fields=None, params=None):
         super().__init__()
         self.implicit_hydrogen = implicit_hydrogen
         self.recalc_coords = recalc_coords
