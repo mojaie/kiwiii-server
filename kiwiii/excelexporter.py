@@ -8,19 +8,14 @@ import base64
 import io
 import json
 import re
-import multiprocessing as mp
-import os
-import pickle
 
 from xlsxwriter.workbook import Workbook
 
 from chorus.model.graphmol import Compound
 from chorus.draw.matplotlib import Matplotlib
 
-from kiwiii.util import lod
+from kiwiii.lod import LOD
 
-
-STRUCT_KEY = "_structure"
 
 EXPORT_OPTIONS = {
     "in_memory": {"in_memory": True},
@@ -58,7 +53,7 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
         sheet_name = re.sub(r"[\[\]\:\*\?\/\\]", "_", table["name"])
         sheet = wb.add_worksheet(sheet_name)
         # TODO: appropriate row height
-        struct = lod.find("key", STRUCT_KEY, table["fields"])
+        struct = LOD(table["fields"]).find("key", "_structure")
         if struct is not None and struct["visible"]:
             sheet.set_default_row(opts["struct_row_height"])
         else:
@@ -71,7 +66,7 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
             sheet.write(0, i, col["name"], text_format)
             col_width = [opts["default_col_width"]]
             for j, row in enumerate(table["records"]):
-                if col["key"] == STRUCT_KEY:
+                if col["key"] == "_structure":  # Chemical structure SVG field
                     mol = Compound(json.loads(row["_molobj"]))
                     mpl = Matplotlib(mol)
                     size = opts["struct_row_height"] - opts[
@@ -105,32 +100,3 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
             i += 1
     wb.close()
     return buf
-
-
-class FileBasedIPC(object):
-    """ Windows compatible file-based IPC
-    """
-    def __init__(self, func):
-        self.func = func
-
-    def _f(self, *args, **kwargs):
-        tmp_name = "_tmp.pickle"
-        argsl = list(args)
-        argsl.append(tmp_name)
-        proc = mp.Process(target=self._p, args=argsl, kwargs=kwargs)
-        proc.start()
-        proc.join()
-        with open(tmp_name, "rb") as f:
-            result = pickle.load(f)
-        os.remove(tmp_name)
-        return result
-
-    def _p(self, *args, **kwargs):
-        al = list(args)
-        n = al.pop()
-        res = self.func(*al, **kwargs)
-        with open(n, "wb") as f:
-            pickle.dump(res, f)
-
-    def __call__(self):
-        return self._f

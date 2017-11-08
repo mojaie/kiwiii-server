@@ -90,6 +90,8 @@ class SQLiteWriter(Task):
                         print("{} rows processed...".format(i))
                 cnt = cur.execute("SELECT COUNT(*) FROM {}".format(table_name))
                 print("{} rows -> {}".format(cnt.fetchone()[0], table_name))
+                # TODO: add index
+                
                 # Append a resource schema
                 table_schema = in_edge.params
                 table_schema["fields"] = in_edge.fields

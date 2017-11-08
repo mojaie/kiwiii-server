@@ -9,11 +9,10 @@ import json
 from tornado import httpclient
 
 from kiwiii import static
-from kiwiii.util import lod
 
 
 def request(query, auth_header):
-    rsrc = lod.find("key", query["dest"], static.RESOURCES)
+    rsrc = static.RESOURCES.find("key", query["dest"])
     url = "{}{}".format(rsrc["url"], query)
     print("HTTP Request: {}".format(url))
     http_client = httpclient.HTTPClient()

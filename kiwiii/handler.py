@@ -198,19 +198,6 @@ class ExcelExportHandler(BaseHandler):
         self.write(buf.getvalue())
 
 
-"""
-class LoginHandler(BaseHandler):
-    def post(self):
-        user = self.get_argument("name")
-        pw = self.get_argument("pass")
-        if user in config["user"] and pw == config["user"][user]["password"]:
-            self.set_secure_cookie("user", user)
-            self.write({"authenticated": True})
-        else:
-            self.write({"authenticated": False})
-"""
-
-
 class ServerStatusHandler(BaseHandler):
     def initialize(self, jq, instance):
         super().initialize()

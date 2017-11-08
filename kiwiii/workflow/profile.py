@@ -4,7 +4,8 @@
 # http://opensource.org/licenses/MIT
 #
 
-from kiwiii import sqlitehelper
+from kiwiii import lod
+from kiwiii import sqlitehelper as helper
 from kiwiii.core.workflow import Workflow
 from kiwiii.node.io import sqlite
 from kiwiii.node.function.number import Number
@@ -23,12 +24,12 @@ class Profile(Workflow):
         super().__init__()
         self.query = query
         e1s = []
-        targets = list(sqlitehelper.SQLITE_RESOURCES.filter(
-            "domain", "activity").values("id"))
+        targets = lod.filtered(helper.SQLITE_RESOURCES, "domain", "activity")
+        target_ids = lod.valuelist(targets, "id")
         sq = {
             "type": "filter",
-            "targets": targets,
-            "key": "id", "operator": "eq", "values": (query["id"],)
+            "targets": target_ids,
+            "key": "compoundID", "operator": "eq", "values": (query["id"],)
         }
         e1, = self.add_node(sqlite.SQLiteFilterInput(sq))
         e1s.append(e1)

@@ -4,7 +4,8 @@
 # http://opensource.org/licenses/MIT
 #
 
-from kiwiii import sqlitehelper
+from kiwiii import lod
+from kiwiii import sqlitehelper as helper
 from kiwiii.core.workflow import Workflow
 from kiwiii.node.io import sqlite
 from kiwiii.node.field.concat import ConcatFields
@@ -21,11 +22,11 @@ class FieldFilter(Workflow):
         self.query = query
         es = []
         # SQLite
-        targets = list(sqlitehelper.SQLITE_RESOURCES.filter(
-            "domain", "activity").values("id"))
+        targets = lod.filtered(helper.SQLITE_RESOURCES, "domain", "activity")
+        target_ids = lod.valuelist(targets, "id")
         q = {
             "type": "filter",
-            "targets": targets,
+            "targets": target_ids,
             "key": "compoundID", "operator": "in", "values": query["values"]
         }
         e1, = self.add_node(sqlite.SQLiteFilterInput(q))
@@ -46,9 +47,9 @@ class FieldFilter(Workflow):
         """
         es1, = self.add_node(MergeRecords(es))
         es2, = self.add_node(ConcatFields(
-            es1, ("assayID", "field"), delimiter="_",
-            field="field"))
+            es1, ("assayID", "field"), {"key": "_field"},
+            separator=":"))
         es3, = self.add_node(Unstack(
-            "id", es2, field_key="field", value_key="value"))
+            "id", es2, field_key="_field", value_key="value"))
         es4, = self.add_node(Number(es3))
         self.add_node(JSONResponse(es4, self))

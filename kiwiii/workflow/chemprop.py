@@ -17,7 +17,6 @@ from kiwiii.node.function.molecule import AsyncMolecule
 from kiwiii.node.function.number import AsyncNumber
 from kiwiii.node.io.json import AsyncJSONResponse
 from kiwiii.node.io.sqlite import SQLiteInput
-from kiwiii.util import lod
 
 
 def like_operator(a, b):
@@ -48,7 +47,7 @@ class ChemProp(Workflow):
         super().__init__()
         self.query = query
         sortfunc = {"numeric": float, "text": str}
-        field = lod.find("key", query["key"], static.CHEM_FIELDS)
+        field = static.CHEM_FIELDS.find("key", query["key"])
         vs = [sortfunc[field["sortType"]](v) for v in query["values"]]
         v = {True: vs, False: vs[0]}[query["operator"] == "in"]
         func = functools.partial(

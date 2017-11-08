@@ -8,11 +8,11 @@
 
 class ListOfDict(list):
     def values(self, key):
-        """List of values"""
+        """Values"""
         return map(lambda x: x[key], self)
 
     def filter(self, key, value):
-        """Filtered records by the given key-value pair"""
+        """Filter by the given key-value pair"""
         return filter(lambda x: x[key] == value, self)
 
     def find(self, key, value):
@@ -76,10 +76,21 @@ class ListOfDict(list):
                 self.append(r)
 
     def delete(self, key, value):
-        """Remove records with the given key."""
+        """Removes records with the given key"""
         new = ListOfDict(filter(lambda x: x[key] != value, self))
         self.clear()
         self.extend(new)
 
 
 LOD = ListOfDict  # aliase
+
+
+"""LOD functions (non-destructive)"""
+
+
+def valuelist(lod, key):
+    return list(map(lambda x: x[key], lod))
+
+
+def filtered(lod, key, value):
+    return LOD(filter(lambda x: x[key] == value, lod))

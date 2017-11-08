@@ -39,9 +39,11 @@ class Molecule(Apply):
 class AsyncMolecule(AsyncNode):
     def __init__(self, in_edge, chem_calcs=None, pickle_mol=False,
                  fields=None, params=None):
-        super().__init__(in_edge, None, fields=fields, params=params)
+        super().__init__(in_edge)
         if fields is None:
             self.fields.merge(static.CHEM_FIELDS)
+        else:
+            self.fields.merge(fields)
         if chem_calcs is None:
             chem_calcs = static.CHEM_FUNCTIONS
         self.func = functools.partial(chem_data, chem_calcs, pickle_mol)

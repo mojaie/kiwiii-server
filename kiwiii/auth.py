@@ -10,18 +10,6 @@ import functools
 from kiwiii import static
 
 
-def session_auth(method):
-    """ Auth without redirect (for async request)"""
-    @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
-        if not self.current_user:
-            def reject(self, *args, **kwargs):
-                self.write({"authenticated": False})
-            return reject(self, *args, **kwargs)
-        return method(self, *args, **kwargs)
-    return wrapper
-
-
 def basic_auth(method):
     @functools.wraps(method)
     def wrapper(handler, *args, **kwargs):

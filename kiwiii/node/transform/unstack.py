@@ -9,7 +9,7 @@ import itertools
 from kiwiii.core.node import Node
 
 
-def stack(row, keys):
+def unstack(row, keys):
     for nk in set(row.keys()) - set(keys):
         d = {k: v for k, v in row.items() if k in keys}
         d["_field"] = nk
@@ -17,16 +17,17 @@ def stack(row, keys):
         yield d
 
 
+# TODO: GroupBy equivalent?
 class Unstack(Node):
-    def __init__(self, in_edge, keys, params=None):
+    def __init__(self, in_edge, field_key="_field", value_key="_value",
+                 params=None):
         super().__init__(in_edge)
-        self.keys = keys
         if params is not None:
             self.params.update(params)
 
     def on_submitted(self):
         stacked = itertools.chain.from_iterable(
-            stack(rcd, self.keys) for rcd in self.in_edge.records)
+            unstack(rcd, self.keys) for rcd in self.in_edge.records)
         main, counter = itertools.tee(stacked)
         self.out_edge.records = main
         self.out_edge.task_count = sum(1 for i in counter)

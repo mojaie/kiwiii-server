@@ -20,8 +20,6 @@ def resource_format(data):
                 continue
             if "name" not in field:
                 field["name"] = field["key"]
-            if "request" not in field:
-                field["request"] = "search"
             if "valueType" not in field:
                 field["valueType"] = "numeric"
             if field["valueType"] in ["text", "compound_id"]:
