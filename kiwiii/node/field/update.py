@@ -6,7 +6,7 @@
 
 import functools
 
-from kiwiii.core.node import Node
+from kiwiii.core.node import SyncNode
 
 
 def rename(updates, row):
@@ -16,9 +16,9 @@ def rename(updates, row):
     return row
 
 
-class UpdateFields(Node):
-    def __init__(self, in_edge, mapping, params=None):
-        super().__init__(in_edge)
+class UpdateFields(SyncNode):
+    def __init__(self, mapping, params=None):
+        super().__init__()
         self.fields = mapping.values()
         self.key_updates = {}
         for old_key, field in mapping.items():
@@ -30,14 +30,10 @@ class UpdateFields(Node):
             self.params.update(params)
 
     def on_submitted(self):
-        if hasattr(self, "func"):
-            self.out_edge.records = map(self.func, self.in_edge.records)
-        else:
-            self.out_edge.records = self.in_edge.records
-        self.out_edge.task_count = self.in_edge.task_count
-        self.out_edge.fields.merge(self.in_edge.fields)
-        self.out_edge.fields.merge(self.fields)
-        self.out_edge.params.update(self.in_edge.params)
-        self.out_edge.params.update(self.params)
+        super().on_submitted()
         for k in self.key_updates.keys():
-            self.out_edge.fields.delete("key", k)
+            self._out_edge.fields.delete("key", k)
+        if hasattr(self, "func"):
+            self._out_edge.records = map(self.func, self._in_edge.records)
+        else:
+            self._out_edge.records = self._in_edge.records

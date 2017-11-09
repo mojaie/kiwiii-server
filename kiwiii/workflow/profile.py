@@ -23,7 +23,6 @@ class Profile(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        e1s = []
         targets = lod.filtered(helper.SQLITE_RESOURCES, "domain", "activity")
         target_ids = lod.valuelist(targets, "id")
         sq = {
@@ -31,8 +30,7 @@ class Profile(Workflow):
             "targets": target_ids,
             "key": "compoundID", "operator": "eq", "values": (query["id"],)
         }
-        e1, = self.add_node(sqlite.SQLiteFilterInput(sq))
-        e1s.append(e1)
+        sq_filter = sqlite.SQLiteFilterInput(sq)
         """
         if r["resourceType"] == "api":
             sq = {
@@ -43,6 +41,9 @@ class Profile(Workflow):
             }
             e1, = self.add_node(httpio.HTTPResourceFilterInput(sq))
         """
-        e2, = self.add_node(MergeRecords(e1s))
-        e3, = self.add_node(Number(e2))
-        self.add_node(JSONResponse(e3, self))
+        merge = MergeRecords()
+        self.connect(sq_filter, merge)
+        number = Number()
+        response = JSONResponse(self)
+        self.connect(merge, number)
+        self.connect(number, response)

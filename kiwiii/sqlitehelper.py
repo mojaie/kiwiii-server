@@ -21,6 +21,7 @@ from kiwiii.lod import LOD
 SQLITE_RESOURCES = LOD(schema.RESOURCES.filter("resourceType", "sqlite"))
 
 
+# TODO: merge into sqliteconnection
 class SQLiteHelper(object):
     def __init__(self):
         self.dbs = {}

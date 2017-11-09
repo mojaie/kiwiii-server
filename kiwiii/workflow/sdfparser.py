@@ -19,7 +19,10 @@ class SDFParser(Workflow):
             {"key": q, "name": q, "sortType": "text"}
             for q in query["params"]["fields"]
         ])
-        e1, = self.add_node(SDFileInput(contents, query["params"]))
-        e2, = self.add_node(Molecule(e1))
-        e3, = self.add_node(Number(e2))
-        self.add_node(JSONResponse(e3, self))
+        sdf_in = SDFileInput(contents, query["params"])
+        molecule = Molecule()
+        number = Number()
+        response = JSONResponse(self)
+        self.connect(sdf_in, molecule)
+        self.connect(molecule, number)
+        self.connect(number, response)

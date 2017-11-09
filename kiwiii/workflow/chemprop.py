@@ -55,8 +55,12 @@ class ChemProp(Workflow):
             static.CHEM_FUNCTIONS[query["key"]],
             OPERATORS[query["operator"]], v
         )
-        e1, = self.add_node(SQLiteInput(query))
-        e2, = self.add_node(MPFilter(func, e1))
-        e3, = self.add_node(AsyncMolecule(e2))
-        e4, = self.add_node(AsyncNumber(e3))
-        self.add_node(AsyncJSONResponse(e4, self))
+        sq_in = SQLiteInput(query)
+        mpf = MPFilter(func)
+        molecule = AsyncMolecule()
+        number = AsyncNumber()
+        response = AsyncJSONResponse(self)
+        self.connect(sq_in, mpf)
+        self.connect(mpf, molecule)
+        self.connect(molecule, number)
+        self.connect(number, response)

@@ -22,10 +22,9 @@ def split(old_key, new_fields, separator, fill, row):
 
 
 class SplitField(Apply):
-    def __init__(self, in_edge, old_key, new_fields, separator, fill=None,
+    def __init__(self, old_key, new_fields, separator, fill=None,
                  params=None):
         super().__init__(
-            in_edge,
             functools.partial(split, old_key, new_fields, separator, fill),
             fields=new_fields, params=params
         )
@@ -33,4 +32,4 @@ class SplitField(Apply):
 
     def on_submitted(self):
         super().on_submitted()
-        self.out_edge.fields.delete("key", self.old_key)
+        self._out_edge.fields.delete("key", self.old_key)

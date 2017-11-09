@@ -43,20 +43,25 @@ class Workflow(Task):
             yield gen.sleep(self.interval)
         self.on_finish()
 
-    def add_node(self, node):
-        """parallel computation
-        returns worker id
+    def connect(self, up, down, up_port=0, down_port=0):
+        """Adds a workflow connection
+            Args:
+                up: source node
+                down: target node
+                port: output port of source node
         """
-        node_id = len(self.nodes)
-        self.nodes.append(node)
-        self.preds[node_id] = {}
-        self.succs[node_id] = {}
-        for in_ in node.in_edges():
-            self.preds[node_id][in_.source] = True
-            self.succs[in_.source][node_id] = True
-        for out in node.out_edges():
-            out.source = node_id
-        return node.out_edges()
+        if up.node_num is None:
+            up.node_num = len(self.nodes)
+            self.nodes.append(up)
+            self.preds[up.node_num] = {}
+            self.succs[up.node_num] = {}
+        if down.node_num is None:
+            down.node_num = len(self.nodes)
+            self.nodes.append(down)
+            self.preds[down.node_num] = {}
+            self.succs[down.node_num] = {}
+        self.preds[down.node_num][up.node_num] = up_port
+        self.succs[up.node_num][down.node_num] = down_port
 
     @gen.coroutine
     def interrupt(self):
@@ -72,8 +77,12 @@ class Workflow(Task):
     def on_submitted(self):
         # TODO: catch exceptions on submit (ex. file path error, format error)
         self.order = graph.topological_sort(self.succs, self.preds)
-        for node_id in self.order:
-            self.nodes[node_id].on_submitted()
+        for up in self.order:
+            for down, dport in self.succs[up].items():
+                uport = self.preds[down][up]
+                self.nodes[down].add_in_edge(
+                    self.nodes[up].out_edge(uport), dport)
+            self.nodes[up].on_submitted()
 
     def output(self):
         # TODO:
@@ -104,7 +113,7 @@ class Workflow(Task):
                 p = round(self.done_count / self.task_count * 100, 1)
             except ZeroDivisionError:
                 p = None
-            # TODO: mpfilter should send doneCount even if the row is filtered out
+            # TODO: mpfilter should send doneCount every time the row processed
             if self.status == "done":
                 data["progress"] = 100
             else:

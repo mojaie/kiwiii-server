@@ -9,7 +9,7 @@ import os
 import sqlite3
 import traceback
 
-from kiwiii.core.node import Task
+from kiwiii.core.node import Node
 
 data_type = {
     "compound_id": "text",
@@ -20,22 +20,21 @@ data_type = {
 }
 
 
-class SQLiteWriter(Task):
-    def __init__(self, in_edges, wf, dest_path,
+class SQLiteWriter(Node):
+    def __init__(self, wf, dest_path,
                  allow_overwrite=True, notice_per_records=10000):
         super().__init__()
-        self._in_edges = in_edges
+        self._in_edges = []
         self.wf = wf
         self.dest_path = dest_path
         self.allow_overwrite = allow_overwrite
         self.notice_per_records = notice_per_records
         self.conn = None
 
-    def in_edges(self):
-        return self._in_edges
-
-    def out_edges(self):
-        return tuple()
+    def add_in_edge(self, edge, port):
+        if port != 0:
+            raise ValueError("invalid port")
+        self._in_edges.append(edge)
 
     def run(self):
         self.on_start()
@@ -59,7 +58,7 @@ class SQLiteWriter(Task):
             schema = self.wf.params
             schema["resources"] = []
             # Tables
-            for in_edge in self.in_edges():
+            for in_edge in self._in_edges:
                 # Create table
                 phrases = []
                 table_name = in_edge.params["table"]
@@ -91,7 +90,7 @@ class SQLiteWriter(Task):
                 cnt = cur.execute("SELECT COUNT(*) FROM {}".format(table_name))
                 print("{} rows -> {}".format(cnt.fetchone()[0], table_name))
                 # TODO: add index
-                
+
                 # Append a resource schema
                 table_schema = in_edge.params
                 table_schema["fields"] = in_edge.fields
@@ -118,7 +117,7 @@ class SQLiteWriter(Task):
             self.on_finish()
 
     def on_submitted(self):
-        self.wf.task_count = sum(i.task_count for i in self.in_edges())
+        self.wf.task_count = sum(i.task_count for i in self._in_edges)
         self.wf.result_count = 0
         self.wf.done_count = 0
         if os.path.exists(self.dest_path) and not self.allow_overwrite:

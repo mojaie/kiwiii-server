@@ -8,7 +8,7 @@ import functools
 import itertools
 
 from tornado import gen
-from kiwiii.core.node import Node, AsyncNode
+from kiwiii.core.node import SyncNode, AsyncNode
 
 
 def number(name, zipped):
@@ -18,10 +18,10 @@ def number(name, zipped):
     return new_row
 
 
-class Number(Node):
-    def __init__(self, in_edge, name="_index", counter=itertools.count,
+class Number(SyncNode):
+    def __init__(self, name="_index", counter=itertools.count,
                  field=None, params=None):
-        super().__init__(in_edge)
+        super().__init__()
         self.counter = counter
         if field is None:
             field = {"key": name}
@@ -31,19 +31,15 @@ class Number(Node):
             self.params.update(params)
 
     def on_submitted(self):
-        zipped = zip(self.in_edge.records, self.counter())
-        self.out_edge.records = map(self.func, zipped)
-        self.out_edge.task_count = self.in_edge.task_count
-        self.out_edge.fields.merge(self.in_edge.fields)
-        self.out_edge.fields.merge(self.fields)
-        self.out_edge.params.update(self.in_edge.params)
-        self.out_edge.params.update(self.params)
+        super().on_submitted()
+        zipped = zip(self._in_edge.records, self.counter())
+        self._out_edge.records = map(self.func, zipped)
 
 
 class AsyncNumber(AsyncNode):
-    def __init__(self, in_edge, name="_index", counter=itertools.count,
+    def __init__(self, name="_index", counter=itertools.count,
                  field=None, params=None):
-        super().__init__(in_edge)
+        super().__init__()
         self.counter = counter
         if field is None:
             field = {"key": name}
@@ -56,6 +52,6 @@ class AsyncNumber(AsyncNode):
     def _get_loop(self):
         cnt = self.counter()
         while 1:
-            in_ = yield self.in_edge.get()
-            yield self.out_edge.put(self.func((in_, next(cnt))))
-            self.out_edge.done_count = self.in_edge.done_count
+            in_ = yield self._in_edge.get()
+            yield self._out_edge.put(self.func((in_, next(cnt))))
+            self._out_edge.done_count = self._in_edge.done_count

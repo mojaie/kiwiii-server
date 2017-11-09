@@ -6,29 +6,26 @@
 
 import itertools
 
-from kiwiii.core.edge import Edge
-from kiwiii.core.task import Task
+from kiwiii.core.node import SyncNode
 
 
-class MergeRecords(Task):
-    def __init__(self, in_edges, params=None):
+class MergeRecords(SyncNode):
+    def __init__(self, params=None):
         super().__init__()
-        self._in_edges = in_edges
-        self.out_edge = Edge()
+        self._in_edges = []
         if params is not None:
             self.params.update(params)
 
-    def in_edges(self):
-        return self._in_edges
-
-    def out_edges(self):
-        return (self.out_edge,)
+    def add_in_edge(self, edge, port):
+        if port != 0:
+            raise ValueError("invalid port")
+        self._in_edges.append(edge)
 
     def on_submitted(self):
-        self.out_edge.records = itertools.chain.from_iterable(
+        self._out_edge.records = itertools.chain.from_iterable(
             i.records for i in self._in_edges)
-        self.out_edge.task_count = sum([i.task_count for i in self._in_edges])
+        self._out_edge.task_count = sum([i.task_count for i in self._in_edges])
         for e in self._in_edges:
-            self.out_edge.fields.merge(e.fields)
+            self._out_edge.fields.merge(e.fields)
         for e in self._in_edges:
-            self.out_edge.params.update(e.params)
+            self._out_edge.params.update(e.params)

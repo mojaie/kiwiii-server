@@ -5,10 +5,10 @@
 #
 
 import itertools
-from kiwiii.core.node import Node
+from kiwiii.core.node import SyncNode
 
 
-class IteratorInput(Node):
+class IteratorInput(SyncNode):
     def __init__(self, iter_input, fields=None, params=None):
         super().__init__()
         self.iter_input = iter_input
@@ -19,11 +19,8 @@ class IteratorInput(Node):
 
     def on_submitted(self):
         main, counter = itertools.tee(self.iter_input)
-        self.out_edge.records = main
-        self.out_edge.task_count = sum(1 for i in counter)
+        self._out_edge.records = main
+        self._out_edge.task_count = sum(1 for i in counter)
         if self.fields:
-            self.out_edge.fields.merge(self.fields)
-        self.out_edge.params.update(self.params)
-
-    def in_edges(self):
-        return tuple()
+            self._out_edge.fields.merge(self.fields)
+        self._out_edge.params.update(self.params)

@@ -20,7 +20,6 @@ class FieldFilter(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        es = []
         # SQLite
         targets = lod.filtered(helper.SQLITE_RESOURCES, "domain", "activity")
         target_ids = lod.valuelist(targets, "id")
@@ -29,12 +28,11 @@ class FieldFilter(Workflow):
             "targets": target_ids,
             "key": "compoundID", "operator": "in", "values": query["values"]
         }
-        e1, = self.add_node(sqlite.SQLiteFilterInput(q))
-        e2, = self.add_node(
-            FilterRecords(e1, "assayID", query["targetAssays"]))
-        e3, = self.add_node(
-            FilterRecords(e2, "field", query["targetFields"]))
-        es.append(e3)
+        sq_in = sqlite.SQLiteFilterInput(q)
+        filter1 = FilterRecords("assayID", query["targetAssays"])
+        filter2 = FilterRecords("field", query["targetFields"])
+        self.connect(sq_in, filter1)
+        self.connect(filter1, filter2)
         """
         if r["resourceType"] == "api":
             sq = {
@@ -45,11 +43,14 @@ class FieldFilter(Workflow):
             }
             e1, = self.add_node(httpio.HTTPResourceFilterInput(sq))
         """
-        es1, = self.add_node(MergeRecords(es))
-        es2, = self.add_node(ConcatFields(
-            es1, ("assayID", "field"), {"key": "_field"},
-            separator=":"))
-        es3, = self.add_node(Unstack(
-            "id", es2, field_key="_field", value_key="value"))
-        es4, = self.add_node(Number(es3))
-        self.add_node(JSONResponse(es4, self))
+        merge = MergeRecords()
+        self.connect(filter2, merge)
+        concat = ConcatFields(
+            ("assayID", "field"), {"key": "_field"}, separator=":")
+        unstack = Unstack("id", field_key="_field", value_key="value")
+        number = Number()
+        response = JSONResponse(self)
+        self.connect(merge, concat)
+        self.connect(concat, unstack)
+        self.connect(unstack, number)
+        self.connect(number, response)

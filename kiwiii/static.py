@@ -82,8 +82,7 @@ CHEM_FUNCTIONS = {
     "_nonH": molutil.non_hydrogen_count
 }
 
-MOLOBJ_KEY = "_mol"
-
+# TODO: local server_config.yaml
 EXTERNALS = [
     "contrib.screenerapi"
 ]

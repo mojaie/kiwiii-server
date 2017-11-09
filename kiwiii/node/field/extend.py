@@ -16,11 +16,10 @@ def extend(name, key, func, row):
 
 
 class Extend(Apply):
-    def __init__(self, in_edge, name, create_from, apply_func=lambda x: x,
+    def __init__(self, name, create_from, apply_func=lambda x: x,
                  field=None, params=None):
         if field is None:
             field = {"key": name}
         super().__init__(
-            in_edge,
             functools.partial(extend, name, create_from, apply_func),
             fields=[field], params=params)

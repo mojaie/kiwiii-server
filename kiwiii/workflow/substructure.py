@@ -52,11 +52,15 @@ class ExactStruct(Workflow):
             "values": (molutil.mw(qmol),),
         }
         func = functools.partial(exact_filter, qmol, query["params"])
-        e1, = self.add_node(sqlite.SQLiteFilterInput(mw_filter))
-        e2, = self.add_node(MPFilter(func, e1))
-        e3, = self.add_node(AsyncMolecule(e2))
-        e4, = self.add_node(AsyncNumber(e3))
-        self.add_node(AsyncJSONResponse(e4, self))
+        sq_filter = sqlite.SQLiteFilterInput(mw_filter)
+        mpf = MPFilter(func)
+        molecule = AsyncMolecule()
+        number = AsyncNumber()
+        response = AsyncJSONResponse(self)
+        self.connect(sq_filter, mpf)
+        self.connect(mpf, molecule)
+        self.connect(molecule, number)
+        self.connect(number, response)
 
 
 class Substruct(Workflow):
@@ -65,11 +69,15 @@ class Substruct(Workflow):
         self.query = query
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(substr_filter, qmol, query["params"])
-        e1, = self.add_node(sqlite.SQLiteInput(query))
-        e2, = self.add_node(MPFilter(func, e1))
-        e3, = self.add_node(AsyncMolecule(e2))
-        e4, = self.add_node(AsyncNumber(e3))
-        self.add_node(AsyncJSONResponse(e4, self))
+        sq_in = sqlite.SQLiteInput(query)
+        mpf = MPFilter(func)
+        molecule = AsyncMolecule()
+        number = AsyncNumber()
+        response = AsyncJSONResponse(self)
+        self.connect(sq_in, mpf)
+        self.connect(mpf, molecule)
+        self.connect(molecule, number)
+        self.connect(number, response)
 
 
 class Superstruct(Workflow):
@@ -78,8 +86,12 @@ class Superstruct(Workflow):
         self.query = query
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(supstr_filter, qmol, query["params"])
-        e1, = self.add_node(sqlite.SQLiteInput(query))
-        e2, = self.add_node(MPFilter(func, e1))
-        e3, = self.add_node(AsyncMolecule(e2))
-        e4, = self.add_node(AsyncNumber(e3))
-        self.add_node(AsyncJSONResponse(e4, self))
+        sq_in = sqlite.SQLiteInput(query)
+        mpf = MPFilter(func)
+        molecule = AsyncMolecule()
+        number = AsyncNumber()
+        response = AsyncJSONResponse(self)
+        self.connect(sq_in, mpf)
+        self.connect(mpf, molecule)
+        self.connect(molecule, number)
+        self.connect(number, response)

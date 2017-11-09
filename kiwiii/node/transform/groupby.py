@@ -7,7 +7,7 @@
 import functools
 import itertools
 
-from kiwiii.core.node import Node
+from kiwiii.core.node import SyncNode
 from kiwiii.util import lod
 
 
@@ -21,20 +21,20 @@ def groupby(key, rows, row):
         return rows
 
 
-class GroupBy(Node):
-    def __init__(self, in_edge, key, params=None):
-        super().__init__(in_edge)
+class GroupBy(SyncNode):
+    def __init__(self, key, params=None):
+        super().__init__()
         self.key = key
         if params is not None:
             self.params.update(params)
 
     def on_submitted(self):
         func = functools.partial(groupby, self.key)
-        grouped = functools.reduce(func, self.in_edge.records, [])
+        grouped = functools.reduce(func, self._in_edge.records, [])
         main, counter = itertools.tee(grouped)
-        self.out_edge.records = main
-        self.out_edge.task_count = sum(1 for i in counter)
-        self.out_edge.fields.merge(self.in_edge.fields)
-        self.out_edge.fields.merge(self.fields)
-        self.out_edge.params.update(self.in_edge.params)
-        self.out_edge.params.update(self.params)
+        self._out_edge.records = main
+        self._out_edge.task_count = sum(1 for i in counter)
+        self._out_edge.fields.merge(self._in_edge.fields)
+        self._out_edge.fields.merge(self.fields)
+        self._out_edge.params.update(self._in_edge.params)
+        self._out_edge.params.update(self.params)

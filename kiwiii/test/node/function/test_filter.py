@@ -21,33 +21,33 @@ def odd(dict_):
 
 class TestFilter(AsyncTestCase):
     def test_filter(self):
-        n = IteratorInput({"value": i} for i in range(10))
-        f = Filter(odd, n.out_edges()[0])
-        n.on_submitted()
-        f.on_submitted()
-        f.run()
-        total = sum(a["value"] for a in f.out_edges()[0].records)
+        iter_in = IteratorInput({"value": i} for i in range(10))
+        iter_in.submit()
+        filter_ = Filter(odd)
+        filter_.add_in_edge(iter_in.out_edge())
+        filter_.submit()
+        total = sum(a["value"] for a in filter_.out_edge().records)
         self.assertEqual(total, 25)
-        self.assertEqual(f.status, "done")
+        self.assertEqual(filter_.status, "done")
 
     @gen_test
     def test_mpfilter(self):
-        n = IteratorInput({"value": i} for i in range(10))
-        n1 = MPFilter(odd, n.out_edges()[0])
-        n2 = AsyncNode(n1.out_edges()[0])
-        n2.interval = 0.01
-        n.on_submitted()
-        n1.on_submitted()
-        n2.on_submitted()
-        self.assertEqual(n2.out_edges()[0].task_count, 100)
-        n1.run()
-        self.assertEqual(n1.status, "running")
-        n2.run()
+        iter_in = IteratorInput({"value": i} for i in range(10))
+        mpf = MPFilter(odd)
+        asyn = AsyncNode()
+        mpf.interval = 0.01
+        iter_in.submit()
+        mpf.submit()
+        asyn.submit()
+        self.assertEqual(mpf.out_edge().task_count, 100)
+        iter_in.run()
+        self.assertEqual(iter_in.status, "running")
+        mpf.run()
         res = []
-        while n2.in_edges()[0].status != "done":
-            r = yield n2.out_edges()[0].get()
+        while mpf.in_edges.status != "done":
+            r = yield n2.out_edge().get()
             res.append(r)
-        self.assertEqual(n2.out_edges()[0].done_count, 100)
+        self.assertEqual(n2.out_edge().done_count, 100)
         self.assertEqual(sum(a["value"] for a in res), 2500)
 
     @gen_test

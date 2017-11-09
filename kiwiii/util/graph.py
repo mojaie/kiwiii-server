@@ -10,6 +10,7 @@ import pickle
 
 def topological_sort(succs, preds):
     # Topological sort
+    # TODO: is there an equivalent in NetworkX?
     order = []
     preds = pickle.loads(pickle.dumps(preds))
     succs = pickle.loads(pickle.dumps(succs))

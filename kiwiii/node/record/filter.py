@@ -10,10 +10,9 @@ from kiwiii.node.function.filter import Filter
 
 
 class FilterRecords(Filter):
-    def __init__(self, in_edge, key, value, filter_operator=operator.eq,
+    def __init__(self, key, value, filter_operator=operator.eq,
                  params=None):
         super().__init__(
-            in_edge,
             lambda x: filter_operator(x[key], value),
             params=params
         )

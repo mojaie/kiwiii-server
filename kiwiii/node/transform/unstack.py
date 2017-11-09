@@ -6,7 +6,7 @@
 
 import itertools
 
-from kiwiii.core.node import Node
+from kiwiii.core.node import SyncNode
 
 
 def unstack(row, keys):
@@ -18,10 +18,10 @@ def unstack(row, keys):
 
 
 # TODO: GroupBy equivalent?
-class Unstack(Node):
-    def __init__(self, in_edge, field_key="_field", value_key="_value",
+class Unstack(SyncNode):
+    def __init__(self, field_key="_field", value_key="_value",
                  params=None):
-        super().__init__(in_edge)
+        super().__init__()
         if params is not None:
             self.params.update(params)
 
@@ -29,10 +29,10 @@ class Unstack(Node):
         stacked = itertools.chain.from_iterable(
             unstack(rcd, self.keys) for rcd in self.in_edge.records)
         main, counter = itertools.tee(stacked)
-        self.out_edge.records = main
-        self.out_edge.task_count = sum(1 for i in counter)
-        fs = filter(lambda x: x["key"] in self.keys, self.in_edge.fields)
-        self.out_edge.fields.merge(fs)
-        self.out_edge.fields.merge([{"key": "_field"}, {"key": "_value"}])
-        self.out_edge.params.update(self.in_edge.params)
-        self.out_edge.params.update(self.params)
+        self._out_edge.records = main
+        self._out_edge.task_count = sum(1 for i in counter)
+        fs = filter(lambda x: x["key"] in self.keys, self._in_edge.fields)
+        self._out_edge.fields.merge(fs)
+        self._out_edge.fields.merge([{"key": "_field"}, {"key": "_value"}])
+        self._out_edge.params.update(self._in_edge.params)
+        self._out_edge.params.update(self.params)

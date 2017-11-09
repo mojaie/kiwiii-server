@@ -15,35 +15,45 @@ class DBFilter(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        e1, = self.add_node(sqlite.SQLiteFilterInput(query))
-        e2, = self.add_node(Number(e1))
-        self.add_node(JSONResponse(e2, self))
+        sq_in = sqlite.SQLiteFilterInput(query)
+        number = Number()
+        response = JSONResponse(self)
+        self.connect(sq_in, number)
+        self.connect(number, response)
 
 
 class DBSearch(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        e1, = self.add_node(sqlite.SQLiteSearchInput(query))
-        e2, = self.add_node(Number(e1))
-        self.add_node(JSONResponse(e2, self))
+        sq_in = sqlite.SQLiteSearchInput(query)
+        number = Number()
+        response = JSONResponse(self)
+        self.connect(sq_in, number)
+        self.connect(number, response)
 
 
 class ChemDBFilter(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        e1, = self.add_node(sqlite.SQLiteFilterInput(query))
-        e2, = self.add_node(Molecule(e1))
-        e3, = self.add_node(Number(e2))
-        self.add_node(JSONResponse(e3, self))
+        sq_in = sqlite.SQLiteFilterInput(query)
+        molecule = Molecule()
+        number = Number()
+        response = JSONResponse(self)
+        self.connect(sq_in, molecule)
+        self.connect(molecule, number)
+        self.connect(number, response)
 
 
 class ChemDBSearch(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        e1, = self.add_node(sqlite.SQLiteSearchInput(query))
-        e2, = self.add_node(Molecule(e1))
-        e3, = self.add_node(Number(e2))
-        self.add_node(JSONResponse(e3, self))
+        sq_in = sqlite.SQLiteSearchInput(query)
+        molecule = Molecule()
+        number = Number()
+        response = JSONResponse(self)
+        self.connect(sq_in, molecule)
+        self.connect(molecule, number)
+        self.connect(number, response)

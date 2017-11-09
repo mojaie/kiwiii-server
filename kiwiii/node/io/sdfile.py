@@ -10,10 +10,10 @@ from chorus import v2000reader  # , v2000writer
 from chorus import molutil
 from chorus.draw import calc2dcoords
 
-from kiwiii.core.node import Node
+from kiwiii.core.node import SyncNode
 
 
-class SDFileInputBase(Node):
+class SDFileInputBase(SyncNode):
     def __init__(self, implicit_hydrogen=False, recalc_coords=False,
                  fields=None, params=None):
         super().__init__()
@@ -38,13 +38,10 @@ class SDFileInputBase(Node):
             yield row
 
     def on_submitted(self):
-        self.out_edge.records = self.records_iter()
-        self.out_edge.task_count = self.row_count
-        self.out_edge.fields.merge(self.fields)
-        self.out_edge.params.update(self.params)
-
-    def in_edges(self):
-        return tuple()
+        self._out_edge.records = self.records_iter()
+        self._out_edge.task_count = self.row_count
+        self._out_edge.fields.merge(self.fields)
+        self._out_edge.params.update(self.params)
 
 
 class SDFileInput(SDFileInputBase):

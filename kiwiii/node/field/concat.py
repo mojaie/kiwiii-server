@@ -17,10 +17,9 @@ def concat(old_keys, new_field, separator, row):
 
 
 class ConcatFields(Apply):
-    def __init__(self, in_edge, old_keys, new_field, separator="_",
+    def __init__(self, old_keys, new_field, separator="_",
                  params=None):
         super().__init__(
-            in_edge,
             functools.partial(concat, old_keys, new_field, separator),
             fields=[new_field], params=params
         )

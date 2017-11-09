@@ -93,4 +93,4 @@ def valuelist(lod, key):
 
 
 def filtered(lod, key, value):
-    return LOD(filter(lambda x: x[key] == value, lod))
+    return ListOfDict(filter(lambda x: x[key] == value, lod))

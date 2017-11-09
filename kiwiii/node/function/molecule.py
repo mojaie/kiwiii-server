@@ -26,9 +26,9 @@ def chem_data(chem_calcs, pickle_mol, row):
 
 
 class Molecule(Apply):
-    def __init__(self, in_edge, chem_calcs=None, pickle_mol=False,
+    def __init__(self, chem_calcs=None, pickle_mol=False,
                  fields=None, params=None):
-        super().__init__(in_edge, None, fields=fields, params=params)
+        super().__init__(None, fields=fields, params=params)
         if fields is None:
             self.fields.merge(static.CHEM_FIELDS)
         if chem_calcs is None:
@@ -37,9 +37,9 @@ class Molecule(Apply):
 
 
 class AsyncMolecule(AsyncNode):
-    def __init__(self, in_edge, chem_calcs=None, pickle_mol=False,
+    def __init__(self, chem_calcs=None, pickle_mol=False,
                  fields=None, params=None):
-        super().__init__(in_edge)
+        super().__init__()
         if fields is None:
             self.fields.merge(static.CHEM_FIELDS)
         else:
@@ -51,7 +51,7 @@ class AsyncMolecule(AsyncNode):
     @gen.coroutine
     def _get_loop(self):
         while 1:
-            in_ = yield self.in_edge.get()
+            in_ = yield self._in_edge.get()
             out = self.func(in_)
-            self.out_edge.done_count = self.in_edge.done_count
-            yield self.out_edge.put(out)
+            self._out_edge.done_count = self._in_edge.done_count
+            yield self._out_edge.put(out)
