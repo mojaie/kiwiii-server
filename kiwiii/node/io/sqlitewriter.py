@@ -21,12 +21,13 @@ data_type = {
 
 
 class SQLiteWriter(Node):
-    def __init__(self, wf, dest_path,
+    def __init__(self, wf, dest_path, create_index=None,
                  allow_overwrite=True, notice_per_records=10000):
         super().__init__()
         self._in_edges = []
         self.wf = wf
         self.dest_path = dest_path
+        self.create_index = create_index
         self.allow_overwrite = allow_overwrite
         self.notice_per_records = notice_per_records
         self.conn = None
@@ -53,6 +54,12 @@ class SQLiteWriter(Node):
                 for t in tables:
                     cur.execute("DROP TABLE {}".format(t))
                     print("Table {} dropped".format(t))
+                cur.execute(
+                    "SELECT name FROM sqlite_master WHERE type='index'")
+                idxs = [row[0] for row in cur.fetchall()]
+                for i in idxs:
+                    cur.execute("DROP INDEX {}".format(i))
+                    print("Index {} dropped".format(i))
             # Schema document table
             cur.execute("CREATE TABLE document(document text)")
             schema = self.wf.params
@@ -72,14 +79,14 @@ class SQLiteWriter(Node):
                         fieldphrase += " collate nocase"
                     phrases.append(fieldphrase)
                 fielddef = ", ".join(phrases)
-                sql = "CREATE TABLE {} ({})".format(table_name, fielddef)
+                sql = "CREATE TABLE {}({})".format(table_name, fielddef)
                 cur.execute(sql)
                 # Insert records
                 for i, rcd in enumerate(in_edge.records):
                     fieldkeys = ", ".join(rcd.keys())
-                    sql = "INSERT INTO {} ({})".format(table_name, fieldkeys)
+                    sql = "INSERT INTO {}({})".format(table_name, fieldkeys)
                     placeholders = ", ".join(["?"] * len(rcd))
-                    sql += " VALUES ({})".format(placeholders)
+                    sql += " VALUES({})".format(placeholders)
                     values = [rcd[c] for c in rcd.keys()]
                     try:
                         cur.execute(sql, values)
@@ -89,8 +96,12 @@ class SQLiteWriter(Node):
                         print("{} rows processed...".format(i))
                 cnt = cur.execute("SELECT COUNT(*) FROM {}".format(table_name))
                 print("{} rows -> {}".format(cnt.fetchone()[0], table_name))
-                # TODO: add index
-
+                # Create index
+                if self.create_index is not None:
+                    for k in self.create_index:
+                        cur.execute("CREATE INDEX {}_{} ON {}({})".format(
+                            table_name, k, table_name, k))
+                        print("Create index {}_{} ...".format(table_name, k))
                 # Append a resource schema
                 table_schema = in_edge.params
                 table_schema["fields"] = in_edge.fields
