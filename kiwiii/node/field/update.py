@@ -6,34 +6,28 @@
 
 import functools
 
-from kiwiii.core.node import SyncNode
+from kiwiii.node.function.apply import Apply
 
 
 def rename(updates, row):
+    new_row = row.copy()
     for old, new in updates.items():
-        row[new] = row[old]
-        del row[old]
-    return row
+        new_row[new] = new_row[old]
+        del new_row[old]
+    return new_row
 
 
-class UpdateFields(SyncNode):
-    def __init__(self, mapping, params=None):
-        super().__init__()
-        self.fields = mapping.values()
-        self.key_updates = {}
-        for old_key, field in mapping.items():
-            if old_key != field["key"]:
-                self.key_updates[old_key] = field["key"]
-        if self.key_updates:
-            self.func = functools.partial(rename, self.key_updates)
-        if params is not None:
-            self.params.update(params)
+class UpdateFields(Apply):
+    def __init__(self, updates, fields=None, params=None):
+        super().__init__(
+            functools.partial(rename, updates),
+            fields=fields, params=params
+        )
+        self.updates = updates
 
     def on_submitted(self):
+        # TODO: Direct change on in_edge may cause unexpected behavior
+        for field in self._in_edge.fields:
+            if field["key"] in self.updates:
+                field["key"] = self.updates[field["key"]]
         super().on_submitted()
-        for k in self.key_updates.keys():
-            self._out_edge.fields.delete("key", k)
-        if hasattr(self, "func"):
-            self._out_edge.records = map(self.func, self._in_edge.records)
-        else:
-            self._out_edge.records = self._in_edge.records

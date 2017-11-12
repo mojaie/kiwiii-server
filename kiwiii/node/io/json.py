@@ -21,8 +21,17 @@ class JSONResponse(Node):
         self.on_finish()
 
     def on_submitted(self):
-        # TODO: reorder fields
-        self.wf.fields.merge(self._in_edge.fields)
+        # Re-order fields
+        self.fields.merge(self._in_edge.fields)
+        self.fields.delete("key", "_molobj")
+        idx = self.fields.pick("key", "_index")
+        if idx:
+            self.wf.fields.add(idx)
+        struct = self.fields.pick("key", "_structure")
+        if struct:
+            self.wf.fields.add(struct)
+        self.wf.fields.merge(self.fields)
+
         self.wf.done_count = 0
         self.wf.task_count = self._in_edge.task_count
 
@@ -41,8 +50,17 @@ class AsyncJSONResponse(Synchronizer):
             self.wf.done_count = self._in_edge.done_count
 
     def on_submitted(self):
-        # TODO: reorder fields
-        self.wf.fields.merge(self._in_edge.fields)
+        # Re-order fields
+        self.fields.merge(self._in_edge.fields)
+        self.fields.delete("key", "_molobj")
+        idx = self.fields.pick("key", "_index")
+        if idx:
+            self.wf.fields.add(idx)
+        struct = self.fields.pick("key", "_structure")
+        if struct:
+            self.wf.fields.add(struct)
+        self.wf.fields.merge(self.fields)
+
         self.wf.result_records = []
         self.wf.result_count = 0
         self.wf.task_count = self._in_edge.task_count

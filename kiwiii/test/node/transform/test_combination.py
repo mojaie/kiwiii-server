@@ -6,9 +6,9 @@
 
 import unittest
 
-from tornado.testing import AsyncTestCase
+from tornado.testing import AsyncTestCase, gen_test
 
-from kiwiii.core.edge import Edge
+from kiwiii.node.io.iterator import IteratorInput
 from kiwiii.node.transform.combination import Combination
 
 
@@ -18,14 +18,17 @@ def odd(dict_):
 
 
 class TestCombination(AsyncTestCase):
+    @gen_test
     def test_combination(self):
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(10)]
-        f = Combination(in_edge)
-        f.on_submitted()
-        self.assertEqual(f.out_edges()[0].task_count, 45)
-        f.run()
-        self.assertEqual(len(list(f.out_edges()[0].records)), 45)
+        iter_in = IteratorInput({"value": i} for i in range(10))
+        comb = Combination()
+        comb.add_in_edge(iter_in.out_edge(0), 0)
+        iter_in.on_submitted()
+        comb.on_submitted()
+        self.assertEqual(comb.out_edge(0).task_count, 45)
+        iter_in.run()
+        yield comb.run()
+        self.assertEqual(len(list(comb.out_edge(0).records)), 45)
 
 
 if __name__ == '__main__':

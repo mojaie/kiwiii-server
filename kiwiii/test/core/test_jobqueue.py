@@ -8,7 +8,7 @@ import time
 import unittest
 
 from kiwiii.core.jobqueue import JobQueue
-from kiwiii.core.task import FlashTask, IdleTask
+from kiwiii.core.task import Task, IdleTask
 
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
@@ -18,9 +18,9 @@ class TestJobQueue(AsyncTestCase):
     @gen_test
     def test_store(self):
         jq = JobQueue()
-        task1 = FlashTask()
-        task2 = FlashTask()
-        task3 = FlashTask()
+        task1 = Task()
+        task2 = Task()
+        task3 = Task()
         yield jq.put(task1)
         yield jq.put(task2)
         task3.creation_time = time.time() - jq.task_lifetime - 100

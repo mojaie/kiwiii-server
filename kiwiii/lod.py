@@ -81,6 +81,14 @@ class ListOfDict(list):
         self.clear()
         self.extend(new)
 
+    def pick(self, key, value):
+        """Pop a record with the given key
+        if no records with the key, return None
+        """
+        for i, e in enumerate(self):
+            if e[key] == value:
+                return self.pop(i)
+
 
 LOD = ListOfDict  # aliase
 

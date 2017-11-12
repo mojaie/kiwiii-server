@@ -24,7 +24,7 @@ class Number(SyncNode):
         super().__init__()
         self.counter = counter
         if field is None:
-            field = {"key": name}
+            field = {"key": name, "name": name, "valueType": "numeric"}
         self.fields.merge([field])
         self.func = functools.partial(number, name)
         if params is not None:
@@ -42,7 +42,7 @@ class AsyncNumber(AsyncNode):
         super().__init__()
         self.counter = counter
         if field is None:
-            field = {"key": name}
+            field = {"key": name, "name": name, "valueType": "numeric"}
         self.fields.merge([field])
         self.func = functools.partial(number, name)
         if params is not None:

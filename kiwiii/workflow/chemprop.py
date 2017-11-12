@@ -46,9 +46,10 @@ class ChemProp(Workflow):
     def __init__(self, query):
         super().__init__()
         self.query = query
-        sortfunc = {"numeric": float, "text": str}
+        sortf = {"numeric": float}
         field = static.CHEM_FIELDS.find("key", query["key"])
-        vs = [sortfunc[field["sortType"]](v) for v in query["values"]]
+        vs = [sortf.get(field["valueType"], str)(v) for v in query["values"]]
+        # TODO Is "IN" query necessary?
         v = {True: vs, False: vs[0]}[query["operator"] == "in"]
         func = functools.partial(
             prop_filter,

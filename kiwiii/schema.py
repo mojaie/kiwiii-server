@@ -13,19 +13,14 @@ def resource_format(data):
         rsrc["domain"] = data["domain"]
         rsrc["resourceType"] = data["type"]
         rsrc["resourceFile"] = data["file"]
+        fields = ListOfDict(rsrc["fields"])
         if rsrc["domain"] == "chemical":
-            rsrc["fields"].extend(static.CHEM_FIELDS)
-        for field in rsrc["fields"]:
-            if field["key"] == "_molobj":
-                continue
+            fields.merge(static.CHEM_FIELDS)
+            fields.delete("key", "_molobj")
+        for field in fields:
             if "name" not in field:
                 field["name"] = field["key"]
-            if "valueType" not in field:
-                field["valueType"] = "numeric"
-            if field["valueType"] in ["text", "compound_id"]:
-                field["sortType"] = "text"
-            else:
-                field["sortType"] = "numeric"
+        rsrc["fields"] = fields
 
 
 def screener_format(data):

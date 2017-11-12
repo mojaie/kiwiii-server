@@ -9,55 +9,70 @@ import unittest
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
+from kiwiii.core.node import Synchronizer, Asynchronizer
 from kiwiii.node.function.number import Number, AsyncNumber
-from kiwiii.core.node import LazyConsumer, Synchronizer, Asynchronizer
-from kiwiii.core.edge import Edge
+from kiwiii.node.io.iterator import IteratorInput
 
 
 class TestNumber(AsyncTestCase):
+    @gen_test
     def test_number(self):
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(10)]
-        f = Number(in_edge, name="num")
-        f.run()
-        total = sum(a["num"] for a in f.out_edges()[0].records)
-        self.assertEqual(total, 45)
-        self.assertEqual(f.status, "done")
+        iter_in = IteratorInput({"value": i} for i in range(10))
+        num = Number(name="num")
+        num.add_in_edge(iter_in.out_edge(0), 0)
+        iter_in.on_submitted()
+        num.on_submitted()
+        iter_in.run()
+        yield num.run()
+        self.assertEqual(sum(n["num"]for n in num.out_edge(0).records), 45)
+        self.assertEqual(num.status, "done")
 
     @gen_test
     def test_asyncnumber(self):
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(10)]
-        n1 = Asynchronizer(in_edge)
-        n2 = AsyncNumber(n1.out_edges()[0], name="num")
-        n3 = Synchronizer(n2.out_edges()[0])
-        n2.interval = 0.01
-        n3.interval = 0.01
-        n1.run()
-        n2.run()
-        yield n3.run()
-        self.assertEqual(n1.status, "done")
-        self.assertEqual(n2.status, "done")
-        self.assertEqual(n3.status, "done")
-        total = sum(r["num"] for r in n3.out_edges()[0].records)
-        self.assertEqual(total, 45)
+        iter_in = IteratorInput({"value": i} for i in range(10))
+        async = Asynchronizer()
+        num = AsyncNumber(name="num")
+        sync = Synchronizer()
+        async.add_in_edge(iter_in.out_edge(0), 0)
+        num.add_in_edge(async.out_edge(0), 0)
+        sync.add_in_edge(num.out_edge(0), 0)
+        num.interval = 0.01
+        sync.interval = 0.01
+        iter_in.on_submitted()
+        async.on_submitted()
+        num.on_submitted()
+        sync.on_submitted()
+        self.assertEqual(sync.out_edge(0).task_count, 10)
+        iter_in.run()
+        async.run()
+        num.run()
+        yield sync.run()
+        self.assertEqual(sum(n["num"]for n in sync.out_edge(0).records), 45)
+        self.assertEqual(num.status, "done")
 
     @gen_test
     def test_interrupt(self):
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(100)]
-        n1 = Asynchronizer(in_edge)
-        n2 = AsyncNumber(n1.out_edges()[0], name="num")
-        n3 = LazyConsumer(n2.out_edges()[0])
-        n2.interval = 0.01
-        n3.interval = 0.01
-        n1.run()
-        n2.run()
-        n3.run()
-        yield n1.interrupt()
+        iter_in = IteratorInput({"value": i} for i in range(10000))
+        async = Asynchronizer()
+        num = AsyncNumber()
+        sync = Synchronizer()
+        async.add_in_edge(iter_in.out_edge(0), 0)
+        num.add_in_edge(async.out_edge(0), 0)
+        sync.add_in_edge(num.out_edge(0), 0)
+        num.interval = 0.01
+        sync.interval = 0.01
+        iter_in.on_submitted()
+        async.on_submitted()
+        num.on_submitted()
+        sync.on_submitted()
+        self.assertEqual(sync.out_edge(0).task_count, 10000)
+        iter_in.run()
+        async.run()
+        num.run()
+        sync.run()
+        yield async.interrupt()
         yield gen.sleep(0.1)
-        self.assertEqual(n3.status, "aborted")
-        self.assertGreater(len(n3.records), 0)
+        self.assertEqual(sync.status, "aborted")
 
 
 if __name__ == '__main__':

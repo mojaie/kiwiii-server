@@ -79,6 +79,14 @@ class TestListOfDict(unittest.TestCase):
             {"a": 15, "d": "Diana"}
         ])
 
+    def test_pick(self):
+        data = ListOfDict(pickle.loads(pickle.dumps(records1)))
+        rcd1 = data.pick("b", 22)
+        self.assertEqual(rcd1, {"a": 13, "b": 22, "c": False, "d": "Beth"})
+        rcd2 = data.pick("b", 22)
+        self.assertEqual(rcd2, {"a": 15, "b": 22, "c": False, "d": "Diana"})
+        self.assertEqual(len(data), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

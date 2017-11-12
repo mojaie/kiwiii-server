@@ -59,12 +59,6 @@ class SyncNode(Node):
         # self._out_edge.records = self._in_edge.records
 
 
-class FlashNode(Node):
-    """For sync node test"""
-    def run(self):
-        self.on_finish()
-
-
 class AsyncNode(Node):
     def __init__(self):
         super().__init__()

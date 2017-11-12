@@ -12,11 +12,22 @@ import traceback
 from kiwiii.core.node import Node
 
 data_type = {
+    "id": "text",
     "compound_id": "text",
+    "assay_id": "text",
+    "svg": "text",
+    "json": "text",
+    "plot": "text",
     "text": "text",
+    "ec50": "real",
+    "active%": "real",
+    "inhibition%": "real",
     "numeric": "real",
     "count": "integer",
-    "flag": "integer"
+    "int": "integer",
+    "flag": "integer",
+    "bool": "integer",
+    "image": "blob"
 }
 
 
@@ -61,7 +72,6 @@ class SQLiteWriter(Node):
                     cur.execute("DROP INDEX {}".format(i))
                     print("Index {} dropped".format(i))
             # Schema document table
-            cur.execute("CREATE TABLE document(document text)")
             schema = self.wf.params
             schema["resources"] = []
             # Tables
@@ -107,6 +117,7 @@ class SQLiteWriter(Node):
                 table_schema["fields"] = in_edge.fields
                 schema["resources"].append(table_schema)
             # Save database schema
+            cur.execute("CREATE TABLE document(document text)")
             cur.execute(
                 "INSERT INTO document VALUES (?)", (json.dumps(schema),))
         except KeyboardInterrupt:

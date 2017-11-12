@@ -9,20 +9,20 @@ import json
 import pickle
 
 from chorus.model.graphmol import Compound
-from tornado import gen
 
 from kiwiii import static
-from kiwiii.core.node import AsyncNode
-from kiwiii.node.function.apply import Apply
+from kiwiii.node.function.apply import Apply, AsyncApply
 
 
 def chem_data(chem_calcs, pickle_mol, row):
+    new_row = {}
     mol = Compound(json.loads(row["_molobj"]))
-    rcd = {k: v(mol) for k, v in chem_calcs.items()}
-    rcd.update(row)
+    new_row.update(row)
+    new_row.update({k: v(mol) for k, v in chem_calcs.items()})
     if pickle_mol:
-        rcd["_molobj"] = pickle.dumps(json.loads(row["_molobj"]), protocol=4)
-    return rcd
+        new_row["_molobj"] = pickle.dumps(
+            json.loads(row["_molobj"]), protocol=4)
+    return new_row
 
 
 class Molecule(Apply):
@@ -36,22 +36,12 @@ class Molecule(Apply):
         self.func = functools.partial(chem_data, chem_calcs, pickle_mol)
 
 
-class AsyncMolecule(AsyncNode):
+class AsyncMolecule(AsyncApply):
     def __init__(self, chem_calcs=None, pickle_mol=False,
                  fields=None, params=None):
-        super().__init__()
+        super().__init__(None, fields=fields, params=params)
         if fields is None:
             self.fields.merge(static.CHEM_FIELDS)
-        else:
-            self.fields.merge(fields)
         if chem_calcs is None:
             chem_calcs = static.CHEM_FUNCTIONS
         self.func = functools.partial(chem_data, chem_calcs, pickle_mol)
-
-    @gen.coroutine
-    def _get_loop(self):
-        while 1:
-            in_ = yield self._in_edge.get()
-            out = self.func(in_)
-            self._out_edge.done_count = self._in_edge.done_count
-            yield self._out_edge.put(out)

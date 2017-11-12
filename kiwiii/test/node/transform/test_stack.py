@@ -6,7 +6,7 @@
 
 import unittest
 
-from tornado.testing import AsyncTestCase
+from tornado.testing import AsyncTestCase, gen_test
 
 from kiwiii.node.io.iterator import IteratorInput
 from kiwiii.node.transform.stack import Stack
@@ -22,13 +22,17 @@ RECORDS = [
 
 
 class TestStack(AsyncTestCase):
+    @gen_test
     def test_stack(self):
-        n = IteratorInput(RECORDS)
-        f = Stack(('id',), n.out_edges()[0])
-        f.on_submitted()
-        self.assertEqual(f.out_edges()[0].task_count, 10)
-        f.run()
-        self.assertEqual(len(list(f.out_edges()[0].records)), 10)
+        iter_in = IteratorInput(RECORDS)
+        stack = Stack(('id',))
+        stack.add_in_edge(iter_in.out_edge(0), 0)
+        iter_in.on_submitted()
+        stack.on_submitted()
+        self.assertEqual(stack.out_edge(0).task_count, 10)
+        iter_in.run()
+        yield stack.run()
+        self.assertEqual(len(list(stack.out_edge(0).records)), 10)
 
 
 if __name__ == '__main__':

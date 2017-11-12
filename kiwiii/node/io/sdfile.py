@@ -14,14 +14,17 @@ from kiwiii.core.node import SyncNode
 
 
 class SDFileInputBase(SyncNode):
-    def __init__(self, implicit_hydrogen=False, recalc_coords=False,
-                 fields=None, params=None):
+    def __init__(self, sdf_options=(), implicit_hydrogen=False,
+                 recalc_coords=False, fields=None, params=None):
         super().__init__()
+        self.sdf_options = sdf_options
         self.implicit_hydrogen = implicit_hydrogen
         self.recalc_coords = recalc_coords
-        if fields is not None:
+        if fields is None:
             self.fields.merge(
-                {"key": q, "name": q, "sortType": "text"} for q in fields)
+                {"key": s, "name": s, "sortType": "text"} for s in sdf_options)
+        else:
+            self.fields.merge(fields)
         if params is not None:
             self.params.update(params)
 
@@ -33,8 +36,8 @@ class SDFileInputBase(SyncNode):
             if self.recalc_coords:
                 calc2dcoords.calc2dcoords(mol)
             row["_molobj"] = json.dumps(mol.jsonized())
-            for p in self.fields:
-                row[p["key"]] = mol.data.get(p["key"], "")
+            for op in self.sdf_options:
+                row[op] = mol.data.get(op, "")
             yield row
 
     def on_submitted(self):

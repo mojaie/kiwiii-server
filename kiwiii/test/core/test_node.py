@@ -9,46 +9,48 @@ import unittest
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
-from kiwiii.core.node import (
-    Synchronizer, Asynchronizer, AsyncNode, LazyConsumer, EagerProducer)
-from kiwiii.core.edge import Edge
+from kiwiii.core.node import Synchronizer, Asynchronizer
+from kiwiii.node.io.iterator import IteratorInput
 
 
 class TestNode(AsyncTestCase):
     @gen_test
     def test_synchronizer(self):
-        in_edge = Edge()
-        in_edge.records = [{"value": i} for i in range(10)]
-        in_edge.task_count = len(in_edge.records)
-        n1 = Asynchronizer(in_edge)
-        n2 = AsyncNode(n1.out_edges()[0])
-        n3 = Synchronizer(n2.out_edges()[0])
-        n2.interval = 0.01
-        n3.interval = 0.01
-        n1.on_submitted()
-        n2.on_submitted()
-        n3.on_submitted()
-        self.assertEqual(n3.out_edges()[0].task_count, 10)
-        n1.run()
-        n2.run()
-        yield n3.run()
-        self.assertEqual(n1.status, "done")
-        self.assertEqual(n2.status, "done")
-        self.assertEqual(n3.status, "done")
+        iter_in = IteratorInput({"value": i} for i in range(10))
+        async = Asynchronizer()
+        sync = Synchronizer()
+        async.add_in_edge(iter_in.out_edge(0), 0)
+        sync.add_in_edge(async.out_edge(0), 0)
+        sync.interval = 0.01
+        iter_in.on_submitted()
+        async.on_submitted()
+        sync.on_submitted()
+        self.assertEqual(sync.out_edge(0).task_count, 10)
+        iter_in.run()
+        async.run()
+        yield sync.run()
+        self.assertEqual(iter_in.status, "done")
+        self.assertEqual(async.status, "done")
+        self.assertEqual(sync.status, "done")
 
     @gen_test
     def test_interrupt(self):
-        n1 = EagerProducer()
-        n2 = AsyncNode(n1.out_edges()[0])
-        n3 = LazyConsumer(n2.out_edges()[0])
-        n2.interval = 0.01
-        n3.interval = 0.01
-        n1.run()
-        n2.run()
-        n3.run()
-        yield n1.interrupt()
+        iter_in = IteratorInput(range(10000))
+        async = Asynchronizer()
+        sync = Synchronizer()
+        async.add_in_edge(iter_in.out_edge(0), 0)
+        sync.add_in_edge(async.out_edge(0), 0)
+        sync.interval = 0.01
+        iter_in.on_submitted()
+        async.on_submitted()
+        sync.on_submitted()
+        self.assertEqual(sync.out_edge(0).task_count, 10000)
+        iter_in.run()
+        async.run()
+        sync.run()
+        yield async.interrupt()
         yield gen.sleep(0.1)
-        self.assertEqual(n3.status, "aborted")
+        self.assertEqual(sync.status, "aborted")
 
 
 if __name__ == '__main__':

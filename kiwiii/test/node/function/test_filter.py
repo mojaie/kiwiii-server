@@ -11,61 +11,65 @@ from tornado.testing import AsyncTestCase, gen_test
 
 from kiwiii.node.function.filter import Filter, MPFilter
 from kiwiii.node.io.iterator import IteratorInput
-from kiwiii.core.node import AsyncNode, LazyConsumer
+from kiwiii.core.node import Synchronizer
 
 
-def odd(dict_):
-    if dict_["value"] % 2:
-        return {"value": dict_["value"]}
+def f(x):
+    if x % 2:
+        return x
 
 
 class TestFilter(AsyncTestCase):
+    @gen_test
     def test_filter(self):
-        iter_in = IteratorInput({"value": i} for i in range(10))
-        iter_in.submit()
-        filter_ = Filter(odd)
-        filter_.add_in_edge(iter_in.out_edge())
-        filter_.submit()
-        total = sum(a["value"] for a in filter_.out_edge().records)
-        self.assertEqual(total, 25)
+        iter_in = IteratorInput(range(10))
+        filter_ = Filter(f)
+        filter_.add_in_edge(iter_in.out_edge(0), 0)
+        iter_in.on_submitted()
+        filter_.on_submitted()
+        iter_in.run()
+        yield filter_.run()
+        self.assertEqual(sum(filter_.out_edge(0).records), 25)
         self.assertEqual(filter_.status, "done")
 
     @gen_test
     def test_mpfilter(self):
-        iter_in = IteratorInput({"value": i} for i in range(10))
-        mpf = MPFilter(odd)
-        asyn = AsyncNode()
+        iter_in = IteratorInput(range(10))
+        mpf = MPFilter(f)
+        sync = Synchronizer()
+        mpf.add_in_edge(iter_in.out_edge(0), 0)
+        sync.add_in_edge(mpf.out_edge(0), 0)
         mpf.interval = 0.01
-        iter_in.submit()
-        mpf.submit()
-        asyn.submit()
-        self.assertEqual(mpf.out_edge().task_count, 100)
+        iter_in.on_submitted()
+        mpf.on_submitted()
+        sync.on_submitted()
+        self.assertEqual(sync.out_edge(0).task_count, 10)
         iter_in.run()
-        self.assertEqual(iter_in.status, "running")
         mpf.run()
-        res = []
-        while mpf.in_edges.status != "done":
-            r = yield n2.out_edge().get()
-            res.append(r)
-        self.assertEqual(n2.out_edge().done_count, 100)
-        self.assertEqual(sum(a["value"] for a in res), 2500)
+        yield sync.run()
+        self.assertEqual(iter_in.status, "done")
+        self.assertEqual(mpf.status, "done")
+        self.assertEqual(sync.status, "done")
+        self.assertEqual(sum(sync.out_edge(0).records), 25)
 
     @gen_test
     def test_interrupt(self):
-        n = IteratorInput({"value": i} for i in range(100))
-        n1 = MPFilter(odd, n.out_edges()[0])
-        n2 = LazyConsumer(n1.out_edges()[0])
-        n2.interval = 0.01
-        n.on_submitted()
-        n1.on_submitted()
-        n2.on_submitted()
-        n.run()
-        n1.run()
-        n2.run()
-        yield n1.interrupt()
+        iter_in = IteratorInput(range(10000))
+        mpf = MPFilter(f)
+        sync = Synchronizer()
+        mpf.add_in_edge(iter_in.out_edge(0), 0)
+        sync.add_in_edge(mpf.out_edge(0), 0)
+        sync.interval = 0.01
+        iter_in.on_submitted()
+        mpf.on_submitted()
+        sync.on_submitted()
+        self.assertEqual(sync.out_edge(0).task_count, 10000)
+        iter_in.run()
+        mpf.run()
+        sync.run()
+        yield mpf.interrupt()
         yield gen.sleep(0.1)
-        self.assertEqual(n2.status, "aborted")
-        self.assertGreater(len(n2.records), 0)
+        self.assertEqual(sync.status, "aborted")
 
 
 if __name__ == '__main__':

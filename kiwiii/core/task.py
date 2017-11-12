@@ -38,7 +38,9 @@ class Task(object):
         self.params = {}
 
     def run(self):
-        pass
+        self.on_start()
+        # do something
+        self.on_finish()
 
     def interrupt(self):
         pass
@@ -71,13 +73,6 @@ class Task(object):
 
     def size(self):
         return debug.total_size(self)
-
-
-class FlashTask(Task):
-    """For sync task test"""
-    @gen.coroutine
-    def run(self):
-        self.on_finish()
 
 
 class IdleTask(Task):
