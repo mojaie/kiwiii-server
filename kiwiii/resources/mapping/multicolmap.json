@@ -1,15 +1,13 @@
 {
   "created": "20:35:29 11/13/16 JST",
   "fields": [{
-    "key": "colmaptest",
-    "name": "Imported activity data",
-    "sortType": "numeric",
-    "visible": true
+    "key": "imported",
+    "name": "Imported from file",
+    "valueType": "numeric"
   },{
-    "key": "colmaptest2",
-    "name": "Imported activity data (2)",
-    "sort": "numeric",
-    "visible": true
+    "key": "imported2",
+    "name": "Imported from file (2)",
+    "valueType": "numeric"
   }],
   "key": "id",
   "mapping": {

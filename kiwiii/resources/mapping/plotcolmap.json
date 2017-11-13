@@ -2,10 +2,8 @@
   "created": "20:35:29 11/13/16 JST",
   "field": {
     "key": "plottest",
-    "name": "Plot import test",
-    "sortType": "none",
-    "valueType": "plot",
-    "visible": true
+    "name": "Plot field",
+    "valueType": "plot"
   },
   "key": "id",
   "mapping": {

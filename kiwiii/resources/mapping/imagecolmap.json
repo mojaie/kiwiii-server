@@ -2,10 +2,8 @@
   "created": "20:35:29 11/13/16 JST",
   "field": {
     "key": "imagetest",
-    "name": "Image import test",
-    "sortType": "none",
-    "valueType": "image",
-    "visible": true
+    "name": "Image field",
+    "valueType": "image"
   },
   "key": "id",
   "mapping": {
