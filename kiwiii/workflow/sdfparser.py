@@ -8,18 +8,19 @@ from kiwiii.core.workflow import Workflow
 from kiwiii.node.function.molecule import Molecule
 from kiwiii.node.function.number import Number
 from kiwiii.node.io.json import JSONResponse
-from kiwiii.node.io.sdfile import SDFileInput
+from kiwiii.node.io.sdfile import SDFileLinesInput
 
 
 class SDFParser(Workflow):
     def __init__(self, contents, query):
         super().__init__()
         self.query = query
-        self.fields.merge([
-            {"key": q, "name": q, "sortType": "text"}
-            for q in query["params"]["fields"]
-        ])
-        sdf_in = SDFileInput(contents, query["params"])
+        sdf_in = SDFileLinesInput(
+            contents, sdf_options=query["params"]["fields"],
+            fields=[
+                {"key": q, "name": q, "valueType": "text"}
+                for q in query["params"]["fields"]
+            ])
         molecule = Molecule()
         number = Number()
         response = JSONResponse(self)

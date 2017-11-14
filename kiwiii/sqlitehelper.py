@@ -108,7 +108,8 @@ class SQLiteHelper(object):
             except (ValueError, StopIteration):
                 raise TypeError()
         elif query["format"] == "dbid":
-            res = self.search((query["source"],), "id", query["value"])
+            res = self.search(
+                (query["source"],), "compound_id", query["value"])
             if res is None:
                 raise ValueError()
             qmol = Compound(json.loads(res["_molobj"]))

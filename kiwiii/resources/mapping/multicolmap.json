@@ -9,7 +9,7 @@
     "name": "Imported from file (2)",
     "valueType": "numeric"
   }],
-  "key": "id",
+  "key": "compound_id",
   "mapping": {
     "DB00186": [99.8, 101.1],
     "DB00189": [2.5, 23.3],

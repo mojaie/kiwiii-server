@@ -18,8 +18,6 @@ def extend(name, key, func, row):
 class Extend(Apply):
     def __init__(self, name, create_from, apply_func=lambda x: x,
                  fields=None, params=None):
-        if fields is None:
-            fields = [{"key": name, "name": name, "valueType": "undefined"}]
         super().__init__(
             functools.partial(extend, name, create_from, apply_func),
             fields=fields, params=params)

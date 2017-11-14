@@ -10,23 +10,22 @@ import itertools
 from kiwiii.node.function.apply import Apply
 
 
-def split(old_key, new_fields, separator, fill, row):
+def split(old_key, new_keys, separator, fill, row):
+    new_row = row.copy()
     values = itertools.chain(
         row[old_key].split(separator), itertools.repeat(fill))
-    new_row = {}
-    for field in new_fields:
-        new_row[field["key"]] = next(values)
-    new_row.update(row)
+    for k in new_keys:
+        new_row[k] = next(values)
     del new_row[old_key]
     return new_row
 
 
 class SplitField(Apply):
-    def __init__(self, old_key, new_fields, separator, fill=None,
-                 params=None):
+    def __init__(self, old_key, new_keys, separator, fill=None,
+                 fields=None, params=None):
         super().__init__(
-            functools.partial(split, old_key, new_fields, separator, fill),
-            fields=new_fields, params=params
+            functools.partial(split, old_key, new_keys, separator, fill),
+            fields=fields, params=params
         )
         self.old_key = old_key
 

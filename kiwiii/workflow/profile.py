@@ -26,9 +26,9 @@ class Profile(Workflow):
         targets = lod.filtered(helper.SQLITE_RESOURCES, "domain", "activity")
         target_ids = lod.valuelist(targets, "id")
         sq = {
-            "type": "filter",
-            "targets": target_ids,
-            "key": "compoundID", "operator": "eq", "values": (query["id"],)
+            "type": "filter", "targets": target_ids,
+            "key": "compound_id", "operator": "eq",
+            "values": (query["compoundID"],)
         }
         sq_filter = sqlite.SQLiteFilterInput(sq)
         """

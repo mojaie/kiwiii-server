@@ -11,23 +11,13 @@ from kiwiii.lod import ListOfDict
 def resource_format(data):
     for rsrc in data["resources"]:
         rsrc["domain"] = data["domain"]
-        rsrc["resourceType"] = data["type"]
-        rsrc["resourceFile"] = data["file"]
+        rsrc["resourceType"] = data["resourceType"]
+        rsrc["resourceFile"] = data["resourceFile"]
         fields = ListOfDict(rsrc["fields"])
         if rsrc["domain"] == "chemical":
             fields.merge(static.CHEM_FIELDS)
             fields.delete("key", "_molobj")
-        for field in fields:
-            if "name" not in field:
-                field["name"] = field["key"]
         rsrc["fields"] = fields
-
-
-def screener_format(data):
-    for rsrc in data["resources"]:
-        rsrc["domain"] = data["domain"]
-        rsrc["resourceType"] = data["type"]
-        rsrc["resourceURL"] = data["url"]
 
 
 def resources():
@@ -43,8 +33,7 @@ def resources():
     for filename in glob.glob(os.path.join(static.API_BASE_DIR, "*.yaml")):
         with open(filename) as f:
             doc = yaml.load(f.read())
-            screener_format(doc)
-            resources.extend(doc["resources"])
+            resources.append(doc)
     return resources
 
 

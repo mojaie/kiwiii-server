@@ -8,6 +8,8 @@ import functools
 import itertools
 
 from tornado import gen
+
+from kiwiii import static
 from kiwiii.core.node import SyncNode, AsyncNode
 
 
@@ -19,13 +21,15 @@ def number(name, zipped):
 
 
 class Number(SyncNode):
-    def __init__(self, name="_index", counter=itertools.count,
-                 field=None, params=None):
+    def __init__(self, name=None, counter=itertools.count,
+                 fields=None, params=None):
         super().__init__()
         self.counter = counter
-        if field is None:
-            field = {"key": name, "name": name, "valueType": "numeric"}
-        self.fields.merge([field])
+        if name is None:
+            name = "_index"
+        if fields is None:
+            fields = [static.INDEX_FIELD]
+        self.fields.merge(fields)
         self.func = functools.partial(number, name)
         if params is not None:
             self.params.update(params)
@@ -38,12 +42,14 @@ class Number(SyncNode):
 
 class AsyncNumber(AsyncNode):
     def __init__(self, name="_index", counter=itertools.count,
-                 field=None, params=None):
+                 fields=None, params=None):
         super().__init__()
         self.counter = counter
-        if field is None:
-            field = {"key": name, "name": name, "valueType": "numeric"}
-        self.fields.merge([field])
+        if name is None:
+            name = "_index"
+        if fields is None:
+            fields = [static.INDEX_FIELD]
+        self.fields.merge(fields)
         self.func = functools.partial(number, name)
         if params is not None:
             self.params.update(params)

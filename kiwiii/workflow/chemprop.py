@@ -36,7 +36,7 @@ def prop_filter(func, op, val, row):
     try:
         valid = op(func(mol), val)
     except TypeError as e:
-        print(e, row["id"], val)
+        print(e, row["compound_id"], val)
     else:
         if valid:
             return row

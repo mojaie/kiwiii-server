@@ -62,6 +62,11 @@ def mol_to_svg(mol):
     return SVG(mol).contents()
 
 
+INDEX_FIELD = {"key": "_index", "name": "index", "valueType": "count"}
+COMPID_FIELD = {"key": "compound_id", "name": "compound ID",
+                "valueType": "compound_id"}
+NAME_FIELD = {"key": "name", "name": "Name", "valueType": "text"}
+
 CHEM_FIELDS = ListOfDict([
     {"key": "_molobj", "name": "Molecule object", "valueType": "json"},
     {"key": "_structure", "name": "Structure", "valueType": "svg"},

@@ -5,7 +5,7 @@
     "name": "Plot field",
     "valueType": "plot"
   },
-  "key": "id",
+  "key": "compound_id",
   "mapping": {
     "DB00193": {
       "$schema": "https://vega.github.io/schema/vega/v3.0.json",

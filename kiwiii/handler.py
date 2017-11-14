@@ -167,7 +167,7 @@ class SDFileParserHandler(BaseHandler):
         }
         wf = SDFParser(contents, query)
         yield wf.submit()
-        self.write(wf.response)
+        self.write(wf.output())
 
 
 class SDFileExportHandler(BaseHandler):

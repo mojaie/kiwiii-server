@@ -39,10 +39,8 @@ class CSVFileInput(SyncNode):
         # TODO: a bit tricky
         self._out_edge.records = self.reader()
         fnames, count = self.inspect()
-        if not self.fields:
-            self._out_edge.fields.merge(
-                {"key": f, "name": f, "valueType": "text"} for f in fnames)
-        else:
-            self._out_edge.fields.merge(self.fields)
+        self._out_edge.fields.merge(
+            {"key": f, "name": f, "valueType": "text"} for f in fnames)
+        self._out_edge.fields.merge(self.fields)
         self._out_edge.task_count = count
         self._out_edge.params.update(self.params)

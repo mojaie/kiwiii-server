@@ -5,7 +5,7 @@
     "name": "Imported from file",
     "valueType": "inhibition%"
   },
-  "key": "id",
+  "key": "compound_id",
   "mapping": {
     "DB00186": 99.8,
     "DB00189": 2.5,

@@ -27,5 +27,7 @@ class MergeRecords(SyncNode):
         self._out_edge.task_count = sum([i.task_count for i in self._in_edges])
         for e in self._in_edges:
             self._out_edge.fields.merge(e.fields)
+        self._out_edge.fields.merge(self.fields)
         for e in self._in_edges:
             self._out_edge.params.update(e.params)
+        self._out_edge.params.update(self.params)

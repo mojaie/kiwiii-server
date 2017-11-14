@@ -86,9 +86,9 @@ class GLSNetwork(Workflow):
         self.nodesid = contents["id"]
         self.query = params
         self.fields.merge([
-            {"key": "source"},
-            {"key": "target"},
-            {"key": "weight"}
+            {"key": "source", "name": "source", "valueType": "numeric"},
+            {"key": "target", "name": "target", "valueType": "numeric"},
+            {"key": "weight", "name": "weight", "valueType": "numeric"}
         ])
         arrgen = functools.partial(gls_array, params)
         arrs = map(arrgen, contents["records"])
