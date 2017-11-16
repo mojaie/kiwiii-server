@@ -10,6 +10,7 @@ from chorus import v2000reader  # , v2000writer
 from chorus import molutil
 from chorus.draw import calc2dcoords
 
+from kiwiii import static
 from kiwiii.core.node import SyncNode
 
 
@@ -20,10 +21,10 @@ class SDFileInputBase(SyncNode):
         self.sdf_options = sdf_options
         self.implicit_hydrogen = implicit_hydrogen
         self.recalc_coords = recalc_coords
-        if fields is None:
-            self.fields.merge(
-                {"key": s, "name": s, "sortType": "text"} for s in sdf_options)
-        else:
+        self.fields.merge(
+            {"key": s, "name": s, "valueType": "text"} for s in sdf_options)
+        self.fields.add(static.MOLOBJ_FIELD)
+        if fields is not None:
             self.fields.merge(fields)
         if params is not None:
             self.params.update(params)

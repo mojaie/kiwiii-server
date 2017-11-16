@@ -5,7 +5,7 @@ import os
 from tornado import web
 from contrib.screenerapi import request
 from kiwiii import excelexporter
-from kiwiii import static
+from kiwiii import configparser as conf
 
 
 class CompoundHandler(web.RequestHandler):
@@ -68,7 +68,7 @@ class TemplateMatcher(object):
         self.name = name
         self.columns = []
         self.template = {}  # {id1: {id: id1, col: val1}, ...}
-        tpath = os.path.join(static.REPORT_TEMPLATE_DIR, tmpl_file)
+        tpath = os.path.join(conf.REPORT_TEMPLATE_DIR, tmpl_file)
         with open(tpath, newline="") as f:
             reader = csv.reader(f)
             header = next(reader)

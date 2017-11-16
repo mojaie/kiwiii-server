@@ -10,6 +10,7 @@ import sqlite3
 import traceback
 
 from kiwiii.core.node import Node
+from kiwiii.util import debug
 
 data_type = {
     "id": "text",
@@ -48,6 +49,7 @@ class SQLiteWriter(Node):
             raise ValueError("invalid port")
         self._in_edges.append(edge)
 
+    @debug.profile
     def run(self):
         self.on_start()
         self.conn = sqlite3.connect(self.dest_path)

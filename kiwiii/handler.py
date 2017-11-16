@@ -17,7 +17,7 @@ from tornado.ioloop import IOLoop
 from tornado.options import define, options, parse_command_line
 
 from kiwiii import excelexporter
-from kiwiii import schema
+from kiwiii import configparser as conf
 from kiwiii import static
 from kiwiii import auth
 from kiwiii.sqlitehelper import SQLITE_HELPER as sq
@@ -49,7 +49,7 @@ class SchemaHandler(BaseHandler):
 
         :statuscode 200: no error
         """
-        self.write(schema.SCHEMA)
+        self.write(conf.schema)
 
 
 class WorkflowHandler(BaseHandler):
@@ -239,11 +239,13 @@ def run():
     define("port", default=8888, help="run on the given port", type=int)
     define("debug", default=False, help="run in debug mode")
     parse_command_line()
+    instance_prefix = conf.INSTANCE_PREFIX
+    timestamp = time.strftime("%X %x %Z", time.localtime(time.time()))
     store = {
         "jq": JobQueue(),
-        "instance": time.strftime("%X %x %Z", time.localtime(time.time()))
+        "instance": "".join((instance_prefix, timestamp))
     }
-    wpath = {True: static.WEB_BUILD, False: static.WEB_DIST}[options.debug]
+    wpath = {True: conf.WEB_BUILD, False: conf.WEB_DIST}[options.debug]
     app = web.Application(
         [
             (r"/schema", SchemaHandler),
@@ -262,7 +264,7 @@ def run():
         compress_response=True,
         cookie_secret="_TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE_"
     )
-    for ext in static.EXTERNALS:
+    for ext in conf.EXTERNALS:
         mod = __import__(ext, fromlist=["handler"])
         mod.handler.install(app)
     app.listen(options.port)

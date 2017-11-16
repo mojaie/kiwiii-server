@@ -55,7 +55,7 @@ def profile(func):
         print("\n<<<---")
         res = func(*args, **kwargs)
         p = pstats.Stats(pr)
-        p.strip_dirs().sort_stats('cumtime').print_stats(20)
+        p.strip_dirs().sort_stats('cumtime').print_stats(40)
         print("\n--->>>")
         return res
 

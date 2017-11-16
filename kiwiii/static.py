@@ -1,6 +1,4 @@
 
-import yaml
-
 from tornado import process
 from chorus import molutil, wclogp
 from chorus.draw.svg import SVG
@@ -33,29 +31,7 @@ except ImportError:
 PROCESSES = process.cpu_count()
 
 
-""" Settings """
-
-try:
-    with open("server_config.yaml") as f:
-        config = yaml.load(f.read())
-except FileNotFoundError:
-    """ use server_config stub"""
-    config = {}
-
-
-USERS = config.get("user")
-WEB_BUILD = config.get("web_build")
-WEB_DIST = config.get("web_dist")
-BASIC_AUTH_REALM = config.get("basic_auth_realm")
-
-
-def user_passwd_matched(user, passwd):
-    return user in USERS and passwd == USERS[user]["password"]
-
-
-SQLITE_BASE_DIR = config.get("sqlite_base_dir")
-API_BASE_DIR = config.get("api_base_dir")
-REPORT_TEMPLATE_DIR = config.get("report_template_dir")
+""" Field definition """
 
 
 def mol_to_svg(mol):
@@ -66,9 +42,11 @@ INDEX_FIELD = {"key": "_index", "name": "index", "valueType": "count"}
 COMPID_FIELD = {"key": "compound_id", "name": "compound ID",
                 "valueType": "compound_id"}
 NAME_FIELD = {"key": "name", "name": "Name", "valueType": "text"}
+MOLOBJ_FIELD = {"key": "_molobj", "name": "Molecule object",
+                "valueType": "json"}
 
 CHEM_FIELDS = ListOfDict([
-    {"key": "_molobj", "name": "Molecule object", "valueType": "json"},
+    MOLOBJ_FIELD,
     {"key": "_structure", "name": "Structure", "valueType": "svg"},
     {"key": "_mw", "name": "MW", "valueType": "numeric"},
     {"key": "_mw_wo_sw", "name": "MW w/o salt and water",
@@ -86,8 +64,3 @@ CHEM_FUNCTIONS = {
     "_logp": wclogp.wclogp,
     "_nonH": molutil.non_hydrogen_count
 }
-
-# TODO: local server_config.yaml
-EXTERNALS = [
-    "contrib.screenerapi"
-]

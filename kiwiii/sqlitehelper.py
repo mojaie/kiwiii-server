@@ -13,12 +13,11 @@ from chorus.draw import calc2dcoords
 from chorus.model.graphmol import Compound
 
 from kiwiii import sqliteconnection as sqlite
-from kiwiii import schema
-from kiwiii import static
+from kiwiii import configparser as conf
 from kiwiii.lod import LOD
 
 
-SQLITE_RESOURCES = LOD(schema.RESOURCES.filter("resourceType", "sqlite"))
+SQLITE_RESOURCES = LOD(conf.RESOURCES.filter("resourceType", "sqlite"))
 
 
 # TODO: merge into sqliteconnection
@@ -31,7 +30,7 @@ class SQLiteHelper(object):
             found = SQLITE_RESOURCES.find("id", r)
             self.dbs.setdefault(r, found["resourceFile"])
             conn = sqlite.Connection(
-                os.path.join(static.SQLITE_BASE_DIR, self.dbs[r]))
+                os.path.join(conf.SQLITE_BASE_DIR, self.dbs[r]))
             yield r, found["table"], conn
 
     def record_count(self, rsrc_ids):

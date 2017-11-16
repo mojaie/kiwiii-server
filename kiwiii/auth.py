@@ -7,7 +7,7 @@
 import base64
 import functools
 
-from kiwiii import static
+from kiwiii import configparser as conf
 
 
 def basic_auth(method):
@@ -16,7 +16,7 @@ def basic_auth(method):
         def reject(hdl):
             hdl.set_header(
                 'WWW-Authenticate',
-                'Basic realm={}'.format(static.BASIC_AUTH_REALM)
+                'Basic realm={}'.format(conf.BASIC_AUTH_REALM)
             )
             hdl.set_status(401)
 
@@ -28,7 +28,7 @@ def basic_auth(method):
         auth_decoded = base64.b64decode(auth[6:]).decode('utf-8')
         user, passwd = auth_decoded.split(':')
 
-        if static.user_passwd_matched(user, passwd):
+        if conf.user_passwd_matched(user, passwd):
             return method(handler, *args, **kwargs)
         return reject(handler)
     return wrapper
