@@ -44,6 +44,7 @@ class ListOfDict(list):
 
     def reduce(self, key="key", dupkey="update"):
         """Removes records with duplicated key
+        Not appropriate for large data - worst case: O(n^2)
         Args:
             dupkey:
                 update - update exisiting record (dict.update)

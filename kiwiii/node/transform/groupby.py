@@ -11,6 +11,7 @@ from kiwiii.core.node import SyncNode
 from kiwiii.util import lod
 
 
+# TODO move to node.record
 def groupby(key, rows, row):
     found = lod.find(key, row[key], rows)
     if found:
@@ -35,6 +36,5 @@ class GroupBy(SyncNode):
         self._out_edge.records = main
         self._out_edge.task_count = sum(1 for i in counter)
         self._out_edge.fields.merge(self._in_edge.fields)
-        self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self._in_edge.params)
         self._out_edge.params.update(self.params)
