@@ -12,7 +12,7 @@ from chorus.model.graphmol import Compound
 
 from kiwiii.core.workflow import Workflow
 from kiwiii.node.function.filter import MPFilter
-from kiwiii.node.function.molecule import AsyncMolecule
+from kiwiii.node.chem.molecule import AsyncMolecule
 from kiwiii.node.function.number import AsyncNumber
 from kiwiii.node.io.json import AsyncJSONResponse
 from kiwiii.node.io.sqlite import SQLiteInput

@@ -11,7 +11,7 @@ from chorus.demo import MOL
 from chorus import v2000reader as reader
 from chorus.model.graphmol import Compound
 
-from kiwiii.node.function.molecule import Molecule
+from kiwiii.node.chem.molecule import Molecule
 from kiwiii.node.io.iterator import IteratorInput
 
 

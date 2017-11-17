@@ -11,7 +11,7 @@ from kiwiii.core.node import SyncNode
 from kiwiii.util import lod
 
 
-# TODO move to node.record
+# TODO remove
 def groupby(key, rows, row):
     found = lod.find(key, row[key], rows)
     if found:

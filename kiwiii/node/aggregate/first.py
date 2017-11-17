@@ -7,7 +7,7 @@
 from kiwiii.core.node import SyncNode
 
 
-class Reduce(SyncNode):
+class AggFirst(SyncNode):
     def __init__(self, key, params=None):
         super().__init__()
         self.key = key
@@ -15,15 +15,14 @@ class Reduce(SyncNode):
         if params is not None:
             self.params.update(params)
 
-    def unique(self):
+    def first(self):
         for r in self._in_edge.records:
             k = r[self.key]
             if k in self.seen:
-                # TODO:
                 continue
             self.seen.add(k)
             yield r
 
     def on_submitted(self):
         super().on_submitted()
-        self._out_edge.records = self.unique()
+        self._out_edge.records = self.first()

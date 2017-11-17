@@ -5,7 +5,7 @@
 #
 
 from kiwiii.core.workflow import Workflow
-from kiwiii.node.function.molecule import Molecule
+from kiwiii.node.chem.molecule import Molecule
 from kiwiii.node.function.number import Number
 from kiwiii.node.io.json import JSONResponse
 from kiwiii.node.io.sdfile import SDFileLinesInput
